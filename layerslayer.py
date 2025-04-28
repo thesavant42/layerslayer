@@ -1,65 +1,95 @@
 # layerslayer.py
-# Entry point for the Layerslayer tool (Peek-first, Build Steps shown)
+# 🛡️ Layerslayer main CLI
 
+import os
+import sys
 from fetcher import (
     get_manifest,
-    get_manifest_by_digest,
     download_layer_blob,
     peek_layer_blob,
     fetch_build_steps,
-    load_cached_token
 )
-from parser import parse_manifest, parse_index
-from utils import ensure_download_dir, select_from_list, load_token
+from utils import (
+    parse_image_ref,
+    registry_base_url,
+    auth_headers,
+    human_readable_size,
+    load_token,
+    save_token,
+)
 
 def main():
     print("🛡️ Welcome to Layerslayer 🛡️\n")
 
-    image_ref = input("Enter image (user/repo:tag): ").strip()
+    image_ref = input("Enter image (user/repo:tag) [default: moby/buildkit:latest]: ").strip()
+    if not image_ref:
+        image_ref = "moby/buildkit:latest"
 
-    # Try to load token.txt or cached pull token
-    token = load_token()
-
-    if not token:
-        token = load_cached_token()
-
+    token = load_token("token.txt")
     if token:
+        print("🔑 Loaded token from token.txt")
         print("🔑 Using loaded token.")
     else:
-        print("⚡ No token provided, proceeding with anonymous pull (may work for public images).")
+        print("⚠️ No token.txt found. Proceeding without user token.")
 
-    # Fetch the manifest
     manifest_data = get_manifest(image_ref, token=token)
 
-    # Handle multi-platform or single platform manifest
-    if manifest_data.get('mediaType', '').endswith('index.v1+json'):
-        chosen_manifest = parse_index(manifest_data, image_ref, token)
+    platforms = manifest_data.get("manifests", [])
+    print("\nAvailable Platforms:")
+    for idx, platform in enumerate(platforms):
+        plat = platform.get("platform", {})
+        print(f"[{idx}] {plat.get('os', 'unknown')}/{plat.get('architecture', 'unknown')}")
+
+    platform_index = input("\nSelect platform index [default: 0]: ").strip()
+    if not platform_index:
+        platform_index = 0
     else:
-        chosen_manifest = manifest_data
+        platform_index = int(platform_index)
 
-    # Fetch and show build steps before doing anything else
-    config_digest = chosen_manifest['config']['digest']
-    fetch_build_steps(image_ref, config_digest, token=token)
+    selected_manifest = platforms[platform_index]
+    digest = selected_manifest["digest"]
 
-    # Parse and display layers
-    layers_info = parse_manifest(chosen_manifest)
+    full_manifest = get_manifest(image_ref, token=token, specific_digest=digest)
+    config_digest = full_manifest["config"]["digest"]
 
-    # Setup download directory
-    download_dir = ensure_download_dir(image_ref)
+    # Fetch and display build steps
+    build_steps = fetch_build_steps(image_ref, config_digest, token=token)
 
-    # Let user select one or more layers
-    selected = select_from_list(layers_info)
+    if build_steps:
+        print("\n🛠️  Build Steps (Dockerfile Commands):")
+        print("----------------------------------------")
+        for idx, step in enumerate(build_steps):
+            print(f"Step {idx}: {step}")
+        print("----------------------------------------\n")
 
-    for layer in selected:
-        # Always peek first
-        peek_layer_blob(image_ref, layer['digest'], token=token)
+    layers = full_manifest.get("layers", [])
+    print("Layers:")
+    for idx, layer in enumerate(layers):
+        size = human_readable_size(layer.get("size", 0))
+        print(f"[{idx}] {layer['digest']} - {size}")
 
-        # After peeking, offer to download
-        decision = input("\nWould you like to download this layer? (y/n): ").strip().lower()
-        if decision == 'y':
-            download_layer_blob(image_ref, layer['digest'], token=token, output_dir=download_dir)
+    layer_input = input("\nSelect layer indexes to peek (e.g., 0,2,3) or ALL [default: 0]: ").strip()
+
+    if not layer_input:
+        selected_indexes = [0]
+    elif layer_input.upper() == "ALL":
+        selected_indexes = list(range(len(layers)))
+    else:
+        selected_indexes = [int(x.strip()) for x in layer_input.split(",")]
+
+    for idx in selected_indexes:
+        layer = layers[idx]
+        digest = layer["digest"]
+        size = layer.get("size", 0)
+
+        print("\n🔍 Peeking into layer:")
+        peek_layer_blob(image_ref, digest, token=token)
+
+        download_decision = input("\nWould you like to download this layer? (y/N): ").strip().lower()
+        if download_decision == "y":
+            download_layer_blob(image_ref, digest, size, token=token)
         else:
-            print("🛑 Skipping download.\n")
+            print("🛑 Skipping download.")
 
 if __name__ == "__main__":
     main()

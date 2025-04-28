@@ -1,61 +1,42 @@
 # utils.py
-# Helper functions for Layerslayer
+# 🛡️ Layerslayer utilities
 
 import os
 
 def parse_image_ref(image_ref):
-    """Parses an image ref like 'moby/buildkit:latest'."""
-    if ':' not in image_ref:
-        raise ValueError("Image reference must include tag (e.g., user/repo:tag)")
-    name, tag = image_ref.split(':', 1)
-    if '/' not in name:
-        # If no namespace is given, assume "library/"
-        full_repo = f"library/{name}"
+    if ":" in image_ref:
+        repo, tag = image_ref.split(":")
     else:
-        full_repo = name
-    return full_repo, tag
+        repo = image_ref
+        tag = "latest"
+    if "/" in repo:
+        user, repo = repo.split("/", 1)
+    else:
+        user = "library"
+    return user, repo, tag
 
-def registry_base_url():
-    """Returns the base URL for Docker Hub."""
-    return "https://registry-1.docker.io/v2"
+def registry_base_url(user, repo):
+    return f"https://registry-1.docker.io/v2/{user}/{repo}"
 
-def auth_headers(token):
-    """Returns Authorization header if token is provided."""
-    headers = {}
+def auth_headers(token=None):
+    headers = {"Accept": "application/vnd.docker.distribution.manifest.v2+json"}
     if token:
-        headers['Authorization'] = f"Bearer {token}"
+        headers["Authorization"] = f"Bearer {token}"
     return headers
 
-def ensure_download_dir(image_ref):
-    """Ensures a structured download directory exists."""
-    full_repo, tag = parse_image_ref(image_ref)
-    path = os.path.join('downloads', full_repo.replace('/', '_'), tag)
-    os.makedirs(path, exist_ok=True)
-    return path
+def human_readable_size(size):
+    for unit in ["B", "KB", "MB", "GB"]:
+        if size < 1024.0:
+            return f"{size:.1f} {unit}"
+        size /= 1024.0
+    return f"{size:.1f} TB"
 
-def load_token():
-    """Loads token from token.txt if available."""
-    if os.path.exists('token.txt'):
-        with open('token.txt', 'r') as f:
-            token = f.read().strip()
-        if token:
-            print("🔑 Loaded token from token.txt")
-            return token
+def load_token(filename):
+    if os.path.exists(filename):
+        with open(filename, "r") as f:
+            return f.read().strip()
     return None
 
-def select_from_list(items):
-    """Prompts the user to select indexes from a list."""
-    choice = input("\nSelect layer indexes to download (e.g., 0,2,3) or ALL: ").strip()
-    if choice.lower() == 'all':
-        return items
-    indexes = [int(x.strip()) for x in choice.split(',') if x.strip().isdigit()]
-    selected = [items[i] for i in indexes if 0 <= i < len(items)]
-    return selected
-
-def human_readable_size(size, decimal_places=1):
-    """Converts bytes into a human-readable string."""
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if size < 1024:
-            return f"{size:.{decimal_places}f} {unit}"
-        size /= 1024
-    return f"{size:.{decimal_places}f} PB"
+def save_token(token, filename="token.txt"):
+    with open(filename, "w") as f:
+        f.write(token)
