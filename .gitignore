@@ -1,0 +1,27 @@
+# Virtual environment
+venv/
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE settings
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS junk files
+.DS_Store
+Thumbs.db
+
+# Authentication files
+token.txt
+token_pull.txt
+
+# Log files
+*.log
+
+# Layer downloads
+downloads/
