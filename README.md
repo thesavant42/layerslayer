@@ -48,6 +48,13 @@ Anonymous access is supported for public images, but full functionality is only 
 ```
 python layerslayer.py
 ```
+Example...
+![optional alt text](./images/001.png)
+...continued...
+![optional alt text](./images/002.png)
+You can save, or not, whatever.
+![optional alt text](./images/003.png)
+
 
 Follow the prompts:
 
