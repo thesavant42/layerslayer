@@ -1,5 +1,5 @@
 # layerslayer.py
-# 🛡️ Layerslayer main CLI
+# 🛡️ Layerslayer main CLI with batch modes, CLI args, and logging
 
 import os
 import sys
@@ -19,30 +19,61 @@ from utils import (
     save_token,
 )
 
+class Tee:
+    """Duplicate stdout/stderr to a file and the console."""
+    def __init__(self, *files):
+        self.files = files
+    def write(self, data):
+        for f in self.files:
+            f.write(data)
+    def flush(self):
+        for f in self.files:
+            f.flush()
+
 def parse_args():
-    parser = argparse.ArgumentParser(
+    p = argparse.ArgumentParser(
         description="Explore and download individual Docker image layers."
     )
-    parser.add_argument(
+    p.add_argument(
+        "--target-image", "-t",
+        dest="image_ref",
+        help="Image (user/repo:tag) to inspect",
+    )
+    p.add_argument(
         "--peek-all",
         action="store_true",
         help="Peek into all layers and exit (no download prompts)",
     )
-    parser.add_argument(
+    p.add_argument(
         "--save-all",
         action="store_true",
         help="Download all layers and exit (no peek listings)",
     )
-    return parser.parse_args()
+    p.add_argument(
+        "--log-file", "-l",
+        dest="log_file",
+        help="Path to save a complete log of output",
+    )
+    return p.parse_args()
 
 def main():
     args = parse_args()
 
+    # set up logging/tee if requested
+    if args.log_file:
+        log_f = open(args.log_file, "w", encoding="utf-8")
+        sys.stdout = Tee(sys.stdout, log_f)
+        sys.stderr = Tee(sys.stderr, log_f)
+
     print("🛡️ Welcome to Layerslayer 🛡️\n")
 
-    image_ref = input("Enter image (user/repo:tag) [default: moby/buildkit:latest]: ").strip()
-    if not image_ref:
-        image_ref = "moby/buildkit:latest"
+    # choose image from CLI or prompt
+    if args.image_ref:
+        image_ref = args.image_ref
+    else:
+        image_ref = input(
+            "Enter image (user/repo:tag) [default: moby/buildkit:latest]: "
+        ).strip() or "moby/buildkit:latest"
 
     token = load_token("token.txt")
     if token:
@@ -59,7 +90,7 @@ def main():
         manifest_index = result
 
     # — Handle multi-arch vs single-arch manifests —
-    if "manifests" in manifest_index and manifest_index["manifests"]:
+    if manifest_index.get("manifests"):
         platforms = manifest_index["manifests"]
         print("\nAvailable platforms:")
         for i, m in enumerate(platforms):
@@ -67,7 +98,6 @@ def main():
             print(f" [{i}] {plat['os']}/{plat['architecture']}")
         choice = int(input("Select a platform [0]: ") or 0)
         digest = platforms[choice]["digest"]
-
         # fetch the chosen platform’s manifest (unpack again if needed)
         result = get_manifest(image_ref, token, specific_digest=digest)
         if isinstance(result, tuple):
@@ -102,13 +132,15 @@ def main():
             download_layer_blob(image_ref, layer["digest"], layer["size"], token)
         return
 
-    # — default interactive mode —  
+    # — default interactive mode —
     print("\nLayers:")
     for idx, layer in enumerate(layers):
         size = human_readable_size(layer["size"])
         print(f" [{idx}] {layer['digest']} - {size}")
 
-    sel = input("\nLayers to peek (comma-separated INDEX or ALL) [default: ALL]: ").strip()
+    sel = input(
+        "\nLayers to peek (comma-separated INDEX or ALL) [default: ALL]: "
+    ).strip()
     if not sel or sel.upper() == "ALL":
         indices = list(range(len(layers)))
     else:
