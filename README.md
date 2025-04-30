@@ -1,71 +1,124 @@
-# 🛡️ Layerslayer
+# Layerslayer
 
-**Layerslayer** is a CLI tool for browsing and extracting Docker image layers from public and private registries.
+**Layerslayer** is a CLI tool for browsing, inspecting, and selectively downloading Docker image layers via the Docker Registry HTTP API v2. Instead of pulling entire images, you can peek inside each layer, view build steps, and choose exactly which blobs to save.
 
-Instead of downloading full container images, Layerslayer allows you to **peek** inside individual filesystem layers, view **build steps** (Dockerfile commands), and selectively **download** only what you need.
+## Features
 
----
+- **Interactive Mode**  
+  Step through platform selection, build steps, layer listing, and per-layer peek/download prompts.
 
-## 🚀 Features
+- **Batch Modes**  
+  - `--peek-all`: Peek all layers (list contents) without download prompts.  
+  - `--save-all`: Download all layers in one go without flooding your console with file listings.
 
-- Pull Docker manifests by `user/image:tag`
-- List platforms (multi-arch support)
-- Display build steps (from image config)
-- Preview filesystem structure inside any layer
-- Download individual layers as `.tar.gz`
-- Supports authentication via bearer tokens
-- Organizes downloads automatically by user/project/tag
+- **CLI Flags**  
+  - `--target-image, -t`  
+    Specify the image reference (`user/repo:tag`) on the command line.  
+  - `--log-file, -l`  
+    Save full stdout/stderr to a log file (tee output to both console and file).
 
----
+- **Multi-arch Support**  
+  Auto-detects manifest lists vs single-arch manifests and handles both seamlessly.
 
-## 📦 Installation
+- **Token Management**  
+  Loads a bearer token from `token.txt` and automatically refreshes via Docker Hub auth when needed.
+
+- **Human-Readable Sizes**  
+  Prints blob sizes in KB/MB for readability.
+
+## Prerequisites
+
+- Python 3.7 or newer  
+- `requests` library  
 
 ```bash
-# Clone repository
-git clone https://github.com/YOUR_USERNAME/layerslayer.git
+pip install requests
+```
+
+- (Optional) A Docker Registry bearer token saved as `token.txt` in the repo root.
+
+## Installation
+
+```bash
+git clone https://github.com/thesavant42/layerslayer.git
 cd layerslayer
+```
 
-# (Optional) Create virtual environment
+(Optional) Create and activate a virtual environment:
+
+```bash
 python -m venv venv
-.\venv\Scripts\activate  # Windows
-source venv/bin/activate # Linux/macOS
+source venv/bin/activate
+```
 
-# Install dependencies
+Install required packages:
+
+```bash
 pip install -r requirements.txt
 ```
-## 🔐 Authentication
-Layerslayer requires a valid Docker Hub bearer token for accessing protected images.
 
-Create a file called token.txt in the root project folder.
+## Usage
 
-Paste your Bearer token inside token.txt.
-
-👉 Important: Your token is never uploaded if .gitignore is correctly configured.
-
-Anonymous access is supported for public images, but full functionality is only available with authentication.
-
-## 🛠️ Usage
+```bash
+python layerslayer.py [options]
 ```
+
+### Interactive Mode (default)
+
+```bash
 python layerslayer.py
 ```
-Example...
-![optional alt text](./images/001.png)
-...continued...
-![optional alt text](./images/002.png)
-You can save, or not, whatever.
-![optional alt text](./images/003.png)
 
+Prompts you for:
+1. **Image reference** (`user/repo:tag`)  
+2. **Platform selection** (if multi-arch)  
+3. **Layers to peek/download** with per-layer confirmation  
 
-Follow the prompts:
+### Peek All Layers
 
-- Enter an image reference like `moby/buildkit:latest`
-- Select a platform (e.g., linux/amd64)
-- View build steps
-- Select layers to peek into
-- Decide whether to download each layer
+List contents of all layers in one go (no download prompts):
 
-## ✨ Future Improvements
-- Smarter token refresh handling
-- Support for private registries
-- JSON or HTML output modes
-- Full offline mode with cached manifests
+```bash
+python layerslayer.py --target-image "studioone/jenkins-master:5" --peek-all
+```
+
+### Download All Layers
+
+Download every layer without listing file contents:
+
+```bash
+python layerslayer.py -t studioone/jenkins-master:5 --save-all
+```
+
+### Logging
+
+Tee all output to a log file:
+
+```bash
+python layerslayer.py -t moby/buildkit:latest -l layers_output.log
+```
+
+## Examples
+
+- **Peek & log** all layers of `moby/buildkit:latest`:
+  ```bash
+  python layerslayer.py -t "moby/buildkit:latest" --peek-all -l peek.log
+  ```
+
+- **Interactive** inspection of `nginx:alpine`:
+  ```bash
+  python layerslayer.py -t nginx:alpine
+  ```
+
+- **Download** all layers of `ubuntu:20.04`:
+  ```bash
+  python layerslayer.py --target-image ubuntu:20.04 --save-all
+  ```
+
+## Contributing
+
+Pull requests and issues are welcome! Please open an issue first for major changes.
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
