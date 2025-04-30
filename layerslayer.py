@@ -4,7 +4,7 @@
 import os
 import sys
 import argparse
-from fetcher_patched import (
+from fetcher import (
     get_manifest,
     download_layer_blob,
     peek_layer_blob,
