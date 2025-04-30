@@ -79,7 +79,7 @@ Prompts you for:
 List contents of all layers in one go (no download prompts):
 
 ```bash
-python layerslayer.py --target-image "studioone/jenkins-master:5" --peek-all
+python layerslayer.py --target-image ""moby/buildkit:latest"" --peek-all
 ```
 
 ### Download All Layers
@@ -87,7 +87,7 @@ python layerslayer.py --target-image "studioone/jenkins-master:5" --peek-all
 Download every layer without listing file contents:
 
 ```bash
-python layerslayer.py -t studioone/jenkins-master:5 --save-all
+python layerslayer.py -t "moby/buildkit:latest" --save-all
 ```
 
 ### Logging
@@ -95,7 +95,7 @@ python layerslayer.py -t studioone/jenkins-master:5 --save-all
 Tee all output to a log file:
 
 ```bash
-python layerslayer.py -t moby/buildkit:latest -l layers_output.log
+python layerslayer.py -t "moby/buildkit:latest" -l layers_output.log
 ```
 
 ## Examples
