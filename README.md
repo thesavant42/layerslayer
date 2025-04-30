@@ -79,7 +79,7 @@ Prompts you for:
 List contents of all layers in one go (no download prompts):
 
 ```bash
-python layerslayer.py --target-image ""moby/buildkit:latest"" --peek-all
+python layerslayer.py --target-image "moby/buildkit:latest" --peek-all
 ```
 
 ### Download All Layers
