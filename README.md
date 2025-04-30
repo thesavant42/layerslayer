@@ -26,6 +26,18 @@
 - **Human-Readable Sizes**  
   Prints blob sizes in KB/MB for readability.
 
+## FAQ
+
+-vQ:Who is this for?
+-vA: Myself, mostly. 
+-vBut if you ever find yourself looking for the presence of files on a docker image, but *don't* want to download a billion gigs of useless images to scrape through them, this is for you. 
+-vIf you want to carve out only a specific layer of the overlayfs that has the data you want, this is for you.
+-vIf you like #YOLOSINT and like Full Contact Recon, this is for you.
+
+- Q: How is this any different than `docker pull` and viewing the filesystem?
+- A: Functionally, it is not that different. In practice however there are some key differences: This is a python script, very portable and light weight, does not require the docker client to even be installed in order to extract useful info. 
+    - And because you only keep the slices you want, you don't need to download the entire image. That's better for the planet somehow, right?
+
 ## Prerequisites
 
 - Python 3.7 or newer  
