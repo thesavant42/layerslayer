@@ -3,6 +3,7 @@
 
 import os
 import sys
+import argparse
 from fetcher_patched import (
     get_manifest,
     download_layer_blob,
@@ -18,7 +19,25 @@ from utils import (
     save_token,
 )
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Explore and download individual Docker image layers."
+    )
+    parser.add_argument(
+        "--peek-all",
+        action="store_true",
+        help="Peek into all layers and exit (no download prompts)",
+    )
+    parser.add_argument(
+        "--save-all",
+        action="store_true",
+        help="Download all layers and exit (no peek listings)",
+    )
+    return parser.parse_args()
+
 def main():
+    args = parse_args()
+
     print("🛡️ Welcome to Layerslayer 🛡️\n")
 
     image_ref = input("Enter image (user/repo:tag) [default: moby/buildkit:latest]: ").strip()
@@ -65,14 +84,30 @@ def main():
     for idx, cmd in enumerate(steps):
         print(f" [{idx}] {cmd}")
 
-    # — List layers —
     layers = full_manifest["layers"]
+
+    # — peek-all mode? —
+    if args.peek_all:
+        print("\n📂 Peeking into all layers:")
+        for idx, layer in enumerate(layers):
+            print(f"\n⦿ Layer [{idx}] {layer['digest']}")
+            peek_layer_blob(image_ref, layer["digest"], token)
+        return
+
+    # — save-all mode? —
+    if args.save_all:
+        print("\n💾 Downloading all layers:")
+        for idx, layer in enumerate(layers):
+            print(f"Downloading Layer [{idx}] {layer['digest']} …")
+            download_layer_blob(image_ref, layer["digest"], layer["size"], token)
+        return
+
+    # — default interactive mode —  
     print("\nLayers:")
     for idx, layer in enumerate(layers):
         size = human_readable_size(layer["size"])
         print(f" [{idx}] {layer['digest']} - {size}")
 
-    # — Peek/download selection —
     sel = input("\nLayers to peek (comma-separated INDEX or ALL) [default: ALL]: ").strip()
     if not sel or sel.upper() == "ALL":
         indices = list(range(len(layers)))
