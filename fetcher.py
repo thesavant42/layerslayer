@@ -1,5 +1,5 @@
 # fetcher.py
-# 🛡️ Layerslayer registry fetch helpers with persistent session
+# 🛡️ Layerslayer registry fetch helpers with resilient token handling
 
 import os
 import requests
@@ -12,7 +12,7 @@ from utils import (
     save_token,
 )
 
-# — Create one Session to persist headers (and TCP connections) across calls —
+# Persistent session to reuse headers & TCP connections for registry calls
 session = requests.Session()
 session.headers.update({
     "Accept": "application/vnd.docker.distribution.manifest.v2+json"
@@ -20,60 +20,78 @@ session.headers.update({
 
 def fetch_pull_token(user, repo):
     """
-    Retrieve a Docker Hub pull token and update our session's Authorization header.
+    Retrieve a Docker Hub pull token (anonymous or authenticated).
+    Bypasses the shared session so no extra headers confuse the auth endpoint.
     """
     auth_url = (
         f"https://auth.docker.io/token"
         f"?service=registry.docker.io&scope=repository:{user}/{repo}:pull"
     )
-    resp = session.get(auth_url)
-    resp.raise_for_status()
+    try:
+        # Use plain requests.get() here—no Accept or stale Auth headers
+        resp = requests.get(auth_url)
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        print(f"⚠️ Warning: pull-token endpoint error: {e}")
+        return None
 
     token = resp.json().get("token")
     if not token:
-        raise RuntimeError("Failed to fetch pull token")
+        print("⚠️ Warning: token endpoint returned no token")
+        return None
 
     save_token(token, filename="token_pull.txt")
     print("💾 Saved pull token to token_pull.txt.")
-
-    # Persist the new token in our session headers
+    # Now inject the fresh token into our session for all registry calls
     session.headers["Authorization"] = f"Bearer {token}"
     return token
 
 def get_manifest(image_ref, token=None, specific_digest=None):
     """
-    Fetch either the multi-arch manifest list or a single-arch manifest.
+    Fetch either a multi-arch manifest list or a single-arch manifest.
+    On 401, attempts one token refresh; if still 401, exits with a friendly message.
     """
     user, repo, tag = parse_image_ref(image_ref)
     ref = specific_digest or tag
     url = f"{registry_base_url(user, repo)}/manifests/{ref}"
 
-    # If caller gave us a token, set it once before the request
+    # If caller provided a token, set it before the request
     if token:
         session.headers["Authorization"] = f"Bearer {token}"
 
     resp = session.get(url)
     if resp.status_code == 401:
         print("🔄 Unauthorized. Fetching fresh pull token...")
-        token = fetch_pull_token(user, repo)
-        resp = session.get(url)
+        new_token = fetch_pull_token(user, repo)
+        if new_token:
+            resp = session.get(url)
+        else:
+            print("⚠️ Proceeding without refreshed token.")
+
+    if resp.status_code == 401:
+        # Final unauthorized → clean exit
+        print(f"❌ Error: Unauthorized fetching manifest for {image_ref}.")
+        print("   • Ensure the image exists and token.txt (if used) is valid.")
+        raise SystemExit(1)
 
     resp.raise_for_status()
     return resp.json()
 
 def fetch_build_steps(image_ref, config_digest, token=None):
     """
-    Download the image config blob and parse out Dockerfile 'created_by' history.
+    Download the image config blob and parse Dockerfile 'created_by' history.
     """
     user, repo, _ = parse_image_ref(image_ref)
     url = f"{registry_base_url(user, repo)}/blobs/{config_digest}"
 
-    # session.headers already has token (or was set above)
     resp = session.get(url)
     if resp.status_code == 401:
         print("🔄 Unauthorized. Fetching fresh pull token...")
-        token = fetch_pull_token(user, repo)
-        resp = session.get(url)
+        new_token = fetch_pull_token(user, repo)
+        if new_token:
+            resp = session.get(url)
+        else:
+            print("⚠️ Proceeding without refreshed token.")
 
     resp.raise_for_status()
     config = resp.json()
@@ -88,7 +106,7 @@ def fetch_build_steps(image_ref, config_digest, token=None):
 
 def download_layer_blob(image_ref, digest, size, token=None):
     """
-    Stream a layer blob to disk as a .tar.gz.
+    Stream a layer blob to disk as a .tar.gz file.
     """
     user, repo, _ = parse_image_ref(image_ref)
     url = f"{registry_base_url(user, repo)}/blobs/{digest}"
@@ -96,8 +114,11 @@ def download_layer_blob(image_ref, digest, size, token=None):
     resp = session.get(url, stream=True)
     if resp.status_code == 401:
         print("🔄 Unauthorized. Fetching fresh pull token...")
-        token = fetch_pull_token(user, repo)
-        resp = session.get(url, stream=True)
+        new_token = fetch_pull_token(user, repo)
+        if new_token:
+            resp = session.get(url, stream=True)
+        else:
+            print("⚠️ Proceeding without refreshed token.")
 
     resp.raise_for_status()
 
@@ -112,6 +133,7 @@ def download_layer_blob(image_ref, digest, size, token=None):
         for chunk in resp.iter_content(chunk_size=8192):
             if chunk:
                 f.write(chunk)
+
     print(f"✅ Saved layer {digest} to {path}")
 
 def peek_layer_blob(image_ref, digest, token=None):
@@ -124,8 +146,11 @@ def peek_layer_blob(image_ref, digest, token=None):
     resp = session.get(url, stream=True)
     if resp.status_code == 401:
         print("🔄 Unauthorized. Fetching fresh pull token...")
-        token = fetch_pull_token(user, repo)
-        resp = session.get(url, stream=True)
+        new_token = fetch_pull_token(user, repo)
+        if new_token:
+            resp = session.get(url, stream=True)
+        else:
+            print("⚠️ Proceeding without refreshed token.")
 
     resp.raise_for_status()
 
