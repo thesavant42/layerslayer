@@ -3,7 +3,7 @@
 
 import os
 import sys
-from fetcher import (
+from fetcher_patched import (
     get_manifest,
     download_layer_blob,
     peek_layer_blob,
@@ -30,66 +30,61 @@ def main():
         print("🔑 Loaded token from token.txt")
         print("🔑 Using loaded token.")
     else:
-        print("⚠️ No token.txt found. Proceeding without user token.")
+        print("🔑 No token found; proceeding anonymously.")
 
-    manifest_data = get_manifest(image_ref, token=token)
-
-    platforms = manifest_data.get("manifests", [])
-    print("\nAvailable Platforms:")
-    for idx, platform in enumerate(platforms):
-        plat = platform.get("platform", {})
-        print(f"[{idx}] {plat.get('os', 'unknown')}/{plat.get('architecture', 'unknown')}")
-
-    platform_index = input("\nSelect platform index [default: 0]: ").strip()
-    if not platform_index:
-        platform_index = 0
+    # — Unpack whatever get_manifest returns (tuple of (json, token)) —
+    result = get_manifest(image_ref, token)
+    if isinstance(result, tuple):
+        manifest_index, token = result
     else:
-        platform_index = int(platform_index)
+        manifest_index = result
 
-    selected_manifest = platforms[platform_index]
-    digest = selected_manifest["digest"]
+    # — Handle multi-arch vs single-arch manifests —
+    if "manifests" in manifest_index and manifest_index["manifests"]:
+        platforms = manifest_index["manifests"]
+        print("\nAvailable platforms:")
+        for i, m in enumerate(platforms):
+            plat = m["platform"]
+            print(f" [{i}] {plat['os']}/{plat['architecture']}")
+        choice = int(input("Select a platform [0]: ") or 0)
+        digest = platforms[choice]["digest"]
 
-    full_manifest = get_manifest(image_ref, token=token, specific_digest=digest)
-    config_digest = full_manifest["config"]["digest"]
-
-    # Fetch and display build steps
-    build_steps = fetch_build_steps(image_ref, config_digest, token=token)
-
-    if build_steps:
-        print("\n🛠️  Build Steps (Dockerfile Commands):")
-        print("----------------------------------------")
-        for idx, step in enumerate(build_steps):
-            print(f"Step {idx}: {step}")
-        print("----------------------------------------\n")
-
-    layers = full_manifest.get("layers", [])
-    print("Layers:")
-    for idx, layer in enumerate(layers):
-        size = human_readable_size(layer.get("size", 0))
-        print(f"[{idx}] {layer['digest']} - {size}")
-
-    layer_input = input("\nSelect layer indexes to peek (e.g., 0,2,3) or ALL [default: 0]: ").strip()
-
-    if not layer_input:
-        selected_indexes = [0]
-    elif layer_input.upper() == "ALL":
-        selected_indexes = list(range(len(layers)))
-    else:
-        selected_indexes = [int(x.strip()) for x in layer_input.split(",")]
-
-    for idx in selected_indexes:
-        layer = layers[idx]
-        digest = layer["digest"]
-        size = layer.get("size", 0)
-
-        print("\n🔍 Peeking into layer:")
-        peek_layer_blob(image_ref, digest, token=token)
-
-        download_decision = input("\nWould you like to download this layer? (y/N): ").strip().lower()
-        if download_decision == "y":
-            download_layer_blob(image_ref, digest, size, token=token)
+        # fetch the chosen platform’s manifest (unpack again if needed)
+        result = get_manifest(image_ref, token, specific_digest=digest)
+        if isinstance(result, tuple):
+            full_manifest, token = result
         else:
-            print("🛑 Skipping download.")
+            full_manifest = result
+    else:
+        full_manifest = manifest_index
+        print(f"\nSingle-arch image detected; using manifest directly")
+
+    # — Fetch and display build steps —
+    steps = fetch_build_steps(image_ref, full_manifest["config"]["digest"], token)
+    print("\nBuild steps:")
+    for idx, cmd in enumerate(steps):
+        print(f" [{idx}] {cmd}")
+
+    # — List layers —
+    layers = full_manifest["layers"]
+    print("\nLayers:")
+    for idx, layer in enumerate(layers):
+        size = human_readable_size(layer["size"])
+        print(f" [{idx}] {layer['digest']} - {size}")
+
+    # — Peek/download selection —
+    sel = input("\nLayers to peek (comma-separated INDEX or ALL) [default: ALL]: ").strip()
+    if not sel or sel.upper() == "ALL":
+        indices = list(range(len(layers)))
+    else:
+        indices = [int(i) for i in sel.split(",")]
+
+    for idx in indices:
+        layer = layers[idx]
+        print(f"\n⦿ Layer [{idx}] {layer['digest']}")
+        peek_layer_blob(image_ref, layer["digest"], token)
+        if input("Download this layer? (y/N) ").strip().lower() == "y":
+            download_layer_blob(image_ref, layer["digest"], layer["size"], token)
 
 if __name__ == "__main__":
     main()
