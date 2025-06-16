@@ -23,5 +23,5 @@ token_pull.txt
 # Log files
 *.log
 
-# Layer downloads
-downloads/
+# Always ignore the contents of the downloads/ directory
+downloads/*
