@@ -1,5 +1,5 @@
 # fetcher.py
-# 🛡️ Layerslayer registry fetch helpers with resilient token handling
+#  Layerslayer registry fetch helpers with resilient token handling
 
 import os
 import requests
@@ -32,16 +32,16 @@ def fetch_pull_token(user, repo):
         resp = requests.get(auth_url)
         resp.raise_for_status()
     except requests.RequestException as e:
-        print(f"⚠️ Warning: pull-token endpoint error: {e}")
+        print(f" Warning: pull-token endpoint error: {e}")
         return None
 
     token = resp.json().get("token")
     if not token:
-        print("⚠️ Warning: token endpoint returned no token")
+        print(" Warning: token endpoint returned no token")
         return None
 
     save_token(token, filename="token_pull.txt")
-    print("💾 Saved pull token to token_pull.txt.")
+    print(" Saved pull token to token_pull.txt.")
     # Now inject the fresh token into our session for all registry calls
     session.headers["Authorization"] = f"Bearer {token}"
     return token
@@ -61,16 +61,16 @@ def get_manifest(image_ref, token=None, specific_digest=None):
 
     resp = session.get(url)
     if resp.status_code == 401:
-        print("🔄 Unauthorized. Fetching fresh pull token...")
+        print(" Unauthorized. Fetching fresh pull token...")
         new_token = fetch_pull_token(user, repo)
         if new_token:
             resp = session.get(url)
         else:
-            print("⚠️ Proceeding without refreshed token.")
+            print(" Proceeding without refreshed token.")
 
     if resp.status_code == 401:
         # Final unauthorized → clean exit
-        print(f"❌ Error: Unauthorized fetching manifest for {image_ref}.")
+        print(f"X Error: Unauthorized fetching manifest for {image_ref}.")
         print("   • Ensure the image exists and token.txt (if used) is valid.")
         raise SystemExit(1)
 
@@ -86,12 +86,12 @@ def fetch_build_steps(image_ref, config_digest, token=None):
 
     resp = session.get(url)
     if resp.status_code == 401:
-        print("🔄 Unauthorized. Fetching fresh pull token...")
+        print(" Unauthorized. Fetching fresh pull token...")
         new_token = fetch_pull_token(user, repo)
         if new_token:
             resp = session.get(url)
         else:
-            print("⚠️ Proceeding without refreshed token.")
+            print(" Proceeding without refreshed token.")
 
     resp.raise_for_status()
     config = resp.json()
@@ -113,12 +113,12 @@ def download_layer_blob(image_ref, digest, size, token=None):
 
     resp = session.get(url, stream=True)
     if resp.status_code == 401:
-        print("🔄 Unauthorized. Fetching fresh pull token...")
+        print(" Unauthorized. Fetching fresh pull token...")
         new_token = fetch_pull_token(user, repo)
         if new_token:
             resp = session.get(url, stream=True)
         else:
-            print("⚠️ Proceeding without refreshed token.")
+            print(" Proceeding without refreshed token.")
 
     resp.raise_for_status()
 
@@ -134,7 +134,7 @@ def download_layer_blob(image_ref, digest, size, token=None):
             if chunk:
                 f.write(chunk)
 
-    print(f"✅ Saved layer {digest} to {path}")
+    print(f"[+] Saved layer {digest} to {path}")
 
 def peek_layer_blob(image_ref, digest, token=None):
     """
@@ -145,18 +145,18 @@ def peek_layer_blob(image_ref, digest, token=None):
 
     resp = session.get(url, stream=True)
     if resp.status_code == 401:
-        print("🔄 Unauthorized. Fetching fresh pull token...")
+        print(" Unauthorized. Fetching fresh pull token...")
         new_token = fetch_pull_token(user, repo)
         if new_token:
             resp = session.get(url, stream=True)
         else:
-            print("⚠️ Proceeding without refreshed token.")
+            print(" Proceeding without refreshed token.")
 
     resp.raise_for_status()
 
     tar_bytes = io.BytesIO(resp.content)
     with tarfile.open(fileobj=tar_bytes, mode="r:gz") as tar:
-        print("\n📦 Layer contents:\n")
+        print("\n Layer contents:\n")
         for member in tar.getmembers():
             if member.isdir():
                 print(f"📂 {member.name}/")

@@ -1,5 +1,5 @@
 # utils.py
-# 🛡️ Layerslayer utilities
+#  Layerslayer utilities
 
 import os
 
