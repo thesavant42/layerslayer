@@ -23,6 +23,7 @@ from utils import (
     load_token,
     save_token,
 )
+from carver import carve_file, CarveResult
 
 class Tee:
     """Duplicate stdout/stderr to a file and the console."""
@@ -141,6 +142,30 @@ def parse_args():
         action="store_true",
         help="Peek all layers in bulk and show combined filesystem",
     )
+    # File carving options
+    p.add_argument(
+        "--carve-file", "-f",
+        dest="carve_file",
+        help="Extract a specific file from the image (e.g., /etc/passwd)",
+    )
+    p.add_argument(
+        "--output-dir", "-o",
+        dest="output_dir",
+        default="./carved",
+        help="Output directory for carved files (default: ./carved)",
+    )
+    p.add_argument(
+        "--chunk-size", "-c",
+        dest="chunk_size",
+        type=int,
+        default=64,
+        help="Chunk size in KB for streaming carve (default: 64)",
+    )
+    p.add_argument(
+        "--quiet", "-q",
+        action="store_true",
+        help="Suppress detailed progress output",
+    )
     return p.parse_args()
 
 
@@ -162,6 +187,23 @@ def main():
         image_ref = input(
             "Enter image (user/repo:tag) [default: moby/buildkit:latest]: "
         ).strip() or "moby/buildkit:latest"
+
+    # --- carve mode: extract a single file and exit ---
+    if args.carve_file:
+        print(f"[*] Carve mode: extracting {args.carve_file} from {image_ref}\n")
+        result = carve_file(
+            image_ref=image_ref,
+            target_path=args.carve_file,
+            output_dir=args.output_dir,
+            chunk_size=args.chunk_size * 1024,
+            verbose=not args.quiet,
+        )
+        if result.found:
+            sys.exit(0)
+        else:
+            if result.error:
+                print(f"[!] Error: {result.error}")
+            sys.exit(1)
 
     token = load_token("token.txt")
     if token:

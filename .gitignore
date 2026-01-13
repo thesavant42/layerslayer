@@ -22,6 +22,7 @@ token_pull.txt
 
 # Log files
 *.log
-logs/*
+logs/
 # Always ignore the contents of the downloads/ directory
-downloads/*
+downloads/
+carved/

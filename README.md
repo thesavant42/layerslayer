@@ -4,26 +4,38 @@
 
 ## Features
 
-- **Interactive Mode**  
+- **Interactive Mode**
   Step through platform selection, build steps, layer listing, and per-layer peek/download prompts.
 
-- **Batch Modes**  
-  - `--peek-all`: Peek all layers (list contents) without download prompts.  
+- **Batch Modes**
+  - `--peek-all`: Peek all layers (list contents) without download prompts.
   - `--save-all`: Download all layers in one go without flooding your console with file listings.
 
-- **CLI Flags**  
-  - `--target-image, -t`  
-    Specify the image reference (`user/repo:tag`) on the command line.  
-  - `--log-file, -l`  
+- **File Carving** (NEW)
+  Extract a specific file from a Docker image without downloading the entire layer.
+  Uses HTTP Range requests to fetch compressed data incrementally, decompresses on-the-fly, and stops as soon as the target file is fully extracted.
+
+- **CLI Flags**
+  - `--target-image, -t`
+    Specify the image reference (`user/repo:tag`) on the command line.
+  - `--carve-file, -f`
+    Extract a specific file from the image (e.g., `/etc/passwd`).
+  - `--output-dir, -o`
+    Output directory for carved files (default: `./carved`).
+  - `--chunk-size, -c`
+    Chunk size in KB for streaming carve (default: 64).
+  - `--quiet, -q`
+    Suppress detailed progress output.
+  - `--log-file, -l`
     Save full stdout/stderr to a log file (tee output to both console and file).
 
-- **Multi-arch Support**  
+- **Multi-arch Support**
   Auto-detects manifest lists vs single-arch manifests and handles both seamlessly.
 
-- **Token Management**  
+- **Token Management**
   Loads a bearer token from `token.txt` and automatically refreshes via Docker Hub auth when needed.
 
-- **Human-Readable Sizes**  
+- **Human-Readable Sizes**
   Prints blob sizes in KB/MB for readability.
 
 ## FAQ
@@ -42,32 +54,6 @@
 
 - Python 3.7 or newer  
 - `requests` library  
-
-```bash
-pip install requests
-```
-
-- (Optional) A Docker Registry bearer token saved as `token.txt` in the repo root.
-
-## Installation
-
-```bash
-git clone https://github.com/thesavant42/layerslayer.git
-cd layerslayer
-```
-
-(Optional) Create and activate a virtual environment:
-
-```bash
-python -m venv venv
-source venv/bin/activate
-```
-
-Install required packages:
-
-```bash
-pip install -r requirements.txt
-```
 
 ## Usage
 
@@ -126,6 +112,52 @@ python layerslayer.py -t "moby/buildkit:latest" -l layers_output.log
   ```bash
   python layerslayer.py --target-image ubuntu:20.04 --save-all
   ```
+
+### File Carving
+
+Extract a specific file from a Docker image without downloading the entire layer:
+
+```bash
+# Extract /etc/passwd from ubuntu:24.04
+python layerslayer.py -t ubuntu:24.04 --carve-file /etc/passwd
+
+# Extract nginx config with custom output directory
+python layerslayer.py -t nginx:alpine -f /etc/nginx/nginx.conf -o ./output
+
+# Quiet mode (suppress progress)
+python layerslayer.py -t alpine:latest -f /etc/os-release -q
+
+# Custom chunk size (128KB)
+python layerslayer.py -t ubuntu:24.04 -f /etc/passwd -c 128
+```
+
+You can also use the carver module directly:
+
+```bash
+python carver.py ubuntu:24.04 /etc/passwd
+python carver.py nginx:alpine /etc/nginx/nginx.conf -o ./output
+```
+
+#### Sample Carve Output
+
+```bash
+$ python layerslayer.py -t ubuntu:24.04 -f /etc/passwd
+
+ Welcome to Layerslayer
+
+[*] Carve mode: extracting /etc/passwd from ubuntu:24.04
+
+Fetching manifest for library/ubuntu:24.04...
+Found 1 layer(s). Searching for /etc/passwd...
+
+Scanning layer 1/1: sha256:ff65ddf9395b...
+  Layer size: 29,724,688 bytes
+  Downloaded: 65,536B -> Decompressed: 312,832B -> Entries: 98
+  FOUND: /etc/passwd (1,622 bytes) at entry #98
+
+Done! File saved to: carved/etc/passwd
+Stats: Downloaded 65,536 bytes of 29,724,688 byte layer (0.2%) in 0.87s
+```
 
 ### Sample Output of Print Only mode
 
