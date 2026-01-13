@@ -1,5 +1,6 @@
 # layerslayer.py
 #  Layerslayer main CLI with batch modes, CLI args, and logging
+#  Now with fast streaming peek using HTTP Range requests
 
 import os
 import sys
@@ -8,7 +9,10 @@ from fetcher import (
     get_manifest,
     download_layer_blob,
     peek_layer_blob,
+    peek_layer_blob_partial,
+    layerslayer as layerslayer_bulk,
     fetch_build_steps,
+    LayerPeekResult,
 )
 from utils import (
     parse_image_ref,
@@ -29,6 +33,68 @@ class Tee:
     def flush(self):
         for f in self.files:
             f.flush()
+
+
+def format_entry_line(entry, show_permissions=True):
+    """
+    Format a TarEntry for display, similar to ls -la output.
+    
+    Args:
+        entry: TarEntry object with rich metadata
+        show_permissions: Whether to show full ls -la style output
+    
+    Returns:
+        Formatted string for display
+    """
+    if show_permissions:
+        # Full ls -la style: drwxr-xr-x  0  0  2024-01-15 10:30  filename
+        size_str = human_readable_size(entry.size).rjust(8)
+        if entry.is_symlink and entry.linkname:
+            name_display = f"{entry.name} -> {entry.linkname}"
+        else:
+            name_display = entry.name + ("/" if entry.is_dir else "")
+        return f"  {entry.mode}  {entry.uid:4d} {entry.gid:4d}  {size_str}  {entry.mtime}  {name_display}"
+    else:
+        # Simple format
+        if entry.is_dir:
+            return f"  [DIR]  {entry.name}/"
+        elif entry.is_symlink:
+            return f"  [LINK] {entry.name} -> {entry.linkname}"
+        else:
+            size_str = human_readable_size(entry.size)
+            return f"  [FILE] {entry.name} ({size_str})"
+
+
+def display_peek_result(result: LayerPeekResult, layer_size: int, verbose: bool = False):
+    """
+    Display the results of a layer peek operation.
+    
+    Args:
+        result: LayerPeekResult from peek_layer_blob_partial
+        layer_size: Full layer size in bytes (for comparison)
+        verbose: Whether to show detailed stats
+    """
+    if result.error:
+        print(f"  [!] Error: {result.error}")
+        return
+    
+    # Show efficiency stats
+    if verbose or result.bytes_downloaded > 0:
+        pct = (result.bytes_downloaded / layer_size * 100) if layer_size > 0 else 0
+        print(f"\n  [Stats] Downloaded: {human_readable_size(result.bytes_downloaded)} "
+              f"of {human_readable_size(layer_size)} ({pct:.3f}%)")
+        print(f"  [Stats] Decompressed: {human_readable_size(result.bytes_decompressed)}")
+        print(f"  [Stats] Files found: {result.entries_found} (partial listing)")
+    
+    print("\n  Layer contents (preview):\n")
+    
+    # Group entries by directory for cleaner display
+    for entry in result.entries:
+        print(format_entry_line(entry, show_permissions=True))
+    
+    if result.partial:
+        print(f"\n  ... (partial listing from first {human_readable_size(result.bytes_downloaded)})")
+
 
 def parse_args():
     p = argparse.ArgumentParser(
@@ -54,7 +120,30 @@ def parse_args():
         dest="log_file",
         help="Path to save a complete log of output",
     )
+    # Streaming peek options
+    p.add_argument(
+        "--legacy-peek",
+        action="store_true",
+        help="Use legacy full-download peek (slower, complete listing)",
+    )
+    p.add_argument(
+        "--peek-bytes", "-b",
+        type=int,
+        default=65536,
+        help="Bytes to fetch for streaming peek (default: 65536 = 64KB)",
+    )
+    p.add_argument(
+        "--simple-output",
+        action="store_true",
+        help="Use simple output format instead of ls -la style",
+    )
+    p.add_argument(
+        "--bulk-peek",
+        action="store_true",
+        help="Peek all layers in bulk and show combined filesystem",
+    )
     return p.parse_args()
+
 
 def main():
     args = parse_args()
@@ -82,14 +171,14 @@ def main():
     else:
         print(" No token found; proceeding anonymously.")
 
-    # — Unpack whatever get_manifest returns (tuple of (json, token)) —
+    # --- Unpack whatever get_manifest returns (tuple of (json, token)) ---
     result = get_manifest(image_ref, token)
     if isinstance(result, tuple):
         manifest_index, token = result
     else:
         manifest_index = result
 
-    # — Handle multi-arch vs single-arch manifests —
+    # --- Handle multi-arch vs single-arch manifests ---
     if manifest_index.get("manifests"):
         platforms = manifest_index["manifests"]
         print("\nAvailable platforms:")
@@ -98,7 +187,7 @@ def main():
             print(f" [{i}] {plat['os']}/{plat['architecture']}")
         choice = int(input("Select a platform [0]: ") or 0)
         digest = platforms[choice]["digest"]
-        # fetch the chosen platform’s manifest (unpack again if needed)
+        # fetch the chosen platform's manifest (unpack again if needed)
         result = get_manifest(image_ref, token, specific_digest=digest)
         if isinstance(result, tuple):
             full_manifest, token = result
@@ -108,7 +197,7 @@ def main():
         full_manifest = manifest_index
         print(f"\nSingle-arch image detected; using manifest directly")
 
-    # — Fetch and display build steps —
+    # --- Fetch and display build steps ---
     steps = fetch_build_steps(image_ref, full_manifest["config"]["digest"], token)
     print("\nBuild steps:")
     for idx, cmd in enumerate(steps):
@@ -116,23 +205,64 @@ def main():
 
     layers = full_manifest["layers"]
 
-    # — peek-all mode? —
-    if args.peek_all:
-        print("\n📂 Peeking into all layers:")
-        for idx, layer in enumerate(layers):
-            print(f"\n⦿ Layer [{idx}] {layer['digest']}")
-            peek_layer_blob(image_ref, layer["digest"], token)
+    # --- bulk-peek mode: peek all layers and show combined filesystem ---
+    if args.bulk_peek:
+        print(f"\n[*] Bulk peeking all {len(layers)} layers...")
+        
+        def progress(msg, current, total):
+            print(f"  [{current+1}/{total}] {msg}")
+        
+        bulk_result = layerslayer_bulk(
+            image_ref=image_ref,
+            layers=layers,
+            token=token,
+            progress_callback=progress,
+        )
+        
+        print(f"\n[*] Bulk peek complete:")
+        print(f"    Layers peeked: {bulk_result.layers_peeked}")
+        print(f"    Total downloaded: {human_readable_size(bulk_result.total_bytes_downloaded)}")
+        print(f"    Total files found: {bulk_result.total_entries}")
+        
+        print("\n  Combined filesystem (preview):\n")
+        for entry in bulk_result.all_entries:
+            print(format_entry_line(entry, show_permissions=not args.simple_output))
+        
         return
 
-    # — save-all mode? —
-    if args.save_all:
-        print("\n Downloading all layers:")
+    # --- peek-all mode ---
+    if args.peek_all:
+        print(f"\n[*] Peeking into all layers " + 
+              ("(legacy mode)" if args.legacy_peek else f"(streaming, {args.peek_bytes} bytes)") + ":")
+        
         for idx, layer in enumerate(layers):
-            print(f"Downloading Layer [{idx}] {layer['digest']} …")
+            layer_size = layer.get("size", 0)
+            print(f"\n[Layer {idx}] {layer['digest']}")
+            print(f"           Size: {human_readable_size(layer_size)}")
+            
+            if args.legacy_peek:
+                # Legacy full download
+                peek_layer_blob(image_ref, layer["digest"], token)
+            else:
+                # Streaming partial peek
+                result = peek_layer_blob_partial(
+                    image_ref, 
+                    layer["digest"], 
+                    token,
+                    initial_bytes=args.peek_bytes,
+                )
+                display_peek_result(result, layer_size, verbose=True)
+        return
+
+    # --- save-all mode ---
+    if args.save_all:
+        print("\n[*] Downloading all layers:")
+        for idx, layer in enumerate(layers):
+            print(f"Downloading Layer [{idx}] {layer['digest']} ...")
             download_layer_blob(image_ref, layer["digest"], layer["size"], token)
         return
 
-    # — default interactive mode —
+    # --- default interactive mode ---
     print("\nLayers:")
     for idx, layer in enumerate(layers):
         size = human_readable_size(layer["size"])
@@ -148,8 +278,23 @@ def main():
 
     for idx in indices:
         layer = layers[idx]
-        print(f"\n⦿ Layer [{idx}] {layer['digest']}")
-        peek_layer_blob(image_ref, layer["digest"], token)
+        layer_size = layer.get("size", 0)
+        print(f"\n[Layer {idx}] {layer['digest']}")
+        print(f"           Size: {human_readable_size(layer_size)}")
+        
+        if args.legacy_peek:
+            # Legacy full download
+            peek_layer_blob(image_ref, layer["digest"], token)
+        else:
+            # Streaming partial peek (default)
+            result = peek_layer_blob_partial(
+                image_ref, 
+                layer["digest"], 
+                token,
+                initial_bytes=args.peek_bytes,
+            )
+            display_peek_result(result, layer_size, verbose=True)
+        
         if input("Download this layer? (y/N) ").strip().lower() == "y":
             download_layer_blob(image_ref, layer["digest"], layer["size"], token)
 
