@@ -26,3 +26,4 @@ logs/
 # Always ignore the contents of the downloads/ directory
 downloads/
 carved/
+carve/

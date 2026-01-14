@@ -4,6 +4,9 @@
 # Parses 512-byte tar headers from decompressed data to extract file entries
 # without needing the full tar file.
 
+### DO NOT CHANGE THIS FILE!!! NO TOUCHING!
+
+
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
