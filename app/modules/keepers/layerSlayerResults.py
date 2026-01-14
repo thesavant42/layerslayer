@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Optional, Callable
 
-from tar_parser import TarEntry
-from utils import parse_image_ref
+from app.modules.finders.tar_parser import TarEntry
+from app.modules.formatters import parse_image_ref
 from app.modules.auth.auth import fetch_pull_token
 from app.modules.finders.peekers import peek_layer_blob_complete
 from app.modules.finders.layerPeekResult import LayerPeekResult

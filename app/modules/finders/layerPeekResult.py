@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
-from tar_parser import TarEntry
+from app.modules.finders.tar_parser import TarEntry
 
 # =============================================================================
 # Data Classes for Streaming Peek Results

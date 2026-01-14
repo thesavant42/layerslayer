@@ -10,7 +10,8 @@ from app.modules.keepers.downloaders import get_manifest, download_layer_blob, f
 from app.modules.finders.peekers import peek_layer_blob, peek_layer_blob_complete
 from app.modules.keepers.layerSlayerResults import layerslayer as layerslayer_bulk, LayerPeekResult
 
-from utils import (
+
+from app.modules.formatters import (
     parse_image_ref,
     registry_base_url,
     human_readable_size,
@@ -281,22 +282,14 @@ def main():
             print(f"\n[Layer {idx}] {layer['digest']}")
             print(f"           Size: {human_readable_size(layer_size)}")
             
-            if args.partial:
-                # Partial streaming peek (faster, incomplete)
-                result = peek_layer_blob_partial(
-                    image_ref, 
-                    layer["digest"], 
-                    token,
-                    initial_bytes=args.peek_bytes,
-                )
-            else:
-                # Complete enumeration (downloads full layer)
-                result = peek_layer_blob_complete(
-                    image_ref, 
-                    layer["digest"], 
-                    layer_size,
-                    token,
-                )
+           
+            # Complete enumeration (downloads full layer)
+            result = peek_layer_blob_complete(
+                image_ref, 
+                layer["digest"], 
+                layer_size,
+                token,
+            )
             display_peek_result(result, layer_size, verbose=True)
         return
 
@@ -328,22 +321,13 @@ def main():
         print(f"\n[Layer {idx}] {layer['digest']}")
         print(f"           Size: {human_readable_size(layer_size)}")
         
-        if args.partial:
-            # Partial streaming peek
-            result = peek_layer_blob_partial(
-                image_ref, 
-                layer["digest"], 
-                token,
-                initial_bytes=args.peek_bytes,
-            )
-        else:
-            # Complete enumeration (default)
-            result = peek_layer_blob_complete(
-                image_ref, 
-                layer["digest"], 
-                layer_size,
-                token,
-            )
+        # Complete enumeration (default)
+        result = peek_layer_blob_complete(
+            image_ref, 
+            layer["digest"], 
+            layer_size,
+            token,
+        )
         display_peek_result(result, layer_size, verbose=True)
         
         if input("Download this layer? (y/N) ").strip().lower() == "y":

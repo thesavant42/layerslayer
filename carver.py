@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from utils import parse_image_ref, registry_base_url
-from tar_parser import TarEntry, parse_tar_header
+from app.modules.formatters import parse_image_ref, registry_base_url
+from app.modules.finders.tar_parser import TarEntry, parse_tar_header
 
 
 # =============================================================================

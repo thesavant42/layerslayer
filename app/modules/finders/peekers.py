@@ -1,9 +1,9 @@
 import os
 import io, tarfile, zlib, requests
 from typing import Optional, List, Generator
-from utils import parse_image_ref, registry_base_url, human_readable_size
 
-from tar_parser import TarEntry, parse_tar_header
+from app.modules.formatters import parse_image_ref, registry_base_url, human_readable_size
+from app.modules.finders.tar_parser import TarEntry, parse_tar_header
 
 from app.modules.auth.auth import fetch_pull_token
 from app.modules.finders.layerPeekResult import LayerPeekResult

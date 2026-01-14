@@ -10,13 +10,13 @@ import io
 from dataclasses import dataclass, field
 from typing import Optional, Callable, Generator, List
 
-from utils import (
+from app.modules.formatters import (
     parse_image_ref,
     registry_base_url,
     human_readable_size,
     save_token,
 )
-from tar_parser import TarEntry, parse_tar_header
+from app.modules.finders.tar_parser import TarEntry, parse_tar_header
 
 # Persistent session to reuse headers & TCP connections for registry calls
 session = requests.Session()
