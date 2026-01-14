@@ -1,0 +1,2 @@
+# This directory stores the SQLite database (lsng.db)
+# Database files are excluded from git via .gitignore
