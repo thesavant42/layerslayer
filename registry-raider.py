@@ -1,5 +1,7 @@
 # registry-raider
 
+## DO NOT TOUCHS
+
 import sys, os, requests, json
 
 # Show usage if no argument provided
@@ -8,7 +10,7 @@ if len(sys.argv) < 2:
     print("")
     print("  Enumerate Docker Registry repositories, tags, and manifests.")
     print("")
-    print("  Example: python registry-raider.py http://165.22.182.63:5000/")
+    print("  Example: python registry-raider.py http://127.0.0.1:5000/")
     sys.exit(1)
 
 # get url from command line
@@ -18,7 +20,7 @@ url = base + "v2/_catalog"
 # Must keep verify=False
 resp = requests.get(url, verify=False).json()
 
-# Fetching Catalog from http://165.22.182.63:5000/
+# Fetching Catalog from http://127.0.0.1:5000/
 print(f"Fetching Catalog from {base}\n")
 
 repos = resp.get("repositories", [])

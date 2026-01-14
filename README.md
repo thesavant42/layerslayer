@@ -2,7 +2,7 @@
 
 **Layerslayer** is a CLI tool for browsing, inspecting, and selectively downloading Docker image layers via the Docker Registry HTTP API v2. Instead of pulling entire images, you can peek inside each layer, view build steps, and choose exactly which blobs to save.
 
-For private-container related features, see also [reg-rav-readme.md](reg-rav-readme.md)
+For private-container related features, see also [reg-rav-readme.md](docs/carver-py.md)
 
 ## Features
 
@@ -24,8 +24,6 @@ For private-container related features, see also [reg-rav-readme.md](reg-rav-rea
     Extract a specific file from the image (e.g., `/etc/passwd`).
   - `--output-dir, -o`
     Output directory for carved files (default: `./carved`).
-  - `--chunk-size, -c`
-    Chunk size in KB for streaming carve (default: 64).
   - `--quiet, -q`
     Suppress detailed progress output.
   - `--log-file, -l`
@@ -40,9 +38,13 @@ For private-container related features, see also [reg-rav-readme.md](reg-rav-rea
 - **Human-Readable Sizes**
   Prints blob sizes in KB/MB for readability.
 
+### Docs
+See [docs/DOCS.md](docs/DOCS.md) for a map of the technical documentation.
+
+
 ## FAQ
 
-- Q:Who is this for?
+- Q: Who is this for?
 - A: Myself, mostly. 
   - But if you ever find yourself looking for the presence of files on a docker image, but *do not* want to download a billion gigs of useless images to scrape through them, this is for you. 
   - If you want to carve out only a specific layer of the overlayfs that has the data you want, this is for you.
@@ -53,6 +55,18 @@ For private-container related features, see also [reg-rav-readme.md](reg-rav-rea
     -  This is a python script, very portable and light weight, does not require the docker client to even be installed in order to extract useful info. 
     - And because you only keep the slices you want, you don't need to download the entire image.
     -  That's better for the planet somehow, right? You get me.
+
+- Q: ...
+- A: *Ok*, let's say you need to quickly search for the existence of a specific passwd file and all of the candidate containers are 40+ gigabytes. They're unmanaged; you could download each of them, mount the images, and crawl for the file. But that could take hours, days... and could take up countless gigabytes of space.
+
+Or, you could use ths, and wthin seconds,  search each layer image for a passwd file and only spend a few hundred kilobytes of overhead for your trouble.
+
+I prefer the fast option. 
+
+## Speed from Efficiency
+
+- It is fast by nature of only decompressing the parts of the file that are actually needed with HTTP range and sliding-window file decompression.
+    - followed by an abrupt closure of the connection.
 
 ## Prerequisites
 
@@ -76,71 +90,7 @@ Prompts you for:
 2. **Platform selection** (if multi-arch)  
 3. **Layers to peek/download** with per-layer confirmation  
 
-### Peek All Layers
-
-List contents of all layers in one go (no download prompts):
-
-```bash
-python layerslayer.py --target-image "moby/buildkit:latest" --peek-all
-```
-
-### Download All Layers
-
-Download every layer without listing file contents:
-
-```bash
-python layerslayer.py -t "moby/buildkit:latest" --save-all
-```
-
-### Logging
-
-Tee all output to a log file:
-
-```bash
-python layerslayer.py -t "moby/buildkit:latest" -l layers_output.log
-```
-
-## Examples
-
-- **Peek & log** all layers of `moby/buildkit:latest`:
-  ```bash
-  python layerslayer.py -t "moby/buildkit:latest" --peek-all -l peek.log
-  ```
-
-- **Interactive** inspection of `nginx:alpine`:
-  ```bash
-  python layerslayer.py -t nginx:alpine
-  ```
-
-- **Download** all layers of `ubuntu:20.04`:
-  ```bash
-  python layerslayer.py --target-image ubuntu:20.04 --save-all
-  ```
-
-### File Carving
-
-Extract a specific file from a Docker image without downloading the entire layer:
-
-```bash
-# Extract /etc/passwd from ubuntu:24.04
-python layerslayer.py -t ubuntu:24.04 --carve-file /etc/passwd
-
-# Extract nginx config with custom output directory
-python layerslayer.py -t nginx:alpine -f /etc/nginx/nginx.conf -o ./output
-
-# Quiet mode (suppress progress)
-python layerslayer.py -t alpine:latest -f /etc/os-release -q
-
-# Custom chunk size (128KB)
-python layerslayer.py -t ubuntu:24.04 -f /etc/passwd -c 128
-```
-
-You can also use the carver module directly:
-
-```bash
-python carver.py ubuntu:24.04 /etc/passwd
-python carver.py nginx:alpine /etc/nginx/nginx.conf -o ./output
-```
+See [docs/USAGE.md](docs/USAGE.md) for more examples.
 
 #### Sample Carve Output
 
@@ -199,7 +149,6 @@ Build steps:
  [...] 
  [33] EXPOSE map[8080/tcp:{}] (metadata only)
  [34] EXPOSE map[50000/tcp:{}] (metadata only)
- 
  [...]
  Layer contents:
 
