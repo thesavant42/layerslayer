@@ -7,8 +7,8 @@
 `python .\layerslayer.py --help`
 
 ```bash
-usage: layerslayer.py [-h] [--target-image IMAGE_REF] [--peek-all] [--save-all] [--log-file LOG_FILE] [--partial] [--peek-bytes PEEK_BYTES] [--simple-output] [--bulk-peek] [--carve-file CARVE_FILE]
-                      [--output-dir OUTPUT_DIR] [--chunk-size CHUNK_SIZE] [--quiet]
+usage: layerslayer.py [-h] [--target-image IMAGE_REF] [--peek-all] [--save-all] [--log-file LOG_FILE] [--simple-output] [--bulk-peek] [--carve-file CARVE_FILE]
+                      [--output-dir OUTPUT_DIR] [--quiet]
 
 Explore and download individual Docker image layers.
 
@@ -20,17 +20,12 @@ options:
   --save-all            Download all layers and exit (no peek listings)
   --log-file, -l LOG_FILE
                         Path to save a complete log of output
-  --partial             Use partial streaming peek (faster, but incomplete listing)
-  --peek-bytes, -b PEEK_BYTES
-                        Bytes to fetch for partial peek (default: 262144 = 256KB)
   --simple-output       Use simple output format instead of ls -la style
   --bulk-peek           Peek all layers in bulk and show combined filesystem
   --carve-file, -f CARVE_FILE
                         Extract a specific file from the image (e.g., /etc/passwd)
   --output-dir, -o OUTPUT_DIR
                         Output directory for carved files (default: ./carved)
-  --chunk-size, -c CHUNK_SIZE
-                        Chunk size in KB for streaming carve (default: 64)
   --quiet, -q           Suppress detailed progress output
 ```
 

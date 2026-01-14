@@ -2,6 +2,8 @@
 
 ## NOTE: This doc is now obsolete and kept for historical reference
 ## The carver file has recently been updated, and documentation has not yet been updated to reflect the new structure.
+## Some of it may still apply to the new code
+
 
 The file contains:
 - 2 constants ([`DEFAULT_CHUNK_SIZE`](carver.py:22), [`DEFAULT_OUTPUT_DIR`](carver.py:23))
