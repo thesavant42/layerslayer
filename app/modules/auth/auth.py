@@ -1,11 +1,13 @@
+import os
+import requests
 
+# Add after line 2 (import requests):
+session = requests.Session()
+session.headers.update({
+    "Accept": "application/vnd.docker.distribution.manifest.v2+json, "
+              "application/vnd.oci.image.manifest.v1+json"
+})
 
-
-## Auth Management TODO finish migration
-# These have been copied from utils.ppy but are not wired up yet,
-# modules that import utils.py will need to also import this.
-
-## create an authenticated header TODO finish migration
 
 def auth_headers(token=None):
     headers = {"Accept": "application/vnd.docker.distribution.manifest.v2+json"}

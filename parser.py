@@ -1,5 +1,8 @@
 # parser.py
 # Parses manifest and config data
+#
+# EWhat's the origin of this file? And the module it imports?
+
 
 from fetcher import get_manifest_by_digest
 

@@ -34,26 +34,3 @@ def parse_image_ref(image_ref):
 def registry_base_url(user, repo):
     return f"https://registry-1.docker.io/v2/{user}/{repo}"
 
-
-## Auth Management TODO move to app\modules\auth\auth.py
-
-## create an authenticated header TODO move to app\modules\auth\auth.py
-def auth_headers(token=None):
-    headers = {"Accept": "application/vnd.docker.distribution.manifest.v2+json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    return headers
-
-
-
-## function to manage readaing the jwt  TODO move to app\modules\auth\auth.py
-def load_token(filename):
-    if os.path.exists(filename):
-        with open(filename, "r") as f:
-            return f.read().strip()
-    return None
-
-## function to manage writing the jwt  TODO move to app\modules\auth\auth.py
-def save_token(token, filename="token.txt"):
-    with open(filename, "w") as f:
-        f.write(token)

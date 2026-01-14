@@ -21,7 +21,7 @@ The biggest file in the collection, handles far too many things. It's important 
 
 
 [docs/parser-tarparser.md](docs/parser-tarparser.md)
-- [`parser.py`](parser.py) handles **what's in the Docker image** at the manifest level (platforms, layers)
+
 - [`tar_parser.py`](tar_parser.py) handles **what's inside each layer** at the binary tar archive level (files, directories, permissions)
 
 [docs\reg-rav-readme.md](docs\reg-rav-readme.md)
