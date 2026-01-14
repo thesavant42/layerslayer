@@ -114,7 +114,6 @@ def main():
             image_ref=image_ref,
             target_path=args.carve_file,
             output_dir=args.output_dir,
-            chunk_size=args.chunk_size * 1024,
             verbose=not args.quiet,
         )
         if result.found:
