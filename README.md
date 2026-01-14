@@ -10,7 +10,7 @@ For private-container related features, see also [reg-rav-readme.md](docs/carver
   Step through platform selection, build steps, layer listing, and per-layer peek/download prompts.
 
 - **Batch Modes**
-  - `--peek-all`: Peek all layers (list contents) without download prompts.
+  - `--peek-all`: Peek all layers (list filesystem contents) without download prompts.
   - `--save-all`: Download all layers in one go without flooding your console with file listings.
 
 - **File Carving** (NEW)
@@ -39,6 +39,7 @@ For private-container related features, see also [reg-rav-readme.md](docs/carver
   Prints blob sizes in KB/MB for readability.
 
 ### Docs
+
 See [docs/DOCS.md](docs/DOCS.md) for a map of the technical documentation.
 
 
@@ -95,22 +96,41 @@ See [docs/USAGE.md](docs/USAGE.md) for more examples.
 #### Sample Carve Output
 
 ```bash
-$ python layerslayer.py -t ubuntu:24.04 -f /etc/passwd
-
- Welcome to Layerslayer
+python layerslayer.py -t ubuntu:24.04 --carve-file /etc/passwd
+ Welcome to Layerslayer 
 
 [*] Carve mode: extracting /etc/passwd from ubuntu:24.04
 
 Fetching manifest for library/ubuntu:24.04...
 Found 1 layer(s). Searching for /etc/passwd...
 
-Scanning layer 1/1: sha256:ff65ddf9395b...
+Scanning layer 1/1: sha256:20043066d3d5c...
   Layer size: 29,724,688 bytes
-  Downloaded: 65,536B -> Decompressed: 312,832B -> Entries: 98
-  FOUND: /etc/passwd (1,622 bytes) at entry #98
+  Downloaded: 65,536B -> Decompressed: 300,732B -> Entries: 111
+  FOUND: /etc/passwd (888 bytes) at entry #111
 
-Done! File saved to: carved/etc/passwd
-Stats: Downloaded 65,536 bytes of 29,724,688 byte layer (0.2%) in 0.87s
+Done! File saved to: carved\etc\passwd
+Stats: Downloaded 65,536 bytes of 29,724,688 byte layer (0.2%) in 1.14s
+(base) cat .\carved\etc\passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin
+_apt:x:42:65534::/nonexistent:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+ubuntu:x:1000:1000:Ubuntu:/home/ubuntu:/bin/bash
 ```
 
 ### Sample Output of Print Only mode

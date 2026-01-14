@@ -27,3 +27,5 @@ logs/
 downloads/
 carved/
 carve/
+/carve
+app/loot/

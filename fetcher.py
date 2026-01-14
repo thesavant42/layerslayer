@@ -364,7 +364,7 @@ def peek_layer_blob_complete(
             error=f"Tar extraction error: {e}",
         )
 
-
+#========= FORMATTER
 def _tarinfo_mode_to_string(mode: int, typeflag: str) -> str:
     """Convert tarfile mode integer to ls-style permission string."""
     type_char = {'5': 'd', '2': 'l', '0': '-'}.get(typeflag, '-')
@@ -378,7 +378,7 @@ def _tarinfo_mode_to_string(mode: int, typeflag: str) -> str:
     
     return type_char + perms
 
-
+#========= FORMATTER
 def _format_mtime(unix_timestamp: int) -> str:
     """Format Unix timestamp to readable string."""
     from datetime import datetime
