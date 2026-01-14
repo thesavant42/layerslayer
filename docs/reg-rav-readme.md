@@ -2,6 +2,8 @@
 
 Interactive CLI tool for enumerating Docker Registry v2 repositories, tags, manifests, and downloading filesystem layers.
 
+### This code has not yet been integrated into the app
+
 ## Usage
 
 ```bash

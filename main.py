@@ -46,18 +46,6 @@ def parse_args():
         dest="log_file",
         help="Path to save a complete log of output",
     )
-    # Peek mode options
-    p.add_argument(
-        "--partial",
-        action="store_true",
-        help="Use partial streaming peek (faster, but incomplete listing)",
-    )
-    p.add_argument(
-        "--peek-bytes", "-b",
-        type=int,
-        default=262144,
-        help="Bytes to fetch for partial peek (default: 262144 = 256KB)",
-    )
     p.add_argument(
         "--simple-output",
         action="store_true",
@@ -74,6 +62,7 @@ def parse_args():
         dest="carve_file",
         help="Extract a specific file from the image (e.g., /etc/passwd)",
     )
+    # TODO change ./carved to apps/loot/
     p.add_argument(
         "--output-dir", "-o",
         dest="output_dir",
@@ -81,18 +70,22 @@ def parse_args():
         help="Output directory for carved files (default: ./carved)",
     )
     p.add_argument(
-        "--chunk-size", "-c",
-        dest="chunk_size",
-        type=int,
-        default=64,
-        help="Chunk size in KB for streaming carve (default: 64)",
-    )
-    p.add_argument(
         "--quiet", "-q",
         action="store_true",
         help="Suppress detailed progress output",
     )
-    return p.parse_args()
+    p.add_argument(
+        "--interactive", "-i",
+        action="store_true",
+        help="Launch interactive mode with prompts",
+    )
+    
+    args = p.parse_args()
+    # Show help if no mode selected
+    if not any([args.peek_all, args.save_all, args.bulk_peek, args.carve_file, args.interactive]):
+        p.print_help()
+        sys.exit(0)
+    return args
 
 
 def main():
@@ -199,10 +192,7 @@ def main():
 
     # --- peek-all mode: enumerate ALL files in each layer ---
     if args.peek_all:
-        if args.partial:
-            print(f"\n[*] Peeking into all layers (partial, {args.peek_bytes} bytes):")
-        else:
-            print(f"\n[*] Peeking into all layers (complete enumeration):")
+        print(f"\n[*] Peeking into all layers (complete enumeration):")
         
         for idx, layer in enumerate(layers):
             layer_size = layer.get("size", 0)
@@ -228,7 +218,10 @@ def main():
             download_layer_blob(image_ref, layer["digest"], layer["size"], token)
         return
 
-    # --- default interactive mode ---
+    # --- interactive mode (requires --interactive flag) ---
+    if not args.interactive:
+        return
+    
     print("\nLayers:")
     for idx, layer in enumerate(layers):
         size = human_readable_size(layer["size"])

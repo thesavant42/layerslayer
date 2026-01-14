@@ -1,5 +1,8 @@
 ## Code Structure Overview for `carver.py`
 
+## NOTE: This doc is now obsolete and kept for historical reference
+## The carver file has recently been updated, and documentation has not yet been updated to reflect the new structure.
+
 The file contains:
 - 2 constants ([`DEFAULT_CHUNK_SIZE`](carver.py:22), [`DEFAULT_OUTPUT_DIR`](carver.py:23))
 - 4 dataclasses ([`ScanResult`](carver.py:30), [`CarveResult`](carver.py:40), [`LayerInfo`](carver.py:100))
