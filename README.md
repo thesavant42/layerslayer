@@ -2,6 +2,8 @@
 
 **Layerslayer** is a CLI tool for browsing, inspecting, and selectively downloading Docker image layers via the Docker Registry HTTP API v2. Instead of pulling entire images, you can peek inside each layer, view build steps, and choose exactly which blobs to save.
 
+For private-container related features, see also [reg-rav-readme.md](reg-rav-readme.md)
+
 ## Features
 
 - **Interactive Mode**
