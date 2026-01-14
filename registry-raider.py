@@ -4,11 +4,11 @@ import sys, os, requests, json
 
 # Show usage if no argument provided
 if len(sys.argv) < 2:
-    print("Usage: python registory-raider.py <registry_url>")
+    print("Usage: python registry-raider.py <registry_url>")
     print("")
     print("  Enumerate Docker Registry repositories, tags, and manifests.")
     print("")
-    print("  Example: python registory-raider.py http://165.22.182.63:5000/")
+    print("  Example: python registry-raider.py http://165.22.182.63:5000/")
     sys.exit(1)
 
 # get url from command line

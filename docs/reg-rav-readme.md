@@ -1,16 +1,16 @@
-# registory-raider
+# registry-raider
 
 Interactive CLI tool for enumerating Docker Registry v2 repositories, tags, manifests, and downloading filesystem layers.
 
 ## Usage
 
 ```bash
-python registory-raider.py <registry_url>
+python registry-raider.py <registry_url>
 ```
 
 **Example:**
 ```bash
-python registory-raider.py http://192.168.1.100:5000/
+python registry-raider.py http://192.168.1.100:5000/
 ```
 
 ## Workflow
