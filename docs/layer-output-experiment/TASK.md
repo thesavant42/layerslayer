@@ -19,6 +19,22 @@ In addition to the existing workflow, I would like to store the peeked layer inf
     - sorting by column attribute
     - filtering
 
+- `app\modules\keepers\storage.py` created
+- need to wire into `app\modules\keepers\layerSlayerResults.py`
+- **all layer peek data is now cached in sqlite and json.**
+
+
+
+
+
+
+
+** DO NOT READ PAST HERE/**
+----
+
+
+# Phase 2
+
 I need a way to navigate the virtual directory structure. To do this, a basic textual datable makes the most sense
 
 ### Displaying and navigating via a Textual dataTable
