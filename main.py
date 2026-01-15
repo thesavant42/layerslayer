@@ -8,6 +8,7 @@ import argparse
 from app.modules.keepers.downloaders import get_manifest, download_layer_blob, fetch_build_steps
 from app.modules.finders.peekers import peek_layer_blob, peek_layer_blob_complete
 from app.modules.keepers.layerSlayerResults import layerslayer as layerslayer_bulk, LayerPeekResult
+from app.modules.keepers import storage
 from app.modules.formatters import (
     parse_image_ref,
     registry_base_url,
@@ -193,20 +194,28 @@ def main():
     if args.peek_all:
         print(f"\n[*] Peeking into all layers (complete enumeration):")
         
-        for idx, layer in enumerate(layers):
-            layer_size = layer.get("size", 0)
-            print(f"\n[Layer {idx}] {layer['digest']}")
-            print(f"           Size: {human_readable_size(layer_size)}")
-            
-           
-            # Complete enumeration (downloads full layer)
-            result = peek_layer_blob_complete(
-                image_ref, 
-                layer["digest"], 
-                layer_size,
-                token,
-            )
-            display_peek_result(result, layer_size, verbose=True)
+        # Initialize database for storage
+        conn = storage.init_database()
+        
+        try:
+            for idx, layer in enumerate(layers):
+                layer_size = layer.get("size", 0)
+                print(f"\n[Layer {idx}] {layer['digest']}")
+                print(f"           Size: {human_readable_size(layer_size)}")
+                
+                # Complete enumeration (downloads full layer)
+                result = peek_layer_blob_complete(
+                    image_ref,
+                    layer["digest"],
+                    layer_size,
+                    token,
+                )
+                display_peek_result(result, layer_size, verbose=True)
+                
+                # Save layer result to JSON and SQLite
+                storage.save_layer_result(result, image_ref, idx, layer_size, conn)
+        finally:
+            conn.close()
         return
 
     # --- save-all mode ---
@@ -234,23 +243,32 @@ def main():
     else:
         indices = [int(i) for i in sel.split(",")]
 
-    for idx in indices:
-        layer = layers[idx]
-        layer_size = layer.get("size", 0)
-        print(f"\n[Layer {idx}] {layer['digest']}")
-        print(f"           Size: {human_readable_size(layer_size)}")
-        
-        # Complete enumeration (default)
-        result = peek_layer_blob_complete(
-            image_ref, 
-            layer["digest"], 
-            layer_size,
-            token,
-        )
-        display_peek_result(result, layer_size, verbose=True)
-        
-        if input("Download this layer? (y/N) ").strip().lower() == "y":
-            download_layer_blob(image_ref, layer["digest"], layer["size"], token)
+    # Initialize database for storage
+    conn = storage.init_database()
+    
+    try:
+        for idx in indices:
+            layer = layers[idx]
+            layer_size = layer.get("size", 0)
+            print(f"\n[Layer {idx}] {layer['digest']}")
+            print(f"           Size: {human_readable_size(layer_size)}")
+            
+            # Complete enumeration (default)
+            result = peek_layer_blob_complete(
+                image_ref,
+                layer["digest"],
+                layer_size,
+                token,
+            )
+            display_peek_result(result, layer_size, verbose=True)
+            
+            # Save layer result to JSON and SQLite
+            storage.save_layer_result(result, image_ref, idx, layer_size, conn)
+            
+            if input("Download this layer? (y/N) ").strip().lower() == "y":
+                download_layer_blob(image_ref, layer["digest"], layer["size"], token)
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     main()
