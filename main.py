@@ -67,7 +67,7 @@ def parse_args():
     p.add_argument(
         "--output-dir", "-o",
         dest="output_dir",
-        default="./carved",
+        default="./apps/loot/",
         help="Output directory for carved files (default: ./carved)",
     )
     p.add_argument(
