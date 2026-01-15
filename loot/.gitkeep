@@ -1,3 +1,0 @@
-# This directory stores JSON exports of layer peek results
-# JSON files are excluded from git via .gitignore
-# Naming convention: owner-repo-tag-fslyr-NN-MMDDYYYY.json

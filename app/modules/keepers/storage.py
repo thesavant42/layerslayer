@@ -19,7 +19,7 @@ from app.modules.formatters import parse_image_ref
 # =============================================================================
 
 DEFAULT_DB_PATH = "app/data/lsng.db"
-DEFAULT_JSON_DIR = "loot"
+DEFAULT_JSON_DIR = "app/loot"
 
 
 # =============================================================================

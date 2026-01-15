@@ -25,7 +25,5 @@ token_pull.txt
 logs/
 # Always ignore the contents of the downloads/ directory
 downloads/
-carved/
-carve/
-/carve
 app/loot/
+app/data/*.db
