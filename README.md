@@ -172,27 +172,43 @@ Build steps:
  [...]
  Layer contents:
 
-| ./
-|- bin (0.0 B)
-| boot/
-| dev/
-| etc/
-  |- etc/.pwd.lock (0.0 B)
-  |- etc/adduser.conf (3.0 KB)
-  | etc/alternatives/
-  |- etc/alternatives/README (100.0 B)
-  |- etc/alternatives/awk (0.0 B)
-  |- etc/alternatives/awk.1.gz (0.0 B)
-  |- etc/alternatives/builtins.7.gz (0.0 B)
-  |- etc/alternatives/nawk (0.0 B)
-  |- etc/alternatives/nawk.1.gz (0.0 B)
-  |- etc/alternatives/pager (0.0 B)
- [...]
-  | etc/apt/trusted.gpg.d/
-  |- etc/apt/trusted.gpg.d/debian-archive-bookworm-automatic.asc (11.6 KB)
-  |- etc/apt/trusted.gpg.d/debian-archive-bookworm-security-automatic.asc (11.6 KB)
-  |- etc/apt/trusted.gpg.d/debian-archive-bookworm-stable.asc (461.0 B)
- [...]
+[...]
+-rw-r--r--       7.0 B  2025-12-16 23:02  alpine-release
+drwxr-xr-x       0.0 B  2025-12-16 23:03  apk/
+drwxr-xr-x       0.0 B  2025-12-16 23:03  busybox-paths.d/
+drwxr-xr-x       0.0 B  2025-12-16 23:03  crontabs/
+-rw-r--r--      89.0 B  2025-11-29 02:44  fstab
+-rw-r--r--     510.0 B  2025-11-29 02:44  group
+-rw-r--r--      10.0 B  2025-11-29 02:44  hostname
+-rw-r--r--      79.0 B  2025-11-29 02:44  hosts
+-rw-r--r--     570.0 B  2025-11-29 02:44  inittab
+-rw-r--r--      51.0 B  2025-12-16 23:02  issue
+drwxr-xr-x       0.0 B  2025-12-16 23:03  logrotate.d/
+drwxr-xr-x       0.0 B  2025-12-16 23:03  modprobe.d/
+-rw-r--r--      15.0 B  2025-11-29 02:44  modules
+drwxr-xr-x       0.0 B  2025-12-16 23:03  modules-load.d/
+-rw-r--r--     284.0 B  2025-11-29 02:44  motd
+lrwxrwxrwx       0.0 B  2025-12-16 23:03  mtab -> ../proc/mounts
+drwxr-xr-x       0.0 B  2025-12-16 23:03  network/
+-rw-r--r--     205.0 B  2025-11-29 02:44  nsswitch.conf
+drwxr-xr-x       0.0 B  2025-12-16 23:03  opt/
+lrwxrwxrwx       0.0 B  2025-12-16 23:03  os-release -> ../usr/lib/os-release
+-rw-r--r--     702.0 B  2025-11-29 02:44  passwd
+drwxr-xr-x       0.0 B  2025-12-16 23:03  periodic/
+-rw-r--r--     547.0 B  2025-11-29 02:44  profile
+drwxr-xr-x       0.0 B  2025-12-16 23:03  profile.d/
+-rw-r--r--      3.1 KB  2025-11-29 02:44  protocols
+drwxr-xr-x       0.0 B  2025-12-16 23:03  secfixes.d/
+-rw-r--r--     156.0 B  2025-12-16 06:19  securetty
+-rw-r--r--     12.5 KB  2025-11-29 02:44  services
+-rw-r-----     260.0 B  2025-12-16 23:03  shadow
+-rw-r--r--      38.0 B  2025-11-29 02:44  shells
+drwxr-xr-x       0.0 B  2025-12-16 23:03  ssl/
+drwxr-xr-x       0.0 B  2025-12-16 23:03  ssl1.1/
+-rw-r--r--      53.0 B  2025-11-29 02:44  sysctl.conf
+drwxr-xr-x       0.0 B  2025-12-16 23:03  sysctl.d/
+drwxr-xr-x       0.0 B  2025-12-16 23:03  udhcpc/
+```
 ```
 
 ## Contributing
