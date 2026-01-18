@@ -1,7 +1,10 @@
 # Task: Store and Print Layer Peek data
 [fs-log-sqlite.py](fs-log-sqlite.py) is a fork of fs-log-sqlite.py, which takes the text logs from layer-peekiing docker containers, and filters their output to the queried directories, while not showing subdirectories
 
-- Update the fs-log-sqlite.py to use the sqlite file instead of a flat text file.
+
+- ~~Update the fs-log-sqlite.py to use the sqlite file instead of a flat text file~~.
+
+---
 
 ### Background
 

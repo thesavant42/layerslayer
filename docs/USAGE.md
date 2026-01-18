@@ -1,6 +1,4 @@
-
-
-### Help
+## Help
 
 - Print the basic help screen
 
@@ -33,7 +31,6 @@ options:
 
  Download a file out of the Image Layer tar gzip, but only download the parts of the layer hat you need!
 
-- Dump a passwd file from a 13 gig container? No problem. 
 - By combining HTTP range with a sliding 256k buffer to catch a gzip header byte, seek to the begining of the packet, and then decompress until we reach the end of the sought after file (passwd in this example), and then the connection is immediately severed. Only the file size + ranging overhead
 
 ```bash
