@@ -80,6 +80,14 @@ def parse_args():
         action="store_true",
         help="Launch interactive mode with prompts",
     )
+    p.add_argument(
+        "--arch", "-a",
+        dest="arch",
+        type=int,
+        default=None,
+        help="Platform index for multi-arch images (e.g., 0 for first platform). "
+             "Skips interactive platform selection.",
+    )
     
     args = p.parse_args()
     # Show help if no mode selected
@@ -145,7 +153,18 @@ def main():
         for i, m in enumerate(platforms):
             plat = m["platform"]
             print(f" [{i}] {plat['os']}/{plat['architecture']}")
-        choice = int(input("Select a platform [0]: ") or 0)
+        
+        # Use --arch if provided, otherwise prompt interactively
+        if args.arch is not None:
+            if args.arch < 0 or args.arch >= len(platforms):
+                print(f"\n[!] Error: --arch {args.arch} is out of range. "
+                      f"Valid indices: 0-{len(platforms) - 1}")
+                sys.exit(1)
+            choice = args.arch
+            print(f"\nUsing platform index {choice} (from --arch)")
+        else:
+            choice = int(input("Select a platform [0]: ") or 0)
+        
         digest = platforms[choice]["digest"]
         # fetch the chosen platform's manifest (unpack again if needed)
         result = get_manifest(image_ref, token, specific_digest=digest)
