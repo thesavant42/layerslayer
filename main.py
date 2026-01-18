@@ -124,9 +124,9 @@ def main():
                 print(f"[!] Error: {result.error}")
             sys.exit(1)
 
-    token = load_token("token.txt")
+    token = load_token("token_pull.txt")
     if token:
-        print(" Loaded token from token.txt")
+        print(" Loaded token from token_pull.txt")
         print(" Using loaded token.")
     else:
         print(" No token found; proceeding anonymously.")
