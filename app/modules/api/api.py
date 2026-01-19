@@ -101,6 +101,32 @@ async def repositories(
         return JSONResponse(content=response.json(), status_code=200)
 
 
+@app.get("/repositories/{namespace}/{repo}/tags")
+async def repository_tags(
+    namespace: str,
+    repo: str,
+    page: int = Query(default=None),
+    page_size: int = Query(default=None),
+    ordering: str = Query(default="last_updated")
+):
+    """
+    Pass-through proxy for Docker Hub's repository tags API.
+    Returns the upstream JSON response verbatim.
+    """
+    url = f"https://hub.docker.com/v2/repositories/{namespace}/{repo}/tags"
+    params = {"ordering": ordering}
+    if page is not None:
+        params["page"] = page
+    if page_size is not None:
+        params["page_size"] = page_size
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, params=params)
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail=response.text)
+        return JSONResponse(content=response.json(), status_code=200)
+
+
 @app.get("/fslog-search", response_class=PlainTextResponse)
 def fslog_search(q: str, image: str = Query(default=None), layer: int = Query(default=None)):
     """Search filesystem logs for files matching a pattern."""
