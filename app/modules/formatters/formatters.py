@@ -49,8 +49,19 @@ def parse_image_ref(image_ref):
     return user, repo, tag
 
 
-## Parse the docker.io registry base (TODO: enable private registires, private registries must use registry-raider.py)
+## Parse the docker.io registry base
 
-def registry_base_url(user, repo):
-    return f"https://registry-1.docker.io/v2/{user}/{repo}"
+def registry_base_url(user, repo, registry="registry-1.docker.io"):
+    """
+    Build the registry API base URL.
+    
+    Args:
+        user: Namespace (e.g., "library", "nginx")
+        repo: Repository name
+        registry: Registry host (default: "registry-1.docker.io")
+    
+    Returns:
+        Base URL for v2 registry API calls
+    """
+    return f"https://{registry}/v2/{user}/{repo}"
 

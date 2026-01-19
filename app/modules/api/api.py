@@ -5,9 +5,13 @@ from io import StringIO
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import PlainTextResponse, JSONResponse
 import httpx
+import requests
 
 # Import main module
 import main
+
+# Import image config fetcher
+from app.modules.finders import get_image_config
 
 # Import fs-log-sqlite module using importlib (due to hyphen in filename)
 spec = importlib.util.spec_from_file_location("fs_log_sqlite", "app/modules/fs-log-sqlite.py")
@@ -174,3 +178,30 @@ def fslog_search(q: str, image: str = Query(default=None), layer: int = Query(de
         sys.stdout = old_stdout
     
     return captured_output.getvalue()
+
+
+@app.get("/repositories/{namespace}/{repo}/tags/{tag}/config")
+def get_tag_config(
+    namespace: str,
+    repo: str,
+    tag: str,
+    arch: str = Query(default=None, description="Target architecture: amd64, arm64, etc.")
+):
+    """
+    Fetch the full image configuration JSON for a tagged image.
+    
+    Returns environment variables, entrypoint, cmd, working directory,
+    labels, build history, and other image metadata.
+    """
+    try:
+        config = get_image_config(
+            namespace=namespace,
+            repo=repo,
+            tag=tag,
+            arch=arch
+        )
+        return JSONResponse(content=config, status_code=200)
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Registry request failed: {e}")
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))

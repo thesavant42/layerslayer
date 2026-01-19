@@ -26,7 +26,7 @@ resp = requests.get(
 
 # CASE 1: multi-arch index
 if "manifests" in resp:
-    # pick first platform (or choose by arch) TODO this should be an argument we can influece as a user
+    # pick first platform (or choose by arch) TODO this should be an argument we can influece as a user!
     digest = resp["manifests"][0]["digest"]
 
 # CASE 2: single-arch manifest

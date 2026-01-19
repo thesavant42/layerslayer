@@ -5,16 +5,16 @@ Below are the line numbers and descriptions corresponding to the container-image
 Each of the areas listed below represent a logical division of the data into unque tables or text labels and their contents.
 
 
- A UI consuming the image config JSON would be concerned with the following fields:
+ - A UI consuming the image config JSON would be concerned with the following fields:
 
 
-Line 2: ARCH
-Line 3: Config Hostname, Domainname, User, Exposed Ports, CMD, Image, Entrypoint, Labels, shELL
+- Line 2: ARCH
+- Line 3: Config Hostname, Domainname, User, Exposed Ports, CMD, Image, Entrypoint, Labels, shELL
 
 
-Line 97-101 Container ID Hostname, Domainname, Username
+- Line 97-101 Container ID Hostname, Domainname, Username
 
-Line 105-106 Exposed Port
+- Line 105-106 Exposed Port
     - Super Important
 Line 111-167, ENV variables
     - Super important
