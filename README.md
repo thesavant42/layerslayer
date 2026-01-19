@@ -33,6 +33,7 @@ options:
 
 - **NEW: API Mode**
     - `uvicorn app.modules.api.api:app --host 127.0.0.1 --port 8000 `
+
 - **Interactive Mode**
   Step through platform selection, build steps, layer listing, and per-layer peek/download prompts.
 
