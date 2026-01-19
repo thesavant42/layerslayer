@@ -25,7 +25,6 @@ def peek_all(
     arch: int = Query(default=0)
 ):
     """
-    Execute --peek-all for the specified image.
     Equivalent to: python main.py -t "{image}" --peek-all --arch={arch} --force
     """
     # Validate image format

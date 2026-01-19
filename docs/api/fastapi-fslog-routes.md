@@ -1,5 +1,5 @@
 # FastAPI /fslog and /fslog-search Endpoint Implementation Plan
-
+**COMPLETED**
 ## Approach
 
 Same minimalist technique as [`/peek-all`](../docs/api/fastapi-peek-all.md):

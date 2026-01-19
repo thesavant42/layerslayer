@@ -14,7 +14,7 @@ Where:
 
 - [x] Task 2. Research the [main.py](main.py) and need to add a --force option to allow a fully unttended code execution, without requiring the user to interact once the script has begun.
 
-- [ ] Task 3. Implement a fastAPI route `/peek-all?image=owner/repo:tag&arch=0&force=1` to enable the workflow described in the user story.
+- [x] Task 3. Implement a fastAPI route `/peek-all?image=owner/repo:tag&arch=0&force=1` to enable the workflow described in the user story.
 
 `/peek-all?image= owner/repo:tag 
 `&arch=0` defaults to arch=0 if not provided.
