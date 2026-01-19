@@ -63,7 +63,7 @@ def parse_args():
         dest="carve_file",
         help="Extract a specific file from the image (e.g., /etc/passwd)",
     )
-    # TODO change ./carved to apps/loot/
+    
     p.add_argument(
         "--output-dir", "-o",
         dest="output_dir",
@@ -91,7 +91,7 @@ def parse_args():
     p.add_argument(
         "--force", "-F",
         action="store_true",
-        help="Force overwrite of existing database entries without prompting",
+        help="Force overwrite of existing database entries without prompting, for non-interactive mode",
     )
     
     args = p.parse_args()
@@ -118,7 +118,7 @@ def main():
         image_ref = args.image_ref
     else:
         image_ref = input(
-            "Enter image (user/repo:tag) [default: moby/buildkit:latest]: "
+            "Enter image (user/repo:tag) [example: moby/buildkit:latest]: "
         ).strip() or "moby/buildkit:latest"
 
     # --- carve mode: extract a single file and exit ---

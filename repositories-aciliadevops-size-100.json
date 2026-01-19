@@ -1,0 +1,2393 @@
+{
+    "count": 98,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-01-06T16:39:19.238146Z",
+            "description": "Memcached image",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-05-04T13:04:44.656071Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "memcached",
+            "namespace": "aciliadevops",
+            "pull_count": 170,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 393139620
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-01-10T13:58:08.543717Z",
+            "description": "PHP 7.2 with FPM",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-01-10T18:04:15.60248Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "php-fpm7.2",
+            "namespace": "aciliadevops",
+            "pull_count": 84,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 212856643
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-01-10T14:56:48.025012Z",
+            "description": "Nginx web server",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T14:20:33.733803Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "nginx",
+            "namespace": "aciliadevops",
+            "pull_count": 1897,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 441096359
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-02-07T18:42:52.083297Z",
+            "description": "Ubuntu LTS images",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-05-03T06:22:16.201827Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "ubuntu",
+            "namespace": "aciliadevops",
+            "pull_count": 400,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 201591769
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-02-07T18:58:05.92322Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-08-05T17:05:13.498303Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "php",
+            "namespace": "aciliadevops",
+            "pull_count": 122,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 443502226
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-02-07T19:00:14.028273Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-08-05T17:09:19.64908Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "php-fpm",
+            "namespace": "aciliadevops",
+            "pull_count": 1091,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 498272014
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-02-19T13:03:35.078934Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-02-19T13:03:35.40062Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "apache2",
+            "namespace": "aciliadevops",
+            "pull_count": 50,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 121941969
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-02-19T13:30:18.58254Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-05-04T13:08:38.694259Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "php-apache2",
+            "namespace": "aciliadevops",
+            "pull_count": 118,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 343151076
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-04-07T11:49:29.122097Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-01-11T19:45:36.914831Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "node",
+            "namespace": "aciliadevops",
+            "pull_count": 760,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 324137326
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-08-08T02:03:16.035067Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-03-02T19:59:23.219851Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "aws-php-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 2326,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 431969133
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-08-12T12:49:21.759186Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-03-02T20:07:31.398291Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "aws-apache-php-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 2391,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 540352570
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-08-12T19:27:50.345556Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-08-12T19:27:50.61017Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "aws-nginx",
+            "namespace": "aciliadevops",
+            "pull_count": 267,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 296192626
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-08-14T17:06:16.017819Z",
+            "description": "Nginx server for testing dockerhub hooks",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-08-17T17:41:30.780598Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "nginx-test-hook",
+            "namespace": "aciliadevops",
+            "pull_count": 63,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 128962991
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-12-22T00:42:44.133629Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2026-01-15T13:41:31.710291Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-nginx",
+            "namespace": "aciliadevops",
+            "pull_count": 2281,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 9440796476
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-12-22T01:08:25.014488Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T16:52:47.124821Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-fpm-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 1440,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 9233271150
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-12-22T21:21:36.834152Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-08-18T15:29:32.21224Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "dev-node-12",
+            "namespace": "aciliadevops",
+            "pull_count": 543,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1316913005
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-12-27T18:01:24.100037Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T16:51:14.235935Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 1104,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 8435930987
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-01-05T13:38:50.659329Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T16:53:38.552268Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-cron-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 1030,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 8250987467
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-01-14T14:48:07.602189Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T17:10:35.24257Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-node-14",
+            "namespace": "aciliadevops",
+            "pull_count": 1412,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 5903826349
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-01-25T15:10:55.607511Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2026-01-15T14:10:38.003139Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-nginx",
+            "namespace": "aciliadevops",
+            "pull_count": 5344,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 8741241898
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-01-25T15:16:09.701579Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:47:51.339205Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 1877,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 11435700465
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-01-25T15:18:35.218594Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:49:26.623131Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-fpm-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 1935,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 11710025660
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-01-25T15:20:21.036831Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:50:20.546232Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-cron-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 2258,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 10858795898
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-02-01T19:27:14.641301Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-02-01T19:27:14.909972Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "beatvote-vocento-node",
+            "namespace": "aciliadevops",
+            "pull_count": 42,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 349783797
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-02-08T16:52:01.183602Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-02-08T16:52:30.896453Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "dev-node-8-gulp",
+            "namespace": "aciliadevops",
+            "pull_count": 44,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 349790648
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-02-08T18:12:35.344707Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T14:11:34.822953Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-7.2",
+            "namespace": "aciliadevops",
+            "pull_count": 351,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1501512645
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-02-08T18:17:16.341093Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-02-12T18:00:32.228885Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "prod-node-8-gulp",
+            "namespace": "aciliadevops",
+            "pull_count": 77,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 353336641
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-02-22T17:35:02.000611Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-08-18T15:35:15.835205Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "prod-node-12",
+            "namespace": "aciliadevops",
+            "pull_count": 485,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 992341634
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-02-22T17:39:40.368576Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T14:17:43.576001Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-node-14",
+            "namespace": "aciliadevops",
+            "pull_count": 3998,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7462795873
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-18T14:25:04.006673Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2026-01-15T13:12:18.70463Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-nginx",
+            "namespace": "aciliadevops",
+            "pull_count": 2660,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7857801043
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-18T14:31:34.513039Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T16:19:43.611506Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 803,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7126362925
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-18T14:34:24.269823Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T16:21:18.565348Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-fpm-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 1664,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7661342093
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-18T14:35:18.098601Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T16:22:10.11275Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-cron-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 1085,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7053194660
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-18T14:38:09.858444Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-08-18T15:23:38.321993Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "local-node-12",
+            "namespace": "aciliadevops",
+            "pull_count": 188,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 426213327
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-18T14:40:54.171645Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T16:39:02.992868Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-node-14",
+            "namespace": "aciliadevops",
+            "pull_count": 968,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 4487509688
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-18T15:18:36.492124Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T16:30:48.656942Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 939,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 11310864764
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-18T15:40:41.910348Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T16:32:13.575867Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-fpm-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 1177,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 9588364520
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-18T15:41:46.843039Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T16:33:10.635993Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-cron-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 797,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 9336593743
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-31T17:04:22.832736Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T17:02:18.912345Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 867,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 10721987953
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-31T17:06:02.233139Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T17:03:45.937172Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-fpm-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 921,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 10922992596
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-31T17:07:25.661069Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T17:04:42.307128Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-cron-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 1375,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 10759374378
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-31T17:24:59.561034Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T14:13:10.316969Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-fpm-7.2",
+            "namespace": "aciliadevops",
+            "pull_count": 386,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1440099003
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-31T17:25:55.109286Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T14:14:11.473951Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-cron-7.2",
+            "namespace": "aciliadevops",
+            "pull_count": 302,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1399782959
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-31T17:42:28.705555Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:58:58.843202Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 1696,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 14221378424
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-31T17:44:20.749503Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T14:00:27.745991Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-fpm-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 1438,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 14189200290
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-31T17:45:39.340358Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T14:01:25.975723Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-cron-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 1343,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 13992024081
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-05-31T20:36:53.838633Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-05-31T20:36:58.342936Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "prod-php-5.6",
+            "namespace": "aciliadevops",
+            "pull_count": 58,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 132055465
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-06-01T00:00:05.494986Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-06-01T03:10:59.425241Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "prod-php-fpm-5.6",
+            "namespace": "aciliadevops",
+            "pull_count": 59,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 139999476
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-06-01T00:02:05.302859Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-06-01T00:02:10.764916Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "prod-php-cron-5.6",
+            "namespace": "aciliadevops",
+            "pull_count": 57,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 134120524
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-08-31T14:06:58.897035Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:24:17.669961Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-node-16",
+            "namespace": "aciliadevops",
+            "pull_count": 1236,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 6133933664
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-08-31T14:13:20.5816Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:40:20.968245Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-node-16",
+            "namespace": "aciliadevops",
+            "pull_count": 1063,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 6640933850
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2021-08-31T14:19:11.570632Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T14:22:21.6975Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-node-16",
+            "namespace": "aciliadevops",
+            "pull_count": 1347,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 6313791098
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2022-03-10T15:07:48.013125Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:16:53.999129Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-8.1",
+            "namespace": "aciliadevops",
+            "pull_count": 1267,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 12046208552
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2022-03-10T15:40:03.423854Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:32:55.210475Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-8.1",
+            "namespace": "aciliadevops",
+            "pull_count": 1351,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 11750242217
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2022-03-10T15:41:34.579554Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:34:27.854027Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-fpm-8.1",
+            "namespace": "aciliadevops",
+            "pull_count": 1202,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 11858446884
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2022-03-10T15:42:33.552975Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:35:25.354652Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-cron-8.1",
+            "namespace": "aciliadevops",
+            "pull_count": 946,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 11516881567
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2022-03-15T13:42:58.370703Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:18:24.739926Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-fpm-8.1",
+            "namespace": "aciliadevops",
+            "pull_count": 1224,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 12136524678
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2022-03-15T13:43:56.760539Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T13:19:21.51732Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-cron-8.1",
+            "namespace": "aciliadevops",
+            "pull_count": 1567,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 11778744407
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2022-03-15T15:04:36.210596Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T14:10:50.121784Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-8.1",
+            "namespace": "aciliadevops",
+            "pull_count": 938,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 11123279576
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2022-03-15T15:06:07.04417Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T14:12:19.363887Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-fpm-8.1",
+            "namespace": "aciliadevops",
+            "pull_count": 1271,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 11032690976
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2022-03-15T15:07:05.115481Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2024-06-15T14:13:18.58704Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-cron-8.1",
+            "namespace": "aciliadevops",
+            "pull_count": 946,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 10859301127
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2023-02-24T17:27:36.417741Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-09-30T12:31:06.806406Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "apk2-ecosys-local-php",
+            "namespace": "aciliadevops",
+            "pull_count": 4268,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 19383943059
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2023-02-24T17:27:49.569595Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-09-30T12:33:34.70145Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "apk2-ecosys-local-php-fpm",
+            "namespace": "aciliadevops",
+            "pull_count": 5390,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 23290150479
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2023-02-24T17:28:01.165619Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-09-30T12:34:19.663268Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "apk2-ecosys-local-php-worker",
+            "namespace": "aciliadevops",
+            "pull_count": 5227,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 23041725067
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2023-02-24T17:28:14.943391Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-09-30T12:37:51.541044Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "apk2-ecosys-local-web",
+            "namespace": "aciliadevops",
+            "pull_count": 4869,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 9388066024
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2023-04-20T11:38:52.83364Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-09-30T12:44:30.392258Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "apk2-ecosys-local-node",
+            "namespace": "aciliadevops",
+            "pull_count": 4545,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 14915286976
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2023-06-26T18:14:43.983301Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2026-01-19T09:29:04.782252Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "disney-local-php",
+            "namespace": "aciliadevops",
+            "pull_count": 5085,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 25589428001
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2023-06-26T18:15:59.20822Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2026-01-19T09:31:24.928957Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "disney-local-php-fpm",
+            "namespace": "aciliadevops",
+            "pull_count": 6123,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 32403191658
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2023-06-26T21:06:20.184213Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2026-01-19T09:51:09.788423Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "disney-local-web",
+            "namespace": "aciliadevops",
+            "pull_count": 4155,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 12383905006
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T14:02:18.626912Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T13:24:29.948979Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-8.2",
+            "namespace": "aciliadevops",
+            "pull_count": 3095,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7626425435
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T14:15:35.822119Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2026-01-15T13:38:37.120678Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-node-20",
+            "namespace": "aciliadevops",
+            "pull_count": 2933,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 4625392011
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T14:47:27.83868Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T13:51:11.070783Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-8.2",
+            "namespace": "aciliadevops",
+            "pull_count": 3038,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7626776045
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T15:00:52.680406Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2026-01-15T14:07:44.822329Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-node-20",
+            "namespace": "aciliadevops",
+            "pull_count": 2875,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 4625393321
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T15:32:21.441052Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T14:27:30.161098Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-8.2",
+            "namespace": "aciliadevops",
+            "pull_count": 3124,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7626793458
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T15:39:03.638546Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T14:30:20.581558Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-fpm-8.2",
+            "namespace": "aciliadevops",
+            "pull_count": 3069,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7836910142
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T15:45:09.177932Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T14:32:35.390045Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-cron-8.2",
+            "namespace": "aciliadevops",
+            "pull_count": 3264,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7729811204
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T15:58:33.022033Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2026-01-15T14:56:19.108847Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-node-20",
+            "namespace": "aciliadevops",
+            "pull_count": 3208,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 4625393673
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T19:35:24.978471Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T13:27:18.896829Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-fpm-8.2",
+            "namespace": "aciliadevops",
+            "pull_count": 3043,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7192209938
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T19:41:31.240426Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T13:29:32.503885Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-cron-8.2",
+            "namespace": "aciliadevops",
+            "pull_count": 3113,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7095815023
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T20:34:08.163736Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T13:54:00.977414Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-fpm-8.2",
+            "namespace": "aciliadevops",
+            "pull_count": 2892,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7192563888
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-06-24T20:40:14.249186Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2025-11-15T13:56:13.506902Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-cron-8.2",
+            "namespace": "aciliadevops",
+            "pull_count": 3051,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7096169024
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2024-11-28T09:45:54.137396Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-11-28T09:45:54.133872Z",
+            "last_updated": "2026-01-19T09:57:18.021614Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "disney-local-node",
+            "namespace": "aciliadevops",
+            "pull_count": 1258,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 10781587874
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-11-19T15:53:59.464037Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-11-19T15:53:59.461953Z",
+            "last_updated": "2026-01-19T09:38:00.299995Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "disney-local-php-8.3",
+            "namespace": "aciliadevops",
+            "pull_count": 563,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 6288441276
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-11-19T17:25:09.882385Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-11-19T17:25:09.88042Z",
+            "last_updated": "2026-01-19T09:40:20.344778Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "disney-local-php-fpm-8.3",
+            "namespace": "aciliadevops",
+            "pull_count": 1062,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 7369369897
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-11-27T13:13:33.778171Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-11-27T13:13:33.774723Z",
+            "last_updated": "2026-01-15T13:26:42.97004Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-8.3",
+            "namespace": "aciliadevops",
+            "pull_count": 141,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1479417266
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-11-27T13:16:22.639333Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-11-27T13:16:22.638355Z",
+            "last_updated": "2026-01-15T13:29:53.440767Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-fpm-8.3",
+            "namespace": "aciliadevops",
+            "pull_count": 103,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1521933609
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-11-27T13:18:36.031384Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-11-27T13:18:36.029769Z",
+            "last_updated": "2026-01-15T13:32:17.701582Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "local-php-cron-8.3",
+            "namespace": "aciliadevops",
+            "pull_count": 215,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1500142674
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-11-27T13:40:10.101518Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-11-27T13:40:10.100428Z",
+            "last_updated": "2026-01-15T13:55:56.1629Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-8.3",
+            "namespace": "aciliadevops",
+            "pull_count": 120,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1479482419
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-11-27T13:42:58.740466Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-11-27T13:42:58.7368Z",
+            "last_updated": "2026-01-15T13:58:59.911849Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-fpm-8.3",
+            "namespace": "aciliadevops",
+            "pull_count": 124,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1521997477
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-11-27T13:45:11.259046Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-11-27T13:45:11.255341Z",
+            "last_updated": "2026-01-15T14:01:24.960667Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "dev-php-cron-8.3",
+            "namespace": "aciliadevops",
+            "pull_count": 249,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1500207474
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-11-27T14:06:59.388678Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-11-27T14:06:59.387334Z",
+            "last_updated": "2026-01-15T14:25:02.244244Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-8.3",
+            "namespace": "aciliadevops",
+            "pull_count": 137,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1479491176
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-11-27T14:09:49.200422Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-11-27T14:09:49.196524Z",
+            "last_updated": "2026-01-15T14:28:05.345614Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-fpm-8.3",
+            "namespace": "aciliadevops",
+            "pull_count": 167,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1522006193
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-11-27T14:12:03.808674Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-11-27T14:12:03.807115Z",
+            "last_updated": "2026-01-15T14:30:29.586115Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "prod-php-cron-8.3",
+            "namespace": "aciliadevops",
+            "pull_count": 181,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1500215019
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-12-10T09:01:22.831624Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-12-10T09:01:22.828614Z",
+            "last_updated": "2026-01-19T09:46:51.023141Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "disney-local-php-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 234,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 2939463247
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-12-10T09:03:32.637888Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-12-10T09:03:32.637178Z",
+            "last_updated": "2026-01-19T09:49:08.439256Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "disney-local-php-fpm-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 483,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 3796031522
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-12-11T12:44:00.01102Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-12-11T12:44:00.0096Z",
+            "last_updated": "2026-01-15T14:45:17.735345Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "disney-prod-php-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 95,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1114763008
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-12-11T12:46:07.721432Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-12-11T12:46:07.718316Z",
+            "last_updated": "2026-01-15T14:47:32.887823Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "disney-prod-php-fpm-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 100,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1435798171
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2025-12-11T12:48:22.168912Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2025-12-11T12:48:22.1677Z",
+            "last_updated": "2026-01-15T14:49:59.769203Z",
+            "media_types": [
+                "application/vnd.docker.distribution.manifest.list.v2+json"
+            ],
+            "name": "disney-prod-php-cron-8.0",
+            "namespace": "aciliadevops",
+            "pull_count": 122,
+            "repository_type": null,
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 1130242245
+        }
+    ]
+}

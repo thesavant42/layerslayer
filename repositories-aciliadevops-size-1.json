@@ -1,0 +1,31 @@
+{
+    "count": 98,
+    "next": "https://hub.docker.com/v2/repositories/aciliadevops?page=2&page_size=1",
+    "previous": null,
+    "results": [
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-01-06T16:39:19.238146Z",
+            "description": "Memcached image",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-05-04T13:04:44.656071Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "memcached",
+            "namespace": "aciliadevops",
+            "pull_count": 170,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 393139620
+        }
+    ]
+}

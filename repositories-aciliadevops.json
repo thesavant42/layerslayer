@@ -1,0 +1,247 @@
+{
+    "count": 98,
+    "next": "https://hub.docker.com/v2/repositories/aciliadevops?page=2&page_size=10",
+    "previous": null,
+    "results": [
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-01-06T16:39:19.238146Z",
+            "description": "Memcached image",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-05-04T13:04:44.656071Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "memcached",
+            "namespace": "aciliadevops",
+            "pull_count": 170,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 393139620
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-01-10T13:58:08.543717Z",
+            "description": "PHP 7.2 with FPM",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-01-10T18:04:15.60248Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "php-fpm7.2",
+            "namespace": "aciliadevops",
+            "pull_count": 84,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 212856643
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-01-10T14:56:48.025012Z",
+            "description": "Nginx web server",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2023-07-28T14:20:33.733803Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "nginx",
+            "namespace": "aciliadevops",
+            "pull_count": 1897,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 441096359
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-02-07T18:42:52.083297Z",
+            "description": "Ubuntu LTS images",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-05-03T06:22:16.201827Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "ubuntu",
+            "namespace": "aciliadevops",
+            "pull_count": 400,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 201591769
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-02-07T18:58:05.92322Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-08-05T17:05:13.498303Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "php",
+            "namespace": "aciliadevops",
+            "pull_count": 122,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 443502226
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-02-07T19:00:14.028273Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-08-05T17:09:19.64908Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "php-fpm",
+            "namespace": "aciliadevops",
+            "pull_count": 1091,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 498272014
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-02-19T13:03:35.078934Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-02-19T13:03:35.40062Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "apache2",
+            "namespace": "aciliadevops",
+            "pull_count": 50,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 121941969
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-02-19T13:30:18.58254Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2020-05-04T13:08:38.694259Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "php-apache2",
+            "namespace": "aciliadevops",
+            "pull_count": 118,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 343151076
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-04-07T11:49:29.122097Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-01-11T19:45:36.914831Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "node",
+            "namespace": "aciliadevops",
+            "pull_count": 760,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 324137326
+        },
+        {
+            "affiliation": "",
+            "categories": [],
+            "content_types": [
+                "image"
+            ],
+            "date_registered": "2020-08-08T02:03:16.035067Z",
+            "description": "",
+            "is_private": false,
+            "last_modified": "2024-10-16T13:48:34.145251Z",
+            "last_updated": "2021-03-02T19:59:23.219851Z",
+            "media_types": [
+                "application/vnd.docker.container.image.v1+json"
+            ],
+            "name": "aws-php-7.4",
+            "namespace": "aciliadevops",
+            "pull_count": 2326,
+            "repository_type": "image",
+            "source": null,
+            "star_count": 0,
+            "status": 1,
+            "status_description": "active",
+            "storage_size": 431969133
+        }
+    ]
+}
