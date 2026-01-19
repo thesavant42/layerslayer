@@ -1,10 +1,16 @@
 # Implementation Plan: FastAPI Docker Hub Repository Proxy
+
 Pass through proxy route for Docker Hub's "/v2/repositories" API endpoint
+
 ## Overview
 
-As as investigator I want to use lsng to investigate repositories on Docker Hub belonging to user "aciliadevops". To achieve this I will access the `/repositories` route and provide thesavant42 as the `namespace` parameter. 
+As as investigator I want to use lsng to investigate repositories on Docker Hub belonging to a user "aciliadevops".
+
+
+- To achieve this I will access the `/repositories` route and provide thesavant42 as the `namespace` parameter. 
+
 Example:
-`http://localhost:8000/repositories?namespace=aciliadevops` requests `https://hub.docker.com/v2/repositories/aciliadevops` and returns JSON for that namespace:
+`http://localhost:8000/repositories?namespace=aciliadevops` should reqiest `https://hub.docker.com/v2/repositories/aciliadevops` and return the server's JSON response for that namespace:
 
 ```json
 {
