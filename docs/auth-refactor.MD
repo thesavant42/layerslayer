@@ -1,4 +1,6 @@
 # Task  1 auth.py 
+
+**COMPLETE**
 This task is in reference to the larger Authentication Refactor detailed [in this doc.](auth-refactor-notes.md)
 ## 
 
