@@ -1,5 +1,5 @@
-# Research making a --peek-all FastAPI
-
+# peek-all api research making a --peek-all FastAPI
+**Complete! IMPLEMENTED**
 ## Description:
 
 A new bare-minium RESTful FastAPI: `/peek-all?image=owner/repo:tag&arch=0`
