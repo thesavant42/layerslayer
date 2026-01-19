@@ -1,44 +1,33 @@
-import os
-import io, tarfile, zlib, requests
+import io
+import tarfile
+import zlib
+import requests
 from typing import Optional, List, Generator
 
 from app.modules.formatters import parse_image_ref, registry_base_url, human_readable_size
 from app.modules.finders.tar_parser import TarEntry, parse_tar_header
-
-from app.modules.auth.auth import fetch_pull_token
+from app.modules.auth import RegistryAuth
 from app.modules.finders.layerPeekResult import LayerPeekResult
 from app.modules.formatters.formatters import _tarinfo_mode_to_string, _format_mtime
 
 # =============================================================================
 # Layer Peek - Streaming with complete enumeration
 # =============================================================================
-# in what ways is this different than peek_layer_blob_streaming?
-def peek_layer_blob(image_ref, digest, token=None):
+
+def peek_layer_blob(auth: RegistryAuth, image_ref: str, digest: str):
     """
     Download a layer blob and list ALL its contents using streaming decompression.
     This enumerates EVERY file in the layer.
+    
+    Args:
+        auth: RegistryAuth instance for authenticated requests
+        image_ref: Image reference (e.g., "nginx:alpine")
+        digest: Layer digest
     """
     user, repo, _ = parse_image_ref(image_ref)
     url = f"{registry_base_url(user, repo)}/blobs/{digest}"
 
-    # Build headers
-    headers = {"Accept": "application/vnd.docker.distribution.manifest.v2+json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    else:
-        # Try to get a fresh token
-        token = fetch_pull_token(user, repo)
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
-
-    resp = requests.get(url, headers=headers, stream=True, timeout=60)
-    if resp.status_code == 401:
-        print(" Unauthorized. Fetching fresh pull token...")
-        new_token = fetch_pull_token(user, repo)
-        if new_token:
-            headers["Authorization"] = f"Bearer {new_token}"
-            resp = requests.get(url, headers=headers, stream=True, timeout=60)
-
+    resp = auth.request_with_retry("GET", url, stream=True, timeout=60)
     resp.raise_for_status()
 
     # Use tarfile for complete enumeration with streaming
@@ -54,10 +43,10 @@ def peek_layer_blob(image_ref, digest, token=None):
 
 
 def peek_layer_blob_complete(
+    auth: RegistryAuth,
     image_ref: str,
     digest: str,
     layer_size: int = 0,
-    token: Optional[str] = None,
 ) -> LayerPeekResult:
     """
     Stream and decompress the ENTIRE layer to enumerate ALL files.
@@ -67,37 +56,19 @@ def peek_layer_blob_complete(
     vtty datatable, DO NOT TOUCH
     
     Args:
+        auth: RegistryAuth instance for authenticated requests
         image_ref: Image reference (e.g., "nginx:latest")
         digest: Layer digest (e.g., "sha256:abc123...")
         layer_size: Total layer size (for progress display)
-        token: Optional auth token
         
     Returns:
         LayerPeekResult with COMPLETE *file listing*
     """
     user, repo, _ = parse_image_ref(image_ref)
-    
-    # Get token if not provided
-    if not token:
-        token = fetch_pull_token(user, repo)
-    
     url = f"{registry_base_url(user, repo)}/blobs/{digest}"
     
-    # Build headers
-    headers = {"Accept": "application/vnd.docker.distribution.manifest.v2+json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    
     try:
-        resp = requests.get(url, headers=headers, stream=True, timeout=120)
-        
-        # Handle auth retry
-        if resp.status_code == 401:
-            token = fetch_pull_token(user, repo)
-            if token:
-                headers["Authorization"] = f"Bearer {token}"
-                resp = requests.get(url, headers=headers, stream=True, timeout=120)
-        
+        resp = auth.request_with_retry("GET", url, stream=True, timeout=120)
         resp.raise_for_status()
         
     except requests.RequestException as e:
@@ -161,11 +132,12 @@ def peek_layer_blob_complete(
             error=f"Tar extraction error: {e}",
         )
 
+
 # LOOK HERE TODO WE  DONT WANT THIS
 def peek_layer_blob_partial(
+    auth: RegistryAuth,
     image_ref: str,
     digest: str,
-    token: Optional[str] = None,
     initial_bytes: int = 262144,
 ) -> LayerPeekResult:
     """
@@ -176,39 +148,29 @@ def peek_layer_blob_partial(
     For complete listing, use peek_layer_blob_complete().
     
     Args:
+        auth: RegistryAuth instance for authenticated requests
         image_ref: Image reference (e.g., "nginx:latest")
         digest: Layer digest (e.g., "sha256:abc123...")
-        token: Optional auth token
         initial_bytes: How many bytes to fetch (default 256KB)
         
     Returns:
         LayerPeekResult with partial file listing
     """
     user, repo, _ = parse_image_ref(image_ref)
-    
-    # Get token if not provided
-    if not token:
-        token = fetch_pull_token(user, repo)
-    
     url = f"{registry_base_url(user, repo)}/blobs/{digest}"
     
-    # Build headers with Range request
-    headers = {
-        "Range": f"bytes=0-{initial_bytes - 1}",
-        "Accept": "application/vnd.docker.distribution.manifest.v2+json",
-    }
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
+    # Get session and add Range header
+    session = auth.get_session()
+    headers = {"Range": f"bytes=0-{initial_bytes - 1}"}
     
     try:
-        resp = requests.get(url, headers=headers, stream=True, timeout=30)
+        resp = session.get(url, headers=headers, stream=True, timeout=30)
         
         # Handle auth retry
         if resp.status_code == 401:
-            token = fetch_pull_token(user, repo)
-            if token:
-                headers["Authorization"] = f"Bearer {token}"
-                resp = requests.get(url, headers=headers, stream=True, timeout=30)
+            auth._token = None
+            session = auth.get_session()
+            resp = session.get(url, headers=headers, stream=True, timeout=30)
         
         resp.raise_for_status()
         
@@ -290,17 +252,24 @@ def peek_layer_blob_partial(
     )
 # END OF LOOK HERE
 
+
 # KEEP ME
 def peek_layer_blob_streaming(
+    auth: RegistryAuth,
     image_ref: str,
     digest: str,
-    token: Optional[str] = None,
     initial_bytes: int = 262144,
 ) -> Generator[TarEntry, None, LayerPeekResult]:
     """
     Generator version that yields entries as they are parsed.
     
     This allows the UI to display entries progressively as they're discovered.
+    
+    Args:
+        auth: RegistryAuth instance for authenticated requests
+        image_ref: Image reference (e.g., "nginx:latest")
+        digest: Layer digest (e.g., "sha256:abc123...")
+        initial_bytes: How many bytes to fetch (default 256KB)
     
     Yields:
         TarEntry objects as they are parsed
@@ -309,20 +278,11 @@ def peek_layer_blob_streaming(
         LayerPeekResult with final stats (accessible via generator.value)
     """
     user, repo, _ = parse_image_ref(image_ref)
-    
-    # Get token if not provided
-    if not token:
-        token = fetch_pull_token(user, repo)
-    
     url = f"{registry_base_url(user, repo)}/blobs/{digest}"
     
-    # Build headers with Range request
-    headers = {
-        "Range": f"bytes=0-{initial_bytes - 1}",
-        "Accept": "application/vnd.docker.distribution.manifest.v2+json",
-    }
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
+    # Get session and add Range header
+    session = auth.get_session()
+    headers = {"Range": f"bytes=0-{initial_bytes - 1}"}
     
     error_msg = None
     compressed_data = b""
@@ -330,14 +290,13 @@ def peek_layer_blob_streaming(
     entries = []
     
     try:
-        resp = requests.get(url, headers=headers, stream=True, timeout=30)
+        resp = session.get(url, headers=headers, stream=True, timeout=30)
         
         # Handle auth retry
         if resp.status_code == 401:
-            token = fetch_pull_token(user, repo)
-            if token:
-                headers["Authorization"] = f"Bearer {token}"
-                resp = requests.get(url, headers=headers, stream=True, timeout=30)
+            auth._token = None
+            session = auth.get_session()
+            resp = session.get(url, headers=headers, stream=True, timeout=30)
         
         resp.raise_for_status()
         
@@ -418,4 +377,3 @@ def peek_layer_blob_streaming(
         entries_found=len(entries),
         entries=entries,
     )
-

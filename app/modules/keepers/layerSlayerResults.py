@@ -3,7 +3,7 @@ from typing import Optional, Callable
 
 from app.modules.finders.tar_parser import TarEntry
 from app.modules.formatters import parse_image_ref
-from app.modules.auth.auth import fetch_pull_token
+from app.modules.auth import RegistryAuth
 from app.modules.finders.peekers import peek_layer_blob_complete
 from app.modules.finders.layerPeekResult import LayerPeekResult
 from app.modules.keepers import storage
@@ -48,7 +48,7 @@ class LayerSlayerResult:
 def layerslayer(
     image_ref: str,
     layers: list[dict],
-    token: Optional[str] = None,
+    auth: Optional[RegistryAuth] = None,
     progress_callback: Optional[Callable[[str, int, int], None]] = None,
 ) -> LayerSlayerResult:
     """
@@ -59,7 +59,7 @@ def layerslayer(
     Args:
         image_ref: Image reference (e.g., "nginx:latest")
         layers: List of layer dicts from manifest["layers"]
-        token: Optional auth token
+        auth: Optional RegistryAuth instance (created if not provided)
         progress_callback: Optional callback(message, current, total)
         
     Returns:
@@ -85,9 +85,9 @@ def layerslayer(
             error="No layers with digests found",
         )
     
-    # Get a token for all layer requests (reuse for efficiency)
-    if not token:
-        token = fetch_pull_token(user, repo)
+    # Create auth instance if not provided
+    if not auth:
+        auth = RegistryAuth(user, repo)
     
     # Initialize database connection for storage
     conn = storage.init_database()
@@ -104,10 +104,10 @@ def layerslayer(
             
             # Use COMPLETE enumeration - download full layer
             result = peek_layer_blob_complete(
+                auth=auth,
                 image_ref=image_ref,
                 digest=digest,
                 layer_size=layer_size,
-                token=token,
             )
             
             layer_results.append(result)
@@ -123,6 +123,8 @@ def layerslayer(
             progress_callback("Done", len(layer_info), len(layer_info))
     finally:
         conn.close()
+        # Invalidate auth session when done with all layers
+        auth.invalidate()
     
     # Use the first layer's digest as image reference (or empty if none)
     image_digest = layer_info[0][0] if layer_info else ""

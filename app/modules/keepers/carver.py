@@ -13,6 +13,7 @@ from typing import Optional
 
 from app.modules.formatters import parse_image_ref, registry_base_url
 from app.modules.finders.tar_parser import TarEntry, parse_tar_header
+from app.modules.auth import RegistryAuth
 
 
 # =============================================================================
@@ -68,32 +69,6 @@ class CarveResult:
 
 
 # =============================================================================
-# Token Management (local to avoid circular imports)
-# =============================================================================
-
-_session = requests.Session()
-_session.headers.update({
-    "Accept": "application/vnd.docker.distribution.manifest.v2+json, "
-              "application/vnd.oci.image.manifest.v1+json"
-})
-
-
-def _fetch_pull_token(namespace: str, repo: str) -> Optional[str]:
-    """Retrieve a Docker Hub pull token (anonymous)."""
-    auth_url = (
-        f"https://auth.docker.io/token"
-        f"?service=registry.docker.io&scope=repository:{namespace}/{repo}:pull"
-    )
-    try:
-        resp = requests.get(auth_url, timeout=10)
-        resp.raise_for_status()
-        return resp.json().get("token")
-    except requests.RequestException as e:
-        print(f"  [!] Error fetching auth token: {e}")
-        return None
-
-
-# =============================================================================
 # Manifest Fetching
 # =============================================================================
 
@@ -105,17 +80,22 @@ class LayerInfo:
     media_type: str
 
 
-def _fetch_manifest(namespace: str, repo: str, tag: str, token: str) -> list[LayerInfo]:
+def _fetch_manifest(auth: RegistryAuth, namespace: str, repo: str, tag: str) -> list[LayerInfo]:
     """
     Fetch image manifest and extract layer information.
     
+    Args:
+        auth: RegistryAuth instance for authenticated requests
+        namespace: Docker Hub namespace
+        repo: Repository name
+        tag: Image tag
+        
     Returns list of LayerInfo in order (base layer first).
     """
     url = f"{registry_base_url(namespace, repo)}/manifests/{tag}"
-    headers = {"Authorization": f"Bearer {token}"}
     
     try:
-        resp = _session.get(url, headers=headers, timeout=30)
+        resp = auth.request_with_retry("GET", url, timeout=30)
         resp.raise_for_status()
         manifest = resp.json()
     except requests.RequestException as e:
@@ -140,7 +120,7 @@ def _fetch_manifest(namespace: str, repo: str, tag: str, token: str) -> list[Lay
             # Fetch the actual manifest
             digest = target.get("digest")
             url = f"{registry_base_url(namespace, repo)}/manifests/{digest}"
-            resp = _session.get(url, headers=headers, timeout=30)
+            resp = auth.request_with_retry("GET", url, timeout=30)
             resp.raise_for_status()
             manifest = resp.json()
     
@@ -205,14 +185,14 @@ class IncrementalBlobReader:
     
     def __init__(
         self,
+        auth: RegistryAuth,
         namespace: str,
         repo: str,
         digest: str,
-        token: str,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ):
+        self.auth = auth
         self.url = f"{registry_base_url(namespace, repo)}/blobs/{digest}"
-        self.token = token
         self.chunk_size = chunk_size
         self.current_offset = 0
         self.bytes_downloaded = 0
@@ -227,18 +207,24 @@ class IncrementalBlobReader:
             return b""
         
         end_offset = self.current_offset + self.chunk_size - 1
-        headers = {
-            "Authorization": f"Bearer {self.token}",
-            "Range": f"bytes={self.current_offset}-{end_offset}"
-        }
+        
+        # Get session and add Range header
+        session = self.auth.get_session()
+        headers = {"Range": f"bytes={self.current_offset}-{end_offset}"}
         
         try:
-            resp = _session.get(self.url, headers=headers, stream=True, timeout=30)
+            resp = session.get(self.url, headers=headers, stream=True, timeout=30)
             
             # Check response - 416 means range not satisfiable (past end)
             if resp.status_code == 416:
                 self.exhausted = True
                 return b""
+            
+            # Handle 401 by refreshing token and retrying
+            if resp.status_code == 401:
+                self.auth._token = None
+                session = self.auth.get_session()
+                resp = session.get(self.url, headers=headers, stream=True, timeout=30)
             
             resp.raise_for_status()
             
@@ -404,144 +390,143 @@ def carve_file(
     # Parse image reference
     namespace, repo, tag = parse_image_ref(image_ref)
     
-    # Step 1: Authenticate
+    # Step 1: Authenticate using centralized RegistryAuth
     if verbose:
         print(f"Fetching manifest for {namespace}/{repo}:{tag}...")
     
-    token = _fetch_pull_token(namespace, repo)
-    if not token:
-        return CarveResult(
-            found=False,
-            target_file=target_path,
-            error="Failed to get authentication token",
-        )
+    auth = RegistryAuth(namespace, repo)
     
-    # Step 2: Get manifest and layers
-    layers = _fetch_manifest(namespace, repo, tag, token)
-    if not layers:
-        return CarveResult(
-            found=False,
-            target_file=target_path,
-            error="No layers found in manifest",
-        )
-    
-    if verbose:
-        print(f"Found {len(layers)} layer(s). Searching for {target_path}...\n")
-    
-    # Step 3: Scan each layer
-    for i, layer in enumerate(layers):
+    try:
+        # Step 2: Get manifest and layers
+        layers = _fetch_manifest(auth, namespace, repo, tag)
+        if not layers:
+            return CarveResult(
+                found=False,
+                target_file=target_path,
+                error="No layers found in manifest",
+            )
+        
         if verbose:
-            print(f"Scanning layer {i+1}/{len(layers)}: {layer.digest[:20]}...")
-            print(f"  Layer size: {layer.size:,} bytes")
+            print(f"Found {len(layers)} layer(s). Searching for {target_path}...\n")
         
-        # Initialize components
-        reader = IncrementalBlobReader(namespace, repo, layer.digest, token, chunk_size)
-        decompressor = IncrementalGzipDecompressor()
-        scanner = TarScanner(target_path)
-        
-        # Stream and scan
-        chunks_fetched = 0
-        while not reader.exhausted:
-            # Fetch next chunk
-            compressed = reader.fetch_chunk()
-            if not compressed:
-                break
+        # Step 3: Scan each layer
+        for i, layer in enumerate(layers):
+            if verbose:
+                print(f"Scanning layer {i+1}/{len(layers)}: {layer.digest[:20]}...")
+                print(f"  Layer size: {layer.size:,} bytes")
             
-            chunks_fetched += 1
+            # Initialize components
+            reader = IncrementalBlobReader(auth, namespace, repo, layer.digest, chunk_size)
+            decompressor = IncrementalGzipDecompressor()
+            scanner = TarScanner(target_path)
             
-            # Check gzip magic on first chunk
-            if chunks_fetched == 1:
-                if len(compressed) < 2 or compressed[0:2] != b'\x1f\x8b':
-                    if verbose:
-                        print(f"  Layer is not gzip compressed, skipping")
+            # Stream and scan
+            chunks_fetched = 0
+            while not reader.exhausted:
+                # Fetch next chunk
+                compressed = reader.fetch_chunk()
+                if not compressed:
                     break
-            
-            # Decompress
-            decompressor.feed(compressed)
-            
-            if decompressor.error:
+                
+                chunks_fetched += 1
+                
+                # Check gzip magic on first chunk
+                if chunks_fetched == 1:
+                    if len(compressed) < 2 or compressed[0:2] != b'\x1f\x8b':
+                        if verbose:
+                            print(f"  Layer is not gzip compressed, skipping")
+                        break
+                
+                # Decompress
+                decompressor.feed(compressed)
+                
+                if decompressor.error:
+                    if verbose:
+                        print(f"  Decompression error: {decompressor.error}")
+                    break
+                
+                # Scan for target
+                result = scanner.scan(decompressor.get_buffer())
+                
                 if verbose:
-                    print(f"  Decompression error: {decompressor.error}")
-                break
-            
-            # Scan for target
-            result = scanner.scan(decompressor.get_buffer())
+                    print(f"  Downloaded: {reader.bytes_downloaded:,}B -> "
+                          f"Decompressed: {decompressor.bytes_decompressed:,}B -> "
+                          f"Entries: {scanner.entries_scanned}")
+                
+                if result.found:
+                    # Check if we have enough data for the file content
+                    buffer = decompressor.get_buffer()
+                    bytes_needed = result.content_offset + result.content_size
+                    
+                    # Fetch more if needed
+                    while len(buffer) < bytes_needed and not reader.exhausted:
+                        compressed = reader.fetch_chunk()
+                        if not compressed:
+                            break
+                        decompressor.feed(compressed)
+                        buffer = decompressor.get_buffer()
+                        if verbose:
+                            print(f"  Fetching more for file content... "
+                                  f"Have {len(buffer):,} / need {bytes_needed:,}")
+                    
+                    buffer = decompressor.get_buffer()
+                    if len(buffer) >= bytes_needed:
+                        # Found and have full content!
+                        if verbose:
+                            print(f"  FOUND: {target_path} ({result.content_size:,} bytes) "
+                                  f"at entry #{result.entries_scanned}")
+                        
+                        # Extract and save
+                        saved_path = extract_and_save(
+                            buffer,
+                            result.content_offset,
+                            result.content_size,
+                            target_path,
+                            output_dir,
+                        )
+                        
+                        elapsed = time.time() - start_time
+                        efficiency = (reader.bytes_downloaded / layer.size * 100) if layer.size else 0
+                        
+                        if verbose:
+                            print(f"\nDone! File saved to: {saved_path}")
+                            print(f"Stats: Downloaded {reader.bytes_downloaded:,} bytes "
+                                  f"of {layer.size:,} byte layer ({efficiency:.1f}%) "
+                                  f"in {elapsed:.2f}s")
+                        
+                        return CarveResult(
+                            found=True,
+                            saved_path=saved_path,
+                            target_file=target_path,
+                            bytes_downloaded=reader.bytes_downloaded,
+                            layer_size=layer.size,
+                            efficiency_pct=efficiency,
+                            elapsed_time=elapsed,
+                            layer_digest=layer.digest,
+                            layers_searched=i + 1,
+                        )
+                    else:
+                        if verbose:
+                            print(f"  [!] Found file but couldn't get full content")
+                            print(f"      Have {len(buffer):,} bytes, need {bytes_needed:,}")
             
             if verbose:
-                print(f"  Downloaded: {reader.bytes_downloaded:,}B -> "
-                      f"Decompressed: {decompressor.bytes_decompressed:,}B -> "
-                      f"Entries: {scanner.entries_scanned}")
-            
-            if result.found:
-                # Check if we have enough data for the file content
-                buffer = decompressor.get_buffer()
-                bytes_needed = result.content_offset + result.content_size
-                
-                # Fetch more if needed
-                while len(buffer) < bytes_needed and not reader.exhausted:
-                    compressed = reader.fetch_chunk()
-                    if not compressed:
-                        break
-                    decompressor.feed(compressed)
-                    buffer = decompressor.get_buffer()
-                    if verbose:
-                        print(f"  Fetching more for file content... "
-                              f"Have {len(buffer):,} / need {bytes_needed:,}")
-                
-                buffer = decompressor.get_buffer()
-                if len(buffer) >= bytes_needed:
-                    # Found and have full content!
-                    if verbose:
-                        print(f"  FOUND: {target_path} ({result.content_size:,} bytes) "
-                              f"at entry #{result.entries_scanned}")
-                    
-                    # Extract and save
-                    saved_path = extract_and_save(
-                        buffer,
-                        result.content_offset,
-                        result.content_size,
-                        target_path,
-                        output_dir,
-                    )
-                    
-                    elapsed = time.time() - start_time
-                    efficiency = (reader.bytes_downloaded / layer.size * 100) if layer.size else 0
-                    
-                    if verbose:
-                        print(f"\nDone! File saved to: {saved_path}")
-                        print(f"Stats: Downloaded {reader.bytes_downloaded:,} bytes "
-                              f"of {layer.size:,} byte layer ({efficiency:.1f}%) "
-                              f"in {elapsed:.2f}s")
-                    
-                    return CarveResult(
-                        found=True,
-                        saved_path=saved_path,
-                        target_file=target_path,
-                        bytes_downloaded=reader.bytes_downloaded,
-                        layer_size=layer.size,
-                        efficiency_pct=efficiency,
-                        elapsed_time=elapsed,
-                        layer_digest=layer.digest,
-                        layers_searched=i + 1,
-                    )
-                else:
-                    if verbose:
-                        print(f"  [!] Found file but couldn't get full content")
-                        print(f"      Have {len(buffer):,} bytes, need {bytes_needed:,}")
+                print()  # Blank line between layers
         
+        elapsed = time.time() - start_time
         if verbose:
-            print()  # Blank line between layers
+            print(f"File not found: {target_path} (searched {len(layers)} layers in {elapsed:.2f}s)")
+        
+        return CarveResult(
+            found=False,
+            target_file=target_path,
+            elapsed_time=elapsed,
+            layers_searched=len(layers),
+        )
     
-    elapsed = time.time() - start_time
-    if verbose:
-        print(f"File not found: {target_path} (searched {len(layers)} layers in {elapsed:.2f}s)")
-    
-    return CarveResult(
-        found=False,
-        target_file=target_path,
-        elapsed_time=elapsed,
-        layers_searched=len(layers),
-    )
+    finally:
+        # Always invalidate auth session when done
+        auth.invalidate()
 
 
 # =============================================================================

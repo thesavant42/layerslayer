@@ -14,11 +14,6 @@ from app.modules.formatters import (
     registry_base_url,
     human_readable_size,
 )
-from app.modules.auth.auth import (
-    auth_headers,
-    load_token,
-    save_token,
-)
 
 from app.modules.keepers.carver import carve_file, CarveResult
 

@@ -1,28 +1,25 @@
 import os
-import requests
 from app.modules.formatters import parse_image_ref, registry_base_url
-from app.modules.auth.auth import fetch_pull_token, session
+from app.modules.auth import RegistryAuth
 
 # =============================================================================
 # Layer Download (Full)
 # =============================================================================
 
-def download_layer_blob(image_ref, digest, size, token=None):
+def download_layer_blob(auth: RegistryAuth, image_ref: str, digest: str, size: int):
     """
     Stream a layer blob to disk as a .tar.gz file.
+    
+    Args:
+        auth: RegistryAuth instance for authenticated requests
+        image_ref: Image reference (e.g., "nginx:alpine")
+        digest: Layer digest
+        size: Layer size (for info only)
     """
     user, repo, _ = parse_image_ref(image_ref)
     url = f"{registry_base_url(user, repo)}/blobs/{digest}"
 
-    resp = session.get(url, stream=True)
-    if resp.status_code == 401:
-        print(" Unauthorized. Fetching fresh pull token...")
-        new_token = fetch_pull_token(user, repo)
-        if new_token:
-            resp = session.get(url, stream=True)
-        else:
-            print(" Proceeding without refreshed token.")
-
+    resp = auth.request_with_retry("GET", url, stream=True)
     resp.raise_for_status()
 
     user_repo = f"{user}_{repo}"
@@ -44,54 +41,50 @@ def download_layer_blob(image_ref, digest, size, token=None):
 # Manifest & Config Fetching
 # =============================================================================
 
-def get_manifest(image_ref, token=None, specific_digest=None):
+def get_manifest(auth: RegistryAuth, image_ref: str, specific_digest: str = None):
     """
     Fetch either a multi-arch manifest list or a single-arch manifest.
-    On 401, attempts one token refresh; if still 401, exits with a friendly message.
+    
+    Args:
+        auth: RegistryAuth instance for authenticated requests
+        image_ref: Image reference (e.g., "nginx:alpine")
+        specific_digest: Optional digest to fetch instead of tag
+        
+    Returns:
+        Manifest as dict
     """
     user, repo, tag = parse_image_ref(image_ref)
     ref = specific_digest or tag
     url = f"{registry_base_url(user, repo)}/manifests/{ref}"
 
-    # If caller provided a token, set it before the request
-    if token:
-        session.headers["Authorization"] = f"Bearer {token}"
-
-    resp = session.get(url)
-    if resp.status_code == 401:
-        print(" Unauthorized. Fetching fresh pull token...")
-        new_token = fetch_pull_token(user, repo)
-        if new_token:
-            resp = session.get(url)
-        else:
-            print(" Proceeding without refreshed token.")
+    resp = auth.request_with_retry("GET", url)
 
     if resp.status_code == 401:
         # Final unauthorized -> clean exit
         print(f"X Error: Unauthorized fetching manifest for {image_ref}.")
-        print("   - Ensure the image exists and token.txt (if used) is valid.")
+        print("   - Ensure the image exists and is accessible.")
         raise SystemExit(1)
 
     resp.raise_for_status()
     return resp.json()
 
 
-def fetch_build_steps(image_ref, config_digest, token=None):
+def fetch_build_steps(auth: RegistryAuth, image_ref: str, config_digest: str):
     """
     Download the image config blob and parse Dockerfile 'created_by' history.
+    
+    Args:
+        auth: RegistryAuth instance for authenticated requests
+        image_ref: Image reference (e.g., "nginx:alpine")
+        config_digest: Config blob digest
+        
+    Returns:
+        List of build step strings
     """
     user, repo, _ = parse_image_ref(image_ref)
     url = f"{registry_base_url(user, repo)}/blobs/{config_digest}"
 
-    resp = session.get(url)
-    if resp.status_code == 401:
-        print(" Unauthorized. Fetching fresh pull token...")
-        new_token = fetch_pull_token(user, repo)
-        if new_token:
-            resp = session.get(url)
-        else:
-            print(" Proceeding without refreshed token.")
-
+    resp = auth.request_with_retry("GET", url)
     resp.raise_for_status()
     config = resp.json()
 
@@ -102,4 +95,3 @@ def fetch_build_steps(image_ref, config_digest, token=None):
             step += " (metadata only)"
         steps.append(step)
     return steps
-
