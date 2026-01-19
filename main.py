@@ -88,6 +88,11 @@ def parse_args():
         help="Platform index for multi-arch images (e.g., 0 for first platform). "
              "Skips interactive platform selection.",
     )
+    p.add_argument(
+        "--force", "-F",
+        action="store_true",
+        help="Force overwrite of existing database entries without prompting",
+    )
     
     args = p.parse_args()
     # Show help if no mode selected
@@ -232,7 +237,7 @@ def main():
                 display_peek_result(result, layer_size, verbose=True)
                 
                 # Save layer result to JSON and SQLite
-                storage.save_layer_result(result, image_ref, idx, layer_size, conn)
+                storage.save_layer_result(result, image_ref, idx, layer_size, conn, force_overwrite=args.force)
         finally:
             conn.close()
         return
@@ -282,7 +287,7 @@ def main():
             display_peek_result(result, layer_size, verbose=True)
             
             # Save layer result to JSON and SQLite
-            storage.save_layer_result(result, image_ref, idx, layer_size, conn)
+            storage.save_layer_result(result, image_ref, idx, layer_size, conn, force_overwrite=args.force)
             
             if input("Download this layer? (y/N) ").strip().lower() == "y":
                 download_layer_blob(image_ref, layer["digest"], layer["size"], token)

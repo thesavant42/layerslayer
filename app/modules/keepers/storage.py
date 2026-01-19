@@ -159,7 +159,7 @@ def get_layer_info(conn: sqlite3.Connection, digest: str) -> Optional[dict]:
     return None
 
 
-def prompt_overwrite(digest: str, conn: sqlite3.Connection) -> bool:
+def prompt_overwrite(digest: str, conn: sqlite3.Connection, force: bool = False) -> bool:
     """
     Prompt user to confirm overwriting existing layer data.
     
@@ -168,6 +168,7 @@ def prompt_overwrite(digest: str, conn: sqlite3.Connection) -> bool:
     Args:
         digest: Layer digest (sha256:...)
         conn: SQLite connection for fetching existing info
+        force: If True, automatically overwrite without prompting
         
     Returns:
         True if user wants to overwrite, False to skip
@@ -183,6 +184,10 @@ def prompt_overwrite(digest: str, conn: sqlite3.Connection) -> bool:
     print(f"    - Entries: {info.get('entries_count', 0):,} files")
     print(f"    - Image: {info.get('image_ref', 'unknown')}")
     print()
+    
+    if force:
+        print("  --force enabled: overwriting automatically")
+        return True
     
     response = input("  Overwrite existing data? [y/N]: ").strip().lower()
     return response in ('y', 'yes')
@@ -388,6 +393,7 @@ def save_layer_result(
     db_path: str = DEFAULT_DB_PATH,
     json_dir: str = DEFAULT_JSON_DIR,
     check_exists: bool = True,
+    force_overwrite: bool = False,
 ) -> tuple[bool, str]:
     """
     Save layer result to both JSON and SQLite.
@@ -403,6 +409,7 @@ def save_layer_result(
         db_path: Path to SQLite database
         json_dir: Directory for JSON files
         check_exists: Whether to check for existing data
+        force_overwrite: If True, overwrite existing data without prompting
         
     Returns:
         Tuple of (success, json_filepath or error message)
@@ -416,7 +423,7 @@ def save_layer_result(
     try:
         # Check for existing data
         if check_exists and check_layer_exists(conn, result.digest):
-            if not prompt_overwrite(result.digest, conn):
+            if not prompt_overwrite(result.digest, conn, force=force_overwrite):
                 return (False, "Skipped - user chose not to overwrite")
             # Delete existing data before re-inserting
             delete_layer_data(conn, result.digest)
