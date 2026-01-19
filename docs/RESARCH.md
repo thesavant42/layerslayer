@@ -18,8 +18,9 @@ Where:
 - Solution: extend `main.py` to include kwargs for `--arch`, and support selecting from an indexed list.
 
 
-- [ ] Task 1. Research the [main.py](main.py) and trace interactive mode to understand what needs to happen to enable fully unattended --peek-all command execution.
+- [x] Task 1. Research the [main.py](main.py) and trace interactive mode to understand what needs to happen to enable fully unattended --peek-all command execution.
 
+- [ ] Task 2. Research the [main.py](main.py) and need to add a --force option to allow a fully unttended code execution, without requiring the user to interact once the script has begun.
 
 
 
@@ -27,4 +28,4 @@ Where:
 
 **BLOCKED! Task 1 is a dependancy of adding this API endpoint.
 
-- [ ] Task 2. Implement a fastAPI route `/peek-all?image=owner/repo:tag&arch=0` to enable the workflow described in the user story.
+- [ ] Task 3. Implement a fastAPI route `/peek-all?image=owner/repo:tag&arch=0` to enable the workflow described in the user story.
