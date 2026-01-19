@@ -1,3 +1,5 @@
 requests
 tqdm
 textular
+fastapi
+uvicorn

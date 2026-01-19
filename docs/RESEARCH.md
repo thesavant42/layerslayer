@@ -16,9 +16,13 @@ Where:
 
 - [ ] Task 3. Implement a fastAPI route `/peek-all?image=owner/repo:tag&arch=0&force=1` to enable the workflow described in the user story.
 
+`/peek-all?image= owner/repo:tag 
+`&arch=0` defaults to arch=0 if not provided.
+Defaults to overwrite with `&force=1` if not provided.
 
+API takes GET parameters and uses them to launch `python main.py -t "owner/repo:tag" --peek-all --arch=0 --force` 
 
-
+thats it. Garbage in, garbage out.
 
 ---
 

@@ -1,5 +1,5 @@
 # FastAPI /peek-all Endpoint Implementation Plan
-
+**COMPLETED**
 ## Approach
 
 Set `sys.argv` with the query parameters, then call `main.main()` directly. This mirrors exactly what happens when you run the CLI command - no subprocess, no code refactoring needed.
