@@ -89,10 +89,15 @@ def parse_args():
         action="store_true",
         help="Force overwrite of existing database entries without prompting, for non-interactive mode",
     )
+    p.add_argument(
+        "--api", "-A",
+        action="store_true",
+        help="Start the API server (uvicorn on 127.0.0.1:8000)",
+    )
     
     args = p.parse_args()
     # Show help if no mode selected
-    if not any([args.peek_all, args.save_all, args.bulk_peek, args.carve_file, args.interactive]):
+    if not any([args.peek_all, args.save_all, args.bulk_peek, args.carve_file, args.interactive, args.api]):
         p.print_help()
         sys.exit(0)
     return args
@@ -100,6 +105,13 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    # --- API server mode ---
+    if args.api:
+        import uvicorn
+        print("[*] Starting API server on http://127.0.0.1:8000")
+        uvicorn.run("app.modules.api.api:app", host="127.0.0.1", port=8000)
+        return
 
     # set up logging/tee if requested
     if args.log_file:
