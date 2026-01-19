@@ -3,7 +3,8 @@ import re
 import importlib.util
 from io import StringIO
 from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, JSONResponse
+import httpx
 
 # Import main module
 import main
@@ -74,6 +75,30 @@ def fslog(image: str, path: str, layer: int = Query(default=None)):
         sys.stdout = old_stdout
     
     return captured_output.getvalue()
+
+
+@app.get("/repositories")
+async def repositories(
+    namespace: str,
+    page: int = Query(default=None),
+    page_size: int = Query(default=None)
+):
+    """
+    Pass-through proxy for Docker Hub's /v2/repositories API.
+    Returns the upstream JSON response verbatim.
+    """
+    url = f"https://hub.docker.com/v2/repositories/{namespace}"
+    params = {}
+    if page is not None:
+        params["page"] = page
+    if page_size is not None:
+        params["page_size"] = page_size
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, params=params)
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail=response.text)
+        return JSONResponse(content=response.json(), status_code=200)
 
 
 @app.get("/fslog-search", response_class=PlainTextResponse)
