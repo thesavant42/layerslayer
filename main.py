@@ -6,7 +6,7 @@ import sys
 import argparse
 
 from app.modules.keepers.downloaders import get_manifest, download_layer_blob, fetch_build_steps
-from app.modules.finders.peekers import peek_layer_blob, peek_layer_streaming
+from app.modules.finders.peekers import peek_layer_streaming
 from app.modules.keepers.layerSlayerResults import layerslayer as layerslayer_bulk, LayerPeekResult
 from app.modules.keepers import storage
 from app.modules.formatters import (
