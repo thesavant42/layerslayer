@@ -7,30 +7,35 @@
 Instead of pulling entire images, you can "peek" inside each layer to reconstruct an inferred filesystem, view manifest file build steps, and choose exactly which blobs to save.
 
 
-```bash
-`python .\main.py --help`
+## **NEW**
 
-usage: main.py [-h] [--target-image IMAGE_REF] [--peek-all] [--save-all] [--log-file LOG_FILE] [--simple-output] [--bulk-peek] [--carve-file CARVE_FILE]
-                      [--output-dir OUTPUT_DIR] [--quiet]
+Implemented --peek-layer CLI flag and /peek API endpoint.
 
-Explore and download individual Docker image layers.
+### Changes made:
 
-options:
-  -h, --help            show this help message and exit
-  --target-image, -t IMAGE_REF
-                        Image (user/repo:tag) to inspect
-  --peek-all            Peek into all layers and exit (no download prompts)
-  --save-all            Download all layers and exit (no peek listings)
-  --log-file, -l LOG_FILE
-                        Path to save a complete log of output
-  --simple-output       Use simple output format instead of ls -la style
-  --bulk-peek           Peek all layers in bulk and show combined filesystem
-  --carve-file, -f CARVE_FILE
-                        Extract a specific file from the image (e.g., /etc/passwd)
-  --output-dir, -o OUTPUT_DIR
-                        Output directory for carved files (default: ./carved)
-  --quiet, -q           Suppress detailed progress output
-```
+- main.py - Replaced --peek-all with --peek-layer=<value>:
+
+    `--peek-layer=all` - peeks all layers (previous `--peek-all` behavior)
+    `--peek-layer=N` - peeks only layer at index N
+    - Fixed `sys.exit(1)` calls to use return (API compatibility)
+    `api.py` - Replaced `/peek-all` with `/peek:`
+    
+    `GET /peek?image=...&layer=all` - all layers
+    `GET /peek?image=...&layer=2` - specific layer
+    Usage:
+
+# CLI - all layers
+`python main.py -t library/alpine:latest --peek-layer=all --arch=0`
+
+# CLI - specific layer
+`python main.py -t library/alpine:latest --peek-layer=2 --arch=0`
+
+# API - all layers  
+`GET /peek?image=library/alpine:latest&layer=all&arch=0`
+
+# API - specific layer
+`GET /peek?image=library/alpine:latest&layer=2&arch=0`
+
 
 ## Features
 
@@ -45,7 +50,8 @@ options:
 
 - **File Carving** (NEW)
   Extract a specific file from a Docker image without downloading the entire layer.
-  Uses HTTP Range requests to fetch compressed data incrementally, decompresses on-the-fly, and stops as soon as the target file is fully extracted.
+  Uses HTTP
+ Range requests to fetch compressed data incrementally, decompresses on-the-fly, and stops as soon as the target file is fully extracted.
 
 ### Docs
 
