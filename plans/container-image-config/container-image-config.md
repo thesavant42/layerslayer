@@ -8,28 +8,28 @@ Each of the areas listed below represent a logical division of the data into unq
  - A UI consuming the image config JSON would be concerned with the following fields:
 
 
-- Line 2: ARCH
-- Line 3: Config Hostname, Domainname, User, Exposed Ports, CMD, Image, Entrypoint, Labels, shELL
+- Line 2: ARCH `."architecture"`
+- Line 3: Config Hostname, Domainname, User, Exposed Ports, CMD, Image, Entrypoint, Labels, shELL - `."config" `
 
 
-- Line 97-101 Container ID Hostname, Domainname, Username
+- Line 97-101 Container ID Hostname, Domainname, Username (if present)
 
-- Line 105-106 Exposed Port
+- Line 105-106 Exposed Port `."config" | ."ExposedPorts"`
     - Super Important
-Line 111-167, ENV variables
+Line 111-167, ENV variables `."config" | ."Env"`
     - Super important
 
-Line 168-175 cmd: array
+Line 168-175 cmd: array `."config" | ."Cmd"`
     - Extremely important!
 
-Line 178 - Workingdir
+Line 178 - Workingdir (if present)
     - Important
     - keep this
-Line  179-181 Entrypoint
+Line  179-181 Entrypoint `. | ."config"."Entrypoint"`
     - ABSOLUTELY MUST HAVE THIS
     - Print it in an emphasized typography, bold or in bright colors
     - 
-183-187 Labels array:
+- 183-187 Labels array: `."config" | ."Labels"`
     - important details,
     - we want to keep these 
 
@@ -37,7 +37,9 @@ Line 189-196 Shell[] Shell commands, want to print these in a table
 
 Line 197: `docker_version`: Always good to know
 
-Line 198 - 846 history
+
+### Build Commands
+Line 198 - 846 history  - ` ."history".[]."created_by"`
 - This is the GOOD stuff! I want these details
 - Table with columns for
     - `created`:    time stamp
@@ -46,10 +48,13 @@ Line 198 - 846 history
     - `empty_layer`: BOOL indicating if there's data to scrape or not
         - Even if the row is empty, I still want the metadata, it's still important
 
-Line 847 - OS details
+### OS ie "linux"
+Line 847 - OS details - ` ."os"`
  - I definitely want the OS and variant info. Print "nul" if it's not present
 
-Line 848-EOF - RootFS digest Array
+
+### Layers
+Line 848-EOF - RootFS digest Array `jq ."rootfs"."diff_ids"`
 - diff_ids - digest of layers to peek
 - Print in a table
 - Add a Meta row to select "ALL LAYERS"

@@ -4,7 +4,7 @@ from typing import Optional, Callable
 from app.modules.finders.tar_parser import TarEntry
 from app.modules.formatters import parse_image_ref
 from app.modules.auth import RegistryAuth
-from app.modules.finders.peekers import peek_layer_blob_complete
+from app.modules.finders.peekers import peek_layer_streaming
 from app.modules.finders.layerPeekResult import LayerPeekResult
 from app.modules.keepers import storage
 
@@ -102,8 +102,8 @@ def layerslayer(
             if progress_callback:
                 progress_callback(f"Peeking layer {i+1}/{len(layer_info)}", i, len(layer_info))
             
-            # Use COMPLETE enumeration - download full layer
-            result = peek_layer_blob_complete(
+            # Use incremental streaming enumeration
+            result = peek_layer_streaming(
                 auth=auth,
                 image_ref=image_ref,
                 digest=digest,
