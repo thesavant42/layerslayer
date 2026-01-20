@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "git-mcp": {
+      "type": "streamable-http",
+      "url": "https://gitmcp.io/thesavant42/layerslayer"
+    }
+  }
+}
