@@ -149,13 +149,14 @@ def peek_layer_streaming(
     digest: str,
     layer_size: int = 0,
     chunk_size: int = 65536,
+    max_bytes: int = 262144,
 ) -> LayerPeekResult:
     """
     Stream and parse layer tar headers incrementally using HTTP Range requests.
     
-    Uses chunked fetching via IncrementalBlobReader to avoid loading the
-    entire compressed layer into memory. Parses tar headers as data becomes
-    available using parse_tar_header().
+    Uses chunked fetching via IncrementalBlobReader to minimize bandwidth.
+    Implements the "tar.gz hack" - fetching only enough compressed data to
+    enumerate file headers without downloading entire layers.
     
     This is the primary function for enumerating layer contents.
     
@@ -165,9 +166,10 @@ def peek_layer_streaming(
         digest: Layer digest (e.g., "sha256:abc123...")
         layer_size: Total layer size (for info only, not used in logic)
         chunk_size: Bytes to fetch per HTTP Range request (default 64KB)
+        max_bytes: Maximum compressed bytes to download (default 256KB)
         
     Returns:
-        LayerPeekResult with complete file listing
+        LayerPeekResult with file listing
     """
     user, repo, _ = parse_image_ref(image_ref)
     
@@ -179,6 +181,10 @@ def peek_layer_streaming(
     archive_complete = False
     
     while not reader.exhausted and not archive_complete:
+        # Early termination based on byte budget (the "tar.gz hack")
+        if reader.bytes_downloaded >= max_bytes:
+            break
+        
         compressed = reader.fetch_chunk()
         if not compressed:
             break

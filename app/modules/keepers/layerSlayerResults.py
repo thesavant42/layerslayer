@@ -50,17 +50,17 @@ def layerslayer(
     layers: list[dict],
     auth: Optional[RegistryAuth] = None,
     progress_callback: Optional[Callable[[str, int, int], None]] = None,
+    max_bytes: int = 0,
 ) -> LayerSlayerResult:
     """
-    Peek ALL layers for an image with COMPLETE file enumeration.
-    
-    Downloads and decompresses each layer fully to enumerate every file.
+    Peek ALL layers for an image.
     
     Args:
         image_ref: Image reference (e.g., "nginx:latest")
         layers: List of layer dicts from manifest["layers"]
         auth: Optional RegistryAuth instance (created if not provided)
         progress_callback: Optional callback(message, current, total)
+        max_bytes: Maximum bytes to download per layer (0 = complete enumeration)
         
     Returns:
         LayerSlayerResult with all layer entries and stats
@@ -108,6 +108,7 @@ def layerslayer(
                 image_ref=image_ref,
                 digest=digest,
                 layer_size=layer_size,
+                max_bytes=max_bytes,
             )
             
             layer_results.append(result)
