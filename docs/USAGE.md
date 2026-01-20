@@ -5,7 +5,7 @@
 `python .\main.py --help`
 
 ```bash
-usage: main.py [-h] [--target-image IMAGE_REF] [--peek-all] [--save-all] [--log-file LOG_FILE] [--simple-output] [--bulk-peek] [--carve-file CARVE_FILE]
+usage: main.py [-h] [--target-image IMAGE_REF] [--peek-layer] [--save-all] [--log-file LOG_FILE] [--simple-output] [--bulk-peek] [--carve-file CARVE_FILE]
                       [--output-dir OUTPUT_DIR] [--quiet]
 
 Explore and download individual Docker image layers.
@@ -14,7 +14,7 @@ options:
   -h, --help            show this help message and exit
   --target-image, -t IMAGE_REF
                         Image (user/repo:tag) to inspect
-  --peek-all            Peek into all layers and exit (no download prompts)
+  --peek-layer          Peek into all layers and exit (all by default, or index int)
   --save-all            Download all layers and exit (no peek listings)
   --log-file, -l LOG_FILE
                         Path to save a complete log of output
