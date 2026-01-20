@@ -24,13 +24,19 @@ app = FastAPI(title="LSNG Peek API")
 IMAGE_PATTERN = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9._-]*/[a-zA-Z0-9][a-zA-Z0-9._-]*(:[a-zA-Z0-9._-]+)?$')
 
 
-@app.get("/peek-all", response_class=PlainTextResponse)
-def peek_all(
+@app.get("/peek", response_class=PlainTextResponse)
+def peek(
     image: str,
+    layer: str = Query(default="all"),
     arch: int = Query(default=0)
 ):
     """
-    Equivalent to: python main.py -t "{image}" --peek-all --arch={arch} --force
+    Equivalent to: python main.py -t "{image}" --peek-layer={layer} --arch={arch} --force
+    
+    Args:
+        image: Image reference (e.g., "nginx/nginx:latest")
+        layer: Layer to peek - 'all' for all layers, or integer index for specific layer
+        arch: Platform index for multi-arch images
     """
     # Validate image format
     if not IMAGE_PATTERN.match(image):
@@ -45,7 +51,7 @@ def peek_all(
         sys.argv = [
             "main.py",
             "-t", image,
-            "--peek-all",
+            f"--peek-layer={layer}",
             f"--arch={arch}",
             "--force"
         ]

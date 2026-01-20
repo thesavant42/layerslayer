@@ -29,9 +29,10 @@ def parse_args():
         help="Image (user/repo:tag) to inspect",
     )
     p.add_argument(
-        "--peek-all",
-        action="store_true",
-        help="Peek into all layers and exit (no download prompts)",
+        "--peek-layer",
+        dest="peek_layer",
+        default=None,
+        help="Peek layer(s): 'all' for all layers, or integer index for specific layer",
     )
     p.add_argument(
         "--save-all",
@@ -97,7 +98,7 @@ def parse_args():
     
     args = p.parse_args()
     # Show help if no mode selected
-    if not any([args.peek_all, args.save_all, args.bulk_peek, args.carve_file, args.interactive, args.api]):
+    if not any([args.peek_layer, args.save_all, args.bulk_peek, args.carve_file, args.interactive, args.api]):
         p.print_help()
         sys.exit(0)
     return args
@@ -169,7 +170,7 @@ def main():
                 if args.arch < 0 or args.arch >= len(platforms):
                     print(f"\n[!] Error: --arch {args.arch} is out of range. "
                           f"Valid indices: 0-{len(platforms) - 1}")
-                    sys.exit(1)
+                    return
                 choice = args.arch
                 print(f"\nUsing platform index {choice} (from --arch)")
             else:
@@ -215,15 +216,27 @@ def main():
             
             return
 
-        # --- peek-all mode: enumerate ALL files in each layer ---
-        if args.peek_all:
-            print(f"\n[*] Peeking into all layers (complete enumeration):")
+        # --- peek-layer mode: enumerate files in specified layer(s) ---
+        if args.peek_layer is not None:
+            # Determine which layers to peek
+            if args.peek_layer.lower() == "all":
+                indices = list(range(len(layers)))
+                print(f"\n[*] Peeking into all {len(layers)} layers (complete enumeration):")
+            else:
+                layer_index = int(args.peek_layer)
+                if layer_index < 0 or layer_index >= len(layers):
+                    print(f"\n[!] Error: layer index {layer_index} is out of range. "
+                          f"Valid indices: 0-{len(layers) - 1}")
+                    return
+                indices = [layer_index]
+                print(f"\n[*] Peeking into layer {layer_index}:")
             
             # Initialize database for storage
             conn = storage.init_database()
             
             try:
-                for idx, layer in enumerate(layers):
+                for idx in indices:
+                    layer = layers[idx]
                     layer_size = layer.get("size", 0)
                     print(f"\n[Layer {idx}] {layer['digest']}")
                     print(f"           Size: {human_readable_size(layer_size)}")
