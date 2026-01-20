@@ -176,8 +176,9 @@ def peek_layer_streaming(
     entries: List[TarEntry] = []
     parse_offset = 0
     first_chunk = True
+    archive_complete = False
     
-    while not reader.exhausted:
+    while not reader.exhausted and not archive_complete:
         compressed = reader.fetch_chunk()
         if not compressed:
             break
@@ -213,9 +214,14 @@ def peek_layer_streaming(
         
         # Parse all available tar headers from current buffer
         while parse_offset + 512 <= len(buffer):
+            # Check for null block BEFORE calling parse_tar_header
+            if buffer[parse_offset:parse_offset + 512] == b'\x00' * 512:
+                archive_complete = True
+                break
+            
             entry, next_offset = parse_tar_header(buffer, parse_offset)
             if entry is None:
-                # End of archive or need more data
+                # Not enough data or parse error - need more chunks
                 break
             entries.append(entry)
             if next_offset <= parse_offset:

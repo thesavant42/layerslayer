@@ -42,9 +42,6 @@ For private-container related features, see also [reg-rav-readme.md](docs/carver
 - **Multi-arch Support**
   Auto-detects manifest lists vs single-arch manifests and handles both seamlessly.
 
-- **Token Management**
-  Loads a bearer token from `token.txt` and automatically refreshes via Docker Hub auth when needed.
-
 - **Human-Readable Sizes**
   Prints blob sizes in KB/MB for readability.
 
