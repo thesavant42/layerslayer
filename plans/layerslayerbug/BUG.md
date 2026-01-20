@@ -29,14 +29,8 @@ There have been *MANY* code changes since then, I **cannot** simply revert to th
 - This information should be used for comparison to a "known good", and to repair the current code base.
 
 ## Diagrams & Docs
-Links to Mermaid Charts in previous git commit:
-- [fetcher-py mermaid chart](https://raw.githubusercontent.com/thesavant42/layerslayer/91d7635d2858ab778f277d6ff84220844b2ff3e1/docs/fetcher-py.md)
 
-- [carver](https://raw.githubusercontent.com/thesavant42/layerslayer/91d7635d2858ab778f277d6ff84220844b2ff3e1/docs/carver-py.md)
-
-- [layerslayer documentation and mermaid chart diagram](https://raw.githubusercontent.com/thesavant42/layerslayer/91d7635d2858ab778f277d6ff84220844b2ff3e1/docs/layerslayer-py.md)
-
-- [TarParser doc](https://raw.githubusercontent.com/thesavant42/layerslayer/91d7635d2858ab778f277d6ff84220844b2ff3e1/docs/parser-tarparser.md)
+[Links to Mermaid Charts in the repository /doc](plans\layerslayerbug\legacy-docs) folder at the date and time of the previous git commit
 
 ## Open Questions:
 
