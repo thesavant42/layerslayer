@@ -47,12 +47,12 @@ def format_entry_line(entry, show_permissions=True):
         if entry.is_symlink and entry.linkname:
             name_display = f"{entry.name} -> {entry.linkname}"
         else:
-            name_display = entry.name + ("/" if entry.is_dir else "")
+            name_display = entry.name
         return f"  {entry.mode}  {entry.uid:4d} {entry.gid:4d}  {size_str}  {entry.mtime}  {name_display}"
     else:
         # Simple format
         if entry.is_dir:
-            return f"  [DIR]  {entry.name}/"
+            return f"  [DIR]  {entry.name}"
         elif entry.is_symlink:
             return f"  [LINK] {entry.name} -> {entry.linkname}"
         else:

@@ -35,7 +35,7 @@ def main():
         sys.stdout = Tee(sys.stdout, log_f)
         sys.stderr = Tee(sys.stderr, log_f)
 
-    print(" Welcome to Layerslayer \n")
+    #print(" Welcome to Layerslayer \n")
 
     # choose image from CLI or prompt
     if args.image_ref:
