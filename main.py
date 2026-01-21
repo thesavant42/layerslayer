@@ -25,7 +25,7 @@ def main():
     # --- API server mode ---
     if args.api:
         import uvicorn
-        print("[*] Starting API server on http://127.0.0.1:8000")
+        print("[*] Starting API server on http://127.0.0.1:8000/docs")
         uvicorn.run("app.modules.api.api:app", host="127.0.0.1", port=8000)
         return
 
