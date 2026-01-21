@@ -28,7 +28,8 @@ IMAGE_PATTERN = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9._-]*/[a-zA-Z0-9][a-zA-Z0-9._
 def peek(
     image: str,
     layer: str = Query(default="all"),
-    arch: int = Query(default=0)
+    arch: int = Query(default=0),
+    hide_build: bool = Query(default=False, description="Hide build steps output")
 ):
     """
     Equivalent to: python main.py -t "{image}" --peek-layer={layer} --arch={arch} --force
@@ -37,6 +38,7 @@ def peek(
         image: Image reference (e.g., "nginx/nginx:latest")
         layer: Layer to peek - 'all' for all layers, or integer index for specific layer
         arch: Platform index for multi-arch images
+        hide_build: If true, hide verbose build steps output
     """
     # Validate image format
     if not IMAGE_PATTERN.match(image):
@@ -55,6 +57,8 @@ def peek(
             f"--arch={arch}",
             "--force"
         ]
+        if hide_build:
+            sys.argv.append("--hide-build")
         
         # Call main directly
         main.main()

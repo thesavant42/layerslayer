@@ -91,6 +91,11 @@ def parse_args():
         help="Force overwrite of existing database entries without prompting, for non-interactive mode",
     )
     p.add_argument(
+        "--hide-build",
+        action="store_true",
+        help="Hide build steps output (only show summary line)",
+    )
+    p.add_argument(
         "--api", "-A",
         action="store_true",
         help="Start the API server (uvicorn on 127.0.0.1:8000)",
@@ -185,9 +190,12 @@ def main():
 
         # --- Fetch and display build steps ---
         steps = fetch_build_steps(auth, image_ref, full_manifest["config"]["digest"])
-        print("\nBuild steps:")
-        for idx, cmd in enumerate(steps):
-            print(f" [{idx}] {cmd}")
+        if args.hide_build:
+            print(f"\nBuild steps: hidden ({len(steps)} steps)")
+        else:
+            print("\nBuild steps:")
+            for idx, cmd in enumerate(steps):
+                print(f" [{idx}] {cmd}")
 
         layers = full_manifest["layers"]
 
