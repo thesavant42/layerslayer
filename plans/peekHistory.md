@@ -31,8 +31,7 @@ s- qlite mcp has connectivity to the sqlite database
 Q: What database elements are best suited for this? We need 
     - the scraped at time,
     - owner,
-    - repo  
-    - arch 
+    - repo
     - os 
     - layer index number
 A: `layer_metadata` table in [lsng.db](app/data/lsng.db) has all of these fields.
@@ -41,7 +40,7 @@ Q: Should the output be text or JSON?
 A: For the history the results should be printed text, each result is laid out in columns of 1 row.
 
 Q: What fields do you want?
-A: **| scrapedat | owner | repo | tag | arch | layerindexnumber | layer_size |**  in that order.
+A: **| scrapedat | owner | repo | tag | layerindexnumber | layer_size |**  in that order.
 ---
 
 ## Tasks
@@ -51,7 +50,7 @@ A: **| scrapedat | owner | repo | tag | arch | layerindexnumber | layer_size |**
         -  -> `layer_metadata` table
 - With no arguments, print the last `page_size=30` results (default)
     - the owner, repo, tags can all be quite lengthy strings, I added a marker to indicate suggested length limits
-        - | scrapedat:12 | owner:<25 | repo:<25 | tag:<20  | arch:<10 | layerindexnumber:<4 | layer_size | 
+        - | scrapedat:12 | owner:<25 | repo:<25 | tag:<20  | layerindexnumber:<4 | layer_size | 
     - 1 row per result
     - None of the arguments are required, they are optional, and will filter the results
 
