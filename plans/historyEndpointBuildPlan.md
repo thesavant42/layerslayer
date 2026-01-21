@@ -102,29 +102,96 @@ LIMIT {page_size} OFFSET {(page-1) * page_size}
 
 ## Implementation Tasks
 
-### 1. Add imports and constants
+### 1. Add query function to storage.py
 
-**File**: [app/modules/api/api.py](../app/modules/api/api.py)
+**File**: [app/modules/keepers/storage.py](../app/modules/keepers/storage.py)
 
-Add at the top of the file with other imports:
+Add this function after the existing [`get_all_layers()`](../app/modules/keepers/storage.py:461) function:
 
 ```python
-import sqlite3
-
-# Database path for history queries
-DB_PATH = "app/data/lsng.db"
-
 # Valid columns for sorting history results
 HISTORY_SORTABLE_COLUMNS = ['scraped_at', 'owner', 'repo', 'tag', 'layer_index', 'layer_size']
+
+
+def get_history_paginated(
+    conn: sqlite3.Connection,
+    q: str = None,
+    page: int = 1,
+    page_size: int = 30,
+    sortby: str = "scraped_at",
+    order: str = "desc"
+) -> tuple[list[dict], int]:
+    """
+    Get paginated layer history with optional search filter.
+    
+    Args:
+        conn: SQLite connection
+        q: Optional search string to filter owner, repo, or tag
+        page: Page number (1-indexed)
+        page_size: Results per page
+        sortby: Column to sort by (must be in HISTORY_SORTABLE_COLUMNS)
+        order: Sort order ('asc' or 'desc')
+        
+    Returns:
+        Tuple of (list of row dicts, total count)
+    """
+    cursor = conn.cursor()
+    base_columns = "scraped_at, owner, repo, tag, layer_index, layer_size"
+    
+    if q:
+        where_clause = "WHERE owner LIKE ? OR repo LIKE ? OR tag LIKE ?"
+        search_param = f"%{q}%"
+        params = [search_param, search_param, search_param]
+        
+        # Count total matching results
+        count_query = f"SELECT COUNT(*) FROM layer_metadata {where_clause}"
+        cursor.execute(count_query, params)
+        total_count = cursor.fetchone()[0]
+        
+        # Fetch paginated results
+        data_query = (
+            f"SELECT {base_columns} FROM layer_metadata "
+            f"{where_clause} "
+            f"ORDER BY {sortby} {order.upper()} "
+            f"LIMIT ? OFFSET ?"
+        )
+        params.extend([page_size, (page - 1) * page_size])
+        cursor.execute(data_query, params)
+    else:
+        count_query = "SELECT COUNT(*) FROM layer_metadata"
+        cursor.execute(count_query)
+        total_count = cursor.fetchone()[0]
+        
+        data_query = (
+            f"SELECT {base_columns} FROM layer_metadata "
+            f"ORDER BY {sortby} {order.upper()} "
+            f"LIMIT ? OFFSET ?"
+        )
+        cursor.execute(data_query, [page_size, (page - 1) * page_size])
+    
+    rows = [dict(row) for row in cursor.fetchall()]
+    return rows, total_count
 ```
 
 ---
 
-### 2. Create helper functions
+### 2. Add import and helper functions to api.py
 
-Add these helper functions before the endpoint definitions:
+**File**: [app/modules/api/api.py](../app/modules/api/api.py)
+
+Add import at the top with other imports (around line 10):
 
 ```python
+from app.modules.keepers import storage
+```
+
+Add helper functions before the endpoint definitions (around line 28):
+
+```python
+# Valid columns for sorting history results (mirrors storage.HISTORY_SORTABLE_COLUMNS)
+HISTORY_SORTABLE_COLUMNS = ['scraped_at', 'owner', 'repo', 'tag', 'layer_index', 'layer_size']
+
+
 def truncate_string(s: str, max_len: int) -> str:
     """Truncate string to max_len, adding '...' if truncated."""
     if s is None:
@@ -157,7 +224,6 @@ def format_history_table(rows: list, page: int, page_size: int, total_count: int
     - layer_index: 5
     - layer_size: 10
     """
-    # Header
     header = (
         f"| {'scraped_at':<12} | {'owner':<25} | {'repo':<25} | "
         f"{'tag':<20} | {'layer':<5} | {'size':<10} |"
@@ -169,7 +235,6 @@ def format_history_table(rows: list, page: int, page_size: int, total_count: int
     lines = [header, separator]
     
     for row in rows:
-        # Extract and format date (first 10 chars of ISO timestamp)
         scraped = str(row['scraped_at'])[:10] if row['scraped_at'] else ""
         
         line = (
@@ -182,7 +247,6 @@ def format_history_table(rows: list, page: int, page_size: int, total_count: int
         )
         lines.append(line)
     
-    # Pagination footer
     total_pages = (total_count + page_size - 1) // page_size if total_count > 0 else 1
     footer = f"\nPage {page} of {total_pages} | {total_count} total results"
     lines.append(footer)
@@ -192,9 +256,11 @@ def format_history_table(rows: list, page: int, page_size: int, total_count: int
 
 ---
 
-### 3. Add the /history endpoint
+### 3. Add the /history endpoint to api.py
 
-Add this endpoint definition after the existing endpoints:
+**File**: [app/modules/api/api.py](../app/modules/api/api.py)
+
+Add this endpoint at the end of the file (after line 266):
 
 ```python
 @app.get("/history", response_class=PlainTextResponse)
@@ -213,7 +279,7 @@ def history(
     
     Example: /history?q=nginx&page=1&sortby=layer_size&order=desc
     """
-    # Validate sortby column (prevent SQL injection)
+    # Validate sortby column
     if sortby not in HISTORY_SORTABLE_COLUMNS:
         raise HTTPException(
             status_code=400,
@@ -228,51 +294,17 @@ def history(
         )
     
     try:
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        
-        # Build query with optional search filter
-        base_columns = "scraped_at, owner, repo, tag, layer_index, layer_size"
-        
-        if q:
-            # Search across owner, repo, and tag
-            where_clause = "WHERE owner LIKE ? OR repo LIKE ? OR tag LIKE ?"
-            search_param = f"%{q}%"
-            params = [search_param, search_param, search_param]
-            
-            # Count total matching results
-            count_query = f"SELECT COUNT(*) FROM layer_metadata {where_clause}"
-            cursor.execute(count_query, params)
-            total_count = cursor.fetchone()[0]
-            
-            # Fetch paginated results
-            # Note: sortby is validated above, safe to interpolate
-            data_query = (
-                f"SELECT {base_columns} FROM layer_metadata "
-                f"{where_clause} "
-                f"ORDER BY {sortby} {order.upper()} "
-                f"LIMIT ? OFFSET ?"
-            )
-            params.extend([page_size, (page - 1) * page_size])
-            cursor.execute(data_query, params)
-        else:
-            # No search filter - return all results
-            count_query = "SELECT COUNT(*) FROM layer_metadata"
-            cursor.execute(count_query)
-            total_count = cursor.fetchone()[0]
-            
-            data_query = (
-                f"SELECT {base_columns} FROM layer_metadata "
-                f"ORDER BY {sortby} {order.upper()} "
-                f"LIMIT ? OFFSET ?"
-            )
-            cursor.execute(data_query, [page_size, (page - 1) * page_size])
-        
-        rows = [dict(row) for row in cursor.fetchall()]
+        conn = storage.init_database()
+        rows, total_count = storage.get_history_paginated(
+            conn=conn,
+            q=q,
+            page=page,
+            page_size=page_size,
+            sortby=sortby,
+            order=order
+        )
         conn.close()
         
-        # Handle empty results
         if not rows:
             if q:
                 return f"No results found matching '{q}'\n"
@@ -280,7 +312,7 @@ def history(
         
         return format_history_table(rows, page, page_size, total_count)
         
-    except sqlite3.Error as e:
+    except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Database error: {str(e)}"
@@ -289,14 +321,12 @@ def history(
 
 ---
 
-### 4. Integration Location
+### 4. Summary of Changes
 
-The new code should be added to [app/modules/api/api.py](../app/modules/api/api.py) in this order:
-
-1. **Line ~9**: Add `import sqlite3` with other imports
-2. **Line ~28**: Add `DB_PATH` and `HISTORY_SORTABLE_COLUMNS` constants after `IMAGE_PATTERN`
-3. **Line ~30**: Add helper functions (`truncate_string`, `format_size`, `format_history_table`) before `@app.get("/peek")`
-4. **After line 266**: Add the `/history` endpoint at the end of the file
+| File | Changes |
+|------|---------|
+| [app/modules/keepers/storage.py](../app/modules/keepers/storage.py) | Add `HISTORY_SORTABLE_COLUMNS` constant and `get_history_paginated()` function |
+| [app/modules/api/api.py](../app/modules/api/api.py) | Add import, helper functions, and `/history` endpoint |
 
 ---
 
@@ -350,12 +380,12 @@ Page 1 of 1 | 3 total results
 
 ## Files to Modify
 
-| File | Line | Changes |
-|------|------|---------|
-| [app/modules/api/api.py](../app/modules/api/api.py) | ~9 | Add `import sqlite3` |
-| [app/modules/api/api.py](../app/modules/api/api.py) | ~28 | Add `DB_PATH` and `HISTORY_SORTABLE_COLUMNS` constants |
-| [app/modules/api/api.py](../app/modules/api/api.py) | ~30 | Add helper functions before first endpoint |
-| [app/modules/api/api.py](../app/modules/api/api.py) | EOF | Add `/history` endpoint at end of file |
+| File | Location | Changes |
+|------|----------|---------|
+| [app/modules/keepers/storage.py](../app/modules/keepers/storage.py) | After line 470 | Add `HISTORY_SORTABLE_COLUMNS` and `get_history_paginated()` |
+| [app/modules/api/api.py](../app/modules/api/api.py) | ~10 | Add `from app.modules.keepers import storage` |
+| [app/modules/api/api.py](../app/modules/api/api.py) | ~28 | Add `HISTORY_SORTABLE_COLUMNS`, helper functions |
+| [app/modules/api/api.py](../app/modules/api/api.py) | EOF | Add `/history` endpoint |
 
 ---
 
