@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Docker Hub Search CLI - Task 1"""
+"""Docker Hub Search Module"""
 
 import argparse
 import json
 import sys
 from datetime import datetime
 import requests
+import httpx
 
 
 def resolve(data, idx):
@@ -49,26 +50,68 @@ def format_date(iso_str):
         return str(iso_str)
 
 
-def print_results(results, total):
-    """Print results as formatted table."""
-    print(f"\nTotal: {total} results\n")
-    print(f"{'SLUG':<40} {'FAV':<4} {'PULLS':<6} {'CREATED':<12} {'UPDATED':<12} DESCRIPTION")
-    print("-" * 100)
+def format_results_text(results, total, page=1):
+    """Format results as text table string."""
+    lines = []
+    lines.append(f"\nTotal: {total} results (page {page})\n")
+    lines.append(f"{'SLUG':<40} {'FAV':<4} {'PULLS':<6} {'CREATED':<12} {'UPDATED':<12} DESCRIPTION")
+    lines.append("-" * 100)
     
     for r in results:
         slug = r.get('id', '')
         stars = r.get('star_count', 0)
         pulls = r.get('pull_count', '0')
-        publisher = r.get('publisher', {})
-        pub_name = publisher.get('name', '') if isinstance(publisher, dict) else ''
         created = format_date(r.get('created_at', ''))
         updated = format_date(r.get('updated_at', ''))
         desc = r.get('short_description', '')
         
-        print(f"{slug:<40} {stars:<4} {pulls:<6} {created:<12} {updated:<12} {desc}")
+        lines.append(f"{slug:<40} {stars:<4} {pulls:<6} {created:<12} {updated:<12} {desc}")
+    
+    return '\n'.join(lines)
+
+
+def print_results(results, total):
+    """Print results as formatted table (CLI use)."""
+    print(format_results_text(results, total))
+
+
+async def search_dockerhub(
+    query: str,
+    page: int = 1,
+    sortby: str = "updated_at",
+    order: str = "desc"
+) -> str:
+    """
+    Search Docker Hub and return formatted text table.
+    
+    Args:
+        query: Search term
+        page: Page number (default 1)
+        sortby: Sort field - 'pull_count' or 'updated_at' (default 'updated_at')
+        order: Sort order - 'asc' or 'desc' (default 'desc')
+    
+    Returns:
+        Formatted text table string
+    """
+    url = "https://hub.docker.com/search.data"
+    params = {
+        'q': query,
+        'page': page,
+        'order': order,
+        'sortby': sortby
+    }
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, params=params, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+    
+    results, total = get_results(data)
+    return format_results_text(results, total, page)
 
 
 def main():
+    """CLI entry point for standalone usage."""
     parser = argparse.ArgumentParser(description='Search Docker Hub')
     parser.add_argument('-q', '--query', help='Search query')
     parser.add_argument('--page', type=int, default=1, help='Page number')
@@ -112,4 +155,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

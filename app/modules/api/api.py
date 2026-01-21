@@ -13,6 +13,9 @@ import main
 # Import image config fetcher
 from app.modules.finders import get_image_config
 
+# Import search module
+from app.modules.search import search_dockerhub
+
 # Import fs-log-sqlite module using importlib (due to hyphen in filename)
 spec = importlib.util.spec_from_file_location("fs_log_sqlite", "app/modules/fs-log-sqlite.py")
 fs_log_sqlite = importlib.util.module_from_spec(spec)
@@ -33,14 +36,14 @@ def peek(
 ):
     """
     Equivalent to: python main.py -t "{image}" --peek-layer={layer} --arch={arch} --force
-    
+    ascen
     Args:
         image: Image reference (e.g., "nginx/nginx:latest")
         layer: Layer to peek - 'all' for all layers, or integer index for specific layer
         arch: Platform index for multi-arch images
         hide_build: If true, hide verbose build steps output
     """
-    # Validate image format
+    # Validate image formatnow it's working what are you editing now?
     if not IMAGE_PATTERN.match(image):
         raise HTTPException(status_code=400, detail="Invalid image reference format")
     
@@ -90,7 +93,53 @@ def fslog(image: str, path: str, layer: int = Query(default=None)):
     
     return captured_output.getvalue()
 
-# TODO Use this pattern as a model for Search
+@app.get("/search.data", response_class=PlainTextResponse)
+async def search_data(
+    q: str = Query(..., description="Search query"),
+    page: int = Query(default=1, ge=1, description="Page number"),
+    sortby: str = Query(default="updated_at", description="Sort field: pull_count or updated_at"),
+    order: str = Query(default="desc", description="Sort order: asc or desc")
+):
+    """
+    Search Docker Hub for images, users, and organizations.
+    Returns formatted text table with search results.
+    
+    Example: /search.data?q=nginx&page=1&sortby=pull_count&order=desc
+    """
+    # Validate sortby
+    if sortby not in ['pull_count', 'updated_at']:
+        raise HTTPException(
+            status_code=400,
+            detail="sortby must be 'pull_count' or 'updated_at'"
+        )
+    
+    # Validate order
+    if order not in ['asc', 'desc']:
+        raise HTTPException(
+            status_code=400,
+            detail="order must be 'asc' or 'desc'"
+        )
+    
+    try:
+        result = await search_dockerhub(
+            query=q,
+            page=page,
+            sortby=sortby,
+            order=order
+        )
+        return result
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Docker Hub API error: {e.response.text}"
+        )
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to connect to Docker Hub: {str(e)}"
+        )
+
+
 @app.get("/repositories")
 async def repositories(
     namespace: str,

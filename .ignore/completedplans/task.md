@@ -4,7 +4,7 @@
 As a researcher I want to be ablel to quickly find users, orgs, containers, and other docker hub assets quickly using the API.
 Would like to search for a term, parse the results, support pagination and sorting.
 
-### Example of a paginateted result with sort and order
+### Example of a paginateted result with sortby and order
 - paginated example, updated_at, order=desc: 
     - `&page=2&sort=updated_at&order=desc`
 - pull_count example: 
@@ -57,7 +57,7 @@ Pagintion and sorting are functional. Here's the sample Help output:
 
 ```bash
 C:\Users\jbras\GitHub\lsng>python .\app\modules\search\search-dockerhub.py --help
-usage: search-dockerhub.py [-h] [-q QUERY] [--page PAGE] [--sort {pull_count,updated_at}] [--order {asc,desc}]
+usage: search-dockerhub.py [-h] [-q QUERY] [--page PAGE] [--sortby {pull_count,updated_at}] [--order {asc,desc}]
                            [--file FILE]
 
 Search Docker Hub
@@ -66,7 +66,7 @@ options:
   -h, --help            show this help message and exit
   -q, --query QUERY     Search query
   --page PAGE           Page number
-  --sort {pull_count,updated_at}
+  --sortby {pull_count,updated_at}
                         Sort field
   --order {asc,desc}    Sort order
   --file FILE           Load from local JSON file (for testing)
