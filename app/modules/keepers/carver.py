@@ -530,6 +530,166 @@ def carve_file(
 
 
 # =============================================================================
+# Browser-Friendly Carving (returns bytes instead of saving to disk)
+# =============================================================================
+
+def carve_file_to_bytes(
+    image_ref: str,
+    target_path: str,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    verbose: bool = False,
+) -> tuple[Optional[bytes], CarveResult]:
+    """
+    Carve a single file from a Docker image layer and return as bytes.
+    
+    Same incremental HTTP Range request + streaming decompression approach
+    as carve_file(), but returns the file content instead of saving to disk.
+    
+    Args:
+        image_ref: Image reference (e.g., "nginx:alpine", "ubuntu:24.04")
+        target_path: Target file path in container (e.g., "/etc/passwd")
+        chunk_size: Fetch chunk size in bytes (default: 64KB)
+        verbose: Whether to show detailed progress output
+        
+    Returns:
+        Tuple of (file_bytes, CarveResult). file_bytes is None if not found.
+    """
+    start_time = time.time()
+    
+    # Parse image reference
+    namespace, repo, tag = parse_image_ref(image_ref)
+    
+    if verbose:
+        print(f"Fetching manifest for {namespace}/{repo}:{tag}...")
+    
+    auth = RegistryAuth(namespace, repo)
+    
+    try:
+        # Get manifest and layers
+        layers = _fetch_manifest(auth, namespace, repo, tag)
+        if not layers:
+            return None, CarveResult(
+                found=False,
+                target_file=target_path,
+                error="No layers found in manifest",
+            )
+        
+        if verbose:
+            print(f"Found {len(layers)} layer(s). Searching for {target_path}...\n")
+        
+        # Scan each layer
+        for i, layer in enumerate(layers):
+            if verbose:
+                print(f"Scanning layer {i+1}/{len(layers)}: {layer.digest[:20]}...")
+                print(f"  Layer size: {layer.size:,} bytes")
+            
+            # Initialize components
+            reader = IncrementalBlobReader(auth, namespace, repo, layer.digest, chunk_size)
+            decompressor = IncrementalGzipDecompressor()
+            scanner = TarScanner(target_path)
+            
+            # Stream and scan
+            chunks_fetched = 0
+            while not reader.exhausted:
+                # Fetch next chunk
+                compressed = reader.fetch_chunk()
+                if not compressed:
+                    break
+                
+                chunks_fetched += 1
+                
+                # Check gzip magic on first chunk
+                if chunks_fetched == 1:
+                    if len(compressed) < 2 or compressed[0:2] != b'\x1f\x8b':
+                        if verbose:
+                            print(f"  Layer is not gzip compressed, skipping")
+                        break
+                
+                # Decompress
+                decompressor.feed(compressed)
+                
+                if decompressor.error:
+                    if verbose:
+                        print(f"  Decompression error: {decompressor.error}")
+                    break
+                
+                # Scan for target
+                result = scanner.scan(decompressor.get_buffer())
+                
+                if verbose:
+                    print(f"  Downloaded: {reader.bytes_downloaded:,}B -> "
+                          f"Decompressed: {decompressor.bytes_decompressed:,}B -> "
+                          f"Entries: {scanner.entries_scanned}")
+                
+                if result.found:
+                    # Check if we have enough data for the file content
+                    buffer = decompressor.get_buffer()
+                    bytes_needed = result.content_offset + result.content_size
+                    
+                    # Fetch more if needed
+                    while len(buffer) < bytes_needed and not reader.exhausted:
+                        compressed = reader.fetch_chunk()
+                        if not compressed:
+                            break
+                        decompressor.feed(compressed)
+                        buffer = decompressor.get_buffer()
+                        if verbose:
+                            print(f"  Fetching more for file content... "
+                                  f"Have {len(buffer):,} / need {bytes_needed:,}")
+                    
+                    buffer = decompressor.get_buffer()
+                    if len(buffer) >= bytes_needed:
+                        # Found and have full content - extract to bytes!
+                        if verbose:
+                            print(f"  FOUND: {target_path} ({result.content_size:,} bytes) "
+                                  f"at entry #{result.entries_scanned}")
+                        
+                        # Extract content directly to bytes (NO DISK I/O)
+                        content = buffer[result.content_offset:result.content_offset + result.content_size]
+                        
+                        elapsed = time.time() - start_time
+                        efficiency = (reader.bytes_downloaded / layer.size * 100) if layer.size else 0
+                        
+                        if verbose:
+                            print(f"\nDone! Extracted {len(content):,} bytes in {elapsed:.2f}s")
+                            print(f"Stats: Downloaded {reader.bytes_downloaded:,} bytes "
+                                  f"of {layer.size:,} byte layer ({efficiency:.1f}%)")
+                        
+                        return content, CarveResult(
+                            found=True,
+                            saved_path=None,  # Not saved to disk
+                            target_file=target_path,
+                            bytes_downloaded=reader.bytes_downloaded,
+                            layer_size=layer.size,
+                            efficiency_pct=efficiency,
+                            elapsed_time=elapsed,
+                            layer_digest=layer.digest,
+                            layers_searched=i + 1,
+                        )
+                    else:
+                        if verbose:
+                            print(f"  [!] Found file but couldn't get full content")
+                            print(f"      Have {len(buffer):,} bytes, need {bytes_needed:,}")
+            
+            if verbose:
+                print()  # Blank line between layers
+        
+        elapsed = time.time() - start_time
+        if verbose:
+            print(f"File not found: {target_path} (searched {len(layers)} layers in {elapsed:.2f}s)")
+        
+        return None, CarveResult(
+            found=False,
+            target_file=target_path,
+            elapsed_time=elapsed,
+            layers_searched=len(layers),
+        )
+    
+    finally:
+        auth.invalidate()
+
+
+# =============================================================================
 # CLI Entry Point (standalone usage)
 # =============================================================================
 

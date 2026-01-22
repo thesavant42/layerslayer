@@ -2,8 +2,9 @@ import sys
 import re
 import importlib.util
 from io import StringIO
+from pathlib import Path
 from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import PlainTextResponse, JSONResponse
+from fastapi.responses import PlainTextResponse, JSONResponse, Response
 import httpx
 import requests
 
@@ -18,6 +19,9 @@ from app.modules.search import search_dockerhub
 
 # Import storage module for history queries
 from app.modules.keepers.storage import init_database, get_history, VALID_SORTBY_COLUMNS
+
+# Import carver for file extraction
+from app.modules.keepers.carver import carve_file_to_bytes
 
 # Import fs-log-sqlite module using importlib (due to hyphen in filename)
 spec = importlib.util.spec_from_file_location("fs_log_sqlite", "app/modules/fs-log-sqlite.py")
@@ -334,4 +338,60 @@ def peek(
         sys.stdout = old_stdout
     
     return captured_output.getvalue()
+
+
+@app.get("/carve")
+def carve(
+    image: str,
+    path: str = Query(..., description="File path in container, e.g., /etc/passwd"),
+):
+    """
+    Carve a single file from a Docker image and return it as a browser download.
+    
+    Uses HTTP Range requests to efficiently extract just the target file
+    without downloading the entire layer.
+    
+    Example: /carve?image=nginx/nginx:alpine&path=/etc/passwd
+    """
+    if not IMAGE_PATTERN.match(image):
+        raise HTTPException(status_code=400, detail="Invalid image reference format")
+    
+    content, result = carve_file_to_bytes(image, path)
+    
+    if not result.found:
+        detail = result.error or f"File not found: {path}"
+        raise HTTPException(status_code=404, detail=detail)
+    
+    # Extract just the filename for Content-Disposition
+    filename = Path(path).name
+    
+    # Guess content type based on extension
+    ext = Path(path).suffix.lower()
+    content_types = {
+        ".json": "application/json",
+        ".xml": "application/xml",
+        ".txt": "text/plain",
+        ".sh": "text/x-shellscript",
+        ".py": "text/x-python",
+        ".conf": "text/plain",
+        ".cfg": "text/plain",
+        ".ini": "text/plain",
+        ".yml": "text/yaml",
+        ".yaml": "text/yaml",
+    }
+    media_type = content_types.get(ext, "application/octet-stream")
+    
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Length": str(len(content)),
+            "X-Carve-Efficiency": f"{result.efficiency_pct:.1f}%",
+            "X-Carve-Bytes-Downloaded": str(result.bytes_downloaded),
+            "X-Carve-Layer-Size": str(result.layer_size),
+            "X-Carve-Layer-Digest": result.layer_digest or "",
+            "X-Carve-Elapsed-Time": f"{result.elapsed_time:.2f}s",
+        }
+    )
 
