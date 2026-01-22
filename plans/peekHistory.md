@@ -2,6 +2,8 @@
 
 As a security research I want to avoid sending unnecessary requests to a target system. To aid in this goal, I want to be ablle to query which repositories/images have already been peeked, and are thus able to be used with `fslog`, which requires the full image reference (`namespace/repository:tag`), filesystem path, and layer index integer.
 
+**By default, I want to see them in order of most recent first.**
+
 ---
 
 ## Problem Statement
@@ -18,15 +20,24 @@ As a security research I want to avoid sending unnecessary requests to a target 
 - It must support pagination for the results
     - Each page returns 30 results by default (just like Docker Hub),
     -  `page=1`, `page_size=30` modifiers to change the results amount displayed
-    - orderby any of the available columns (`scrapedat`, `repo`, `owner`, `tag`, etc) 
+    - orderby any of the available columns (`scraped_at`, `repo`, `owner`, `tag`, etc) , `scraped_at` is default, sort by most recent. 
 - support search of the rows, filter results to only those results with a match.
     - Example: `/history?q=nginx` only shows results that have nginx in the owner name, repo name, or tag.
 ---
 
 ### Resources
-s- qlite mcp has connectivity to the sqlite database
+- sqlite mcp has connectivity to the sqlite database
 
 ### Open Question:
+Q: How should I connecto to the database?
+A: Create a new function at
+
+ app\modules\keepers\storage.py:524-526
+```
+ =============================================================================
+# Put history query here TODO
+# =============================================================================
+```
 
 Q: What database elements are best suited for this? We need 
     - the scraped at time,
@@ -40,12 +51,12 @@ Q: Should the output be text or JSON?
 A: For the history the results should be printed text, each result is laid out in columns of 1 row.
 
 Q: What fields do you want?
-A: **| scrapedat | owner | repo | tag | layerindexnumber | layer_size |**  in that order.
+A: **| scraped_at | owner | repo | tag | layer_index | layer_size |**  in that order.
 ---
 
 ## Tasks
 
-- [ ] 1. Create a Fast API route for `/histiory?` 
+- [ ] 1. Create a Fast API route for `/history?` 
     - results db: [app/data/lsng.db](app/data/lsng.db)
         -  -> `layer_metadata` table
 - With no arguments, print the last `page_size=30` results (default)
