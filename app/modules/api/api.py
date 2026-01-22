@@ -3,24 +3,9 @@ import re
 import importlib.util
 from io import StringIO
 from pathlib import Path
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, APIRouter
 from fastapi.responses import PlainTextResponse, JSONResponse, Response, StreamingResponse
-import httpx
-import requests
-
-# Import main module
-import main
-
-# Import image config fetcher
-from app.modules.finders import get_image_config
-
-# Import search module
-from app.modules.search import search_dockerhub
-
-# Import storage module for history queries
-from app.modules.keepers.storage import init_database, get_history, VALID_SORTBY_COLUMNS
-
-# Import carver for file extraction
+import fastapi_swagger_dark as fsd
 from app.modules.keepers.carver import carve_file_to_bytes
 
 # Import auth and formatters for layer streaming
@@ -32,9 +17,11 @@ spec = importlib.util.spec_from_file_location("fs_log_sqlite", "app/modules/fs-l
 fs_log_sqlite = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fs_log_sqlite)
 
-app = FastAPI(title="LSNG Peek API")
-
-# Validate image reference format to prevent injection
+app = FastAPI(title="LSNG Peek API", docs_url=None)
+router = APIRouter()
+# Validate image reference frouter = fastapi.APIRouter()
+fsd.install(router)  # Install dark docs on the router
+app.include_router(router)  # Include router in appormat to prevent injection
 IMAGE_PATTERN = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9._-]*/[a-zA-Z0-9][a-zA-Z0-9._-]*(:[a-zA-Z0-9._-]+)?$')
 
 

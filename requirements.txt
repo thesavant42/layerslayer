@@ -3,3 +3,4 @@ tqdm
 textular
 fastapi
 uvicorn
+fastapi_swagger_dark
