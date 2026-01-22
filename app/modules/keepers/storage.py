@@ -522,5 +522,67 @@ def get_layer_entries(
     return [dict(row) for row in cursor.fetchall()]
 
 # =============================================================================
-# Put history query here TODO
+# History Query
 # =============================================================================
+
+VALID_SORTBY_COLUMNS = {"scraped_at", "owner", "repo", "tag", "layer_index", "layer_size"}
+
+
+def get_history(
+    conn: sqlite3.Connection,
+    q: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 30,
+    sortby: str = "scraped_at",
+    order: str = "desc",
+) -> list[dict]:
+    """
+    Query layer history from database with pagination, sorting, and filtering.
+    
+    Args:
+        conn: SQLite connection
+        q: Optional search query to filter by owner, repo, or tag
+        page: Page number (1-indexed)
+        page_size: Number of results per page
+        sortby: Column to sort by (scraped_at, owner, repo, tag, layer_index, layer_size)
+        order: Sort order (asc or desc)
+        
+    Returns:
+        List of dicts with scraped_at, owner, repo, tag, layer_index, layer_size
+    """
+    # Validate sortby column
+    if sortby not in VALID_SORTBY_COLUMNS:
+        sortby = "scraped_at"
+    
+    # Validate order
+    if order.lower() not in ("asc", "desc"):
+        order = "desc"
+    
+    cursor = conn.cursor()
+    
+    # Build query
+    base_query = """
+        SELECT scraped_at, owner, repo, tag, layer_index, layer_size
+        FROM layer_metadata
+    """
+    
+    params = []
+    
+    # Add filter if search query provided
+    if q:
+        base_query += """
+        WHERE owner LIKE ? OR repo LIKE ? OR tag LIKE ?
+        """
+        search_pattern = f"%{q}%"
+        params.extend([search_pattern, search_pattern, search_pattern])
+    
+    # Add ORDER BY
+    base_query += f" ORDER BY {sortby} {order.upper()}"
+    
+    # Add pagination
+    offset = (page - 1) * page_size
+    base_query += " LIMIT ? OFFSET ?"
+    params.extend([page_size, offset])
+    
+    cursor.execute(base_query, params)
+    return [dict(row) for row in cursor.fetchall()]

@@ -16,6 +16,9 @@ from app.modules.finders import get_image_config
 # Import search module
 from app.modules.search import search_dockerhub
 
+# Import storage module for history queries
+from app.modules.keepers.storage import init_database, get_history, VALID_SORTBY_COLUMNS
+
 # Import fs-log-sqlite module using importlib (due to hyphen in filename)
 spec = importlib.util.spec_from_file_location("fs_log_sqlite", "app/modules/fs-log-sqlite.py")
 fs_log_sqlite = importlib.util.module_from_spec(spec)
@@ -264,3 +267,68 @@ def get_tag_config(
         raise HTTPException(status_code=502, detail=f"Registry request failed: {e}")
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/history", response_class=PlainTextResponse)
+def history(
+    q: str = Query(default=None, description="Filter by owner, repo, or tag"),
+    page: int = Query(default=1, ge=1, description="Page number"),
+    page_size: int = Query(default=30, ge=1, le=100, description="Results per page"),
+    sortby: str = Query(default="scraped_at", description="Column to sort by"),
+    order: str = Query(default="desc", description="Sort order: asc or desc")
+):
+    """
+    List cached scan results from the database.
+    Returns formatted text table with previously peeked layers.
+    
+    Example: /history?q=nginx&page=1&page_size=30&sortby=scraped_at&order=desc
+    """
+    # Validate sortby
+    if sortby not in VALID_SORTBY_COLUMNS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"sortby must be one of: {', '.join(sorted(VALID_SORTBY_COLUMNS))}"
+        )
+    
+    # Validate order
+    if order not in ['asc', 'desc']:
+        raise HTTPException(
+            status_code=400,
+            detail="order must be 'asc' or 'desc'"
+        )
+    
+    # Query database
+    conn = init_database()
+    try:
+        rows = get_history(
+            conn=conn,
+            q=q,
+            page=page,
+            page_size=page_size,
+            sortby=sortby,
+            order=order
+        )
+    finally:
+        conn.close()
+    
+    # Format output as text table
+    # Column widths: scraped_at(12), owner(<25), repo(<25), tag(<20), layer_index(<4), layer_size
+    header = f"{'scraped_at':<12} | {'owner':<25} | {'repo':<25} | {'tag':<20} | {'idx':<4} | {'layer_size':>12}"
+    separator = f"{'-'*12}-+-{'-'*25}-+-{'-'*25}-+-{'-'*20}-+-{'-'*4}-+-{'-'*12}"
+    
+    lines = [header, separator]
+    
+    for row in rows:
+        # Truncate long strings
+        scraped_at = str(row.get('scraped_at', ''))[:10]
+        owner = str(row.get('owner', ''))[:25]
+        repo = str(row.get('repo', ''))[:25]
+        tag = str(row.get('tag', ''))[:20]
+        layer_index = str(row.get('layer_index', ''))
+        layer_size = row.get('layer_size', 0) or 0
+        
+        lines.append(
+            f"{scraped_at:<12} | {owner:<25} | {repo:<25} | {tag:<20} | {layer_index:<4} | {layer_size:>12}"
+        )
+    
+    return "\n".join(lines)
