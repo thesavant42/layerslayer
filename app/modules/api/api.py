@@ -176,6 +176,8 @@ def fslog(image: str, path: str, layer: int = Query(default=None)):
         else:
             sys.argv = ["fs-log-sqlite.py", image, path]
         fs_log_sqlite.main()
+    except SystemExit:
+        pass  # fs-log-sqlite calls sys.exit() for empty results
     finally:
         sys.stdout = old_stdout
     
@@ -198,6 +200,8 @@ def fslog_search(q: str, image: str = Query(default=None), layer: int = Query(de
             if layer is not None:
                 sys.argv.append(str(layer))
         fs_log_sqlite.main()
+    except SystemExit:
+        pass  # fs-log-sqlite calls sys.exit() for empty results
     finally:
         sys.stdout = old_stdout
     
