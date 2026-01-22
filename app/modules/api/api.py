@@ -358,6 +358,7 @@ def peek(
 def carve(
     image: str,
     path: str = Query(..., description="File path in container, e.g., /etc/passwd"),
+    as_text: bool = Query(default=False, description="Render as plain text in browser instead of downloading"),
 ):
     """
     Carve a single file from a Docker image and return it as a browser download.
@@ -366,6 +367,7 @@ def carve(
     without downloading the entire layer.
     
     Example: /carve?image=nginx/nginx:alpine&path=/etc/passwd
+    Example: /carve?image=nginx/nginx:alpine&path=/etc/passwd&as_text=true
     """
     if not IMAGE_PATTERN.match(image):
         raise HTTPException(status_code=400, detail="Invalid image reference format")
@@ -395,18 +397,28 @@ def carve(
     }
     media_type = content_types.get(ext, "application/octet-stream")
     
+    headers = {
+        "Content-Length": str(len(content)),
+        "X-Carve-Efficiency": f"{result.efficiency_pct:.1f}%",
+        "X-Carve-Bytes-Downloaded": str(result.bytes_downloaded),
+        "X-Carve-Layer-Size": str(result.layer_size),
+        "X-Carve-Layer-Digest": result.layer_digest or "",
+        "X-Carve-Elapsed-Time": f"{result.elapsed_time:.2f}s",
+    }
+
+    if as_text:
+        headers["Content-Disposition"] = f'inline; filename="{filename}"'
+        return Response(
+            content=content,
+            media_type="text/plain; charset=utf-8",
+            headers=headers,
+        )
+
+    headers["Content-Disposition"] = f'attachment; filename="{filename}"'
     return Response(
         content=content,
         media_type=media_type,
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-            "Content-Length": str(len(content)),
-            "X-Carve-Efficiency": f"{result.efficiency_pct:.1f}%",
-            "X-Carve-Bytes-Downloaded": str(result.bytes_downloaded),
-            "X-Carve-Layer-Size": str(result.layer_size),
-            "X-Carve-Layer-Digest": result.layer_digest or "",
-            "X-Carve-Elapsed-Time": f"{result.elapsed_time:.2f}s",
-        }
+        headers=headers,
     )
 
 
