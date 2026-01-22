@@ -4,7 +4,7 @@ import importlib.util
 from io import StringIO
 from pathlib import Path
 from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import PlainTextResponse, JSONResponse, Response
+from fastapi.responses import PlainTextResponse, JSONResponse, Response, StreamingResponse
 import httpx
 import requests
 
@@ -22,6 +22,10 @@ from app.modules.keepers.storage import init_database, get_history, VALID_SORTBY
 
 # Import carver for file extraction
 from app.modules.keepers.carver import carve_file_to_bytes
+
+# Import auth and formatters for layer streaming
+from app.modules.auth import RegistryAuth
+from app.modules.formatters import parse_image_ref, registry_base_url
 
 # Import fs-log-sqlite module using importlib (due to hyphen in filename)
 spec = importlib.util.spec_from_file_location("fs_log_sqlite", "app/modules/fs-log-sqlite.py")
@@ -393,5 +397,72 @@ def carve(
             "X-Carve-Layer-Digest": result.layer_digest or "",
             "X-Carve-Elapsed-Time": f"{result.elapsed_time:.2f}s",
         }
+    )
+
+
+@app.get("/layer/download")
+def download_layer(
+    image: str,
+    digest: str = Query(..., description="Layer digest, e.g., sha256:abc123..."),
+):
+    """
+    Stream a layer blob directly to the browser as a download.
+    
+    Acts as an authenticated proxy - fetches the layer from the registry
+    and streams it directly to the browser without intermediate storage.
+    
+    Example: /layer/download?image=nginx/nginx:alpine&digest=sha256:abc123...
+    """
+    if not IMAGE_PATTERN.match(image):
+        raise HTTPException(status_code=400, detail="Invalid image reference format")
+    
+    # Validate digest format
+    if not digest.startswith("sha256:") or len(digest) != 71:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid digest format. Expected sha256:<64 hex chars>"
+        )
+    
+    # Parse image reference to get namespace and repo
+    namespace, repo, _ = parse_image_ref(image)
+    url = f"{registry_base_url(namespace, repo)}/blobs/{digest}"
+    
+    # Create authenticated session and fetch the layer
+    auth = RegistryAuth(namespace, repo)
+    
+    try:
+        resp = auth.request_with_retry("GET", url, stream=True)
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        auth.invalidate()
+        raise HTTPException(status_code=502, detail=f"Registry request failed: {e}")
+    
+    # Generate a clean filename from the digest
+    filename = digest.replace(":", "_") + ".tar.gz"
+    
+    # Get content length if available
+    content_length = resp.headers.get("Content-Length", "")
+    
+    # Stream the response content directly to the browser
+    def generate():
+        try:
+            for chunk in resp.iter_content(chunk_size=8192):
+                if chunk:
+                    yield chunk
+        finally:
+            resp.close()
+            auth.invalidate()
+    
+    headers = {
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "X-Layer-Digest": digest,
+    }
+    if content_length:
+        headers["Content-Length"] = content_length
+    
+    return StreamingResponse(
+        generate(),
+        media_type="application/gzip",
+        headers=headers,
     )
 
