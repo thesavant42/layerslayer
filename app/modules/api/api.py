@@ -30,71 +30,6 @@ app = FastAPI(title="LSNG Peek API")
 IMAGE_PATTERN = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9._-]*/[a-zA-Z0-9][a-zA-Z0-9._-]*(:[a-zA-Z0-9._-]+)?$')
 
 
-@app.get("/peek", response_class=PlainTextResponse)
-def peek(
-    image: str,
-    layer: str = Query(default="all"),
-    arch: int = Query(default=0),
-    hide_build: bool = Query(default=False, description="Hide build steps output")
-):
-    """
-    Equivalent to: python main.py -t "{image}" --peek-layer={layer} --arch={arch} --force
-    ascen
-    Args:
-        image: Image reference (e.g., "nginx/nginx:latest")
-        layer: Layer to peek - 'all' for all layers, or integer index for specific layer
-        arch: Platform index for multi-arch images
-        hide_build: If true, hide verbose build steps output
-    """
-    # Validate image formatnow it's working what are you editing now?
-    if not IMAGE_PATTERN.match(image):
-        raise HTTPException(status_code=400, detail="Invalid image reference format")
-    
-    # Capture stdout
-    old_stdout = sys.stdout
-    sys.stdout = captured_output = StringIO()
-    
-    try:
-        # Set argv as if called from CLI
-        sys.argv = [
-            "main.py",
-            "-t", image,
-            f"--peek-layer={layer}",
-            f"--arch={arch}",
-            "--force"
-        ]
-        if hide_build:
-            sys.argv.append("--hide-build")
-        
-        # Call main directly
-        main.main()
-        
-    finally:
-        # Restore stdout
-        sys.stdout = old_stdout
-    
-    return captured_output.getvalue()
-
-
-@app.get("/fslog", response_class=PlainTextResponse)
-def fslog(image: str, path: str, layer: int = Query(default=None)):
-    """Browse filesystem logs for a Docker image layer."""
-    if not IMAGE_PATTERN.match(image):
-        raise HTTPException(status_code=400, detail="Invalid image reference format")
-    
-    old_stdout = sys.stdout
-    sys.stdout = captured_output = StringIO()
-    
-    try:
-        if layer is not None:
-            sys.argv = ["fs-log-sqlite.py", image, str(layer), path, "--single-layer"]
-        else:
-            sys.argv = ["fs-log-sqlite.py", image, path]
-        fs_log_sqlite.main()
-    finally:
-        sys.stdout = old_stdout
-    
-    return captured_output.getvalue()
 
 @app.get("/search.data", response_class=PlainTextResponse)
 async def search_data(
@@ -141,6 +76,114 @@ async def search_data(
             status_code=502,
             detail=f"Failed to connect to Docker Hub: {str(e)}"
         )
+
+
+@app.get("/history", response_class=PlainTextResponse)
+def history(
+    q: str = Query(default=None, description="Filter by owner, repo, or tag"),
+    page: int = Query(default=1, ge=1, description="Page number"),
+    page_size: int = Query(default=30, ge=1, le=100, description="Results per page"),
+    sortby: str = Query(default="scraped_at", description="Column to sort by"),
+    order: str = Query(default="desc", description="Sort order: asc or desc")
+):
+    """
+    List cached scan results from the database.
+    Returns formatted text table with previously peeked layers.
+    
+    Example: /history?q=nginx&page=1&page_size=30&sortby=scraped_at&order=desc
+    """
+    # Validate sortby
+    if sortby not in VALID_SORTBY_COLUMNS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"sortby must be one of: {', '.join(sorted(VALID_SORTBY_COLUMNS))}"
+        )
+    
+    # Validate order
+    if order not in ['asc', 'desc']:
+        raise HTTPException(
+            status_code=400,
+            detail="order must be 'asc' or 'desc'"
+        )
+    
+    # Query database
+    conn = init_database()
+    try:
+        rows = get_history(
+            conn=conn,
+            q=q,
+            page=page,
+            page_size=page_size,
+            sortby=sortby,
+            order=order
+        )
+    finally:
+        conn.close()
+    
+    # Format output as text table
+    # Column widths: scraped_at(12), owner(<25), repo(<25), tag(<20), layer_index(<4), layer_size
+    header = f"{'scraped_at':<12} | {'owner':<25} | {'repo':<25} | {'tag':<20} | {'idx':<4} | {'layer_size':>12}"
+    separator = f"{'-'*12}-+-{'-'*25}-+-{'-'*25}-+-{'-'*20}-+-{'-'*4}-+-{'-'*12}"
+    
+    lines = [header, separator]
+    
+    for row in rows:
+        # Truncate long strings
+        scraped_at = str(row.get('scraped_at', ''))[:10]
+        owner = str(row.get('owner', ''))[:25]
+        repo = str(row.get('repo', ''))[:25]
+        tag = str(row.get('tag', ''))[:20]
+        layer_index = str(row.get('layer_index', ''))
+        layer_size = row.get('layer_size', 0) or 0
+        
+        lines.append(
+            f"{scraped_at:<12} | {owner:<25} | {repo:<25} | {tag:<20} | {layer_index:<4} | {layer_size:>12}"
+        )
+    
+    return "\n".join(lines)
+
+
+@app.get("/fslog", response_class=PlainTextResponse)
+def fslog(image: str, path: str, layer: int = Query(default=None)):
+    """Browse filesystem logs for a Docker image layer."""
+    if not IMAGE_PATTERN.match(image):
+        raise HTTPException(status_code=400, detail="Invalid image reference format")
+    
+    old_stdout = sys.stdout
+    sys.stdout = captured_output = StringIO()
+    
+    try:
+        if layer is not None:
+            sys.argv = ["fs-log-sqlite.py", image, str(layer), path, "--single-layer"]
+        else:
+            sys.argv = ["fs-log-sqlite.py", image, path]
+        fs_log_sqlite.main()
+    finally:
+        sys.stdout = old_stdout
+    
+    return captured_output.getvalue()
+
+
+@app.get("/fslog-search", response_class=PlainTextResponse)
+def fslog_search(q: str, image: str = Query(default=None), layer: int = Query(default=None)):
+    """Search filesystem logs for files matching a pattern."""
+    if image and not IMAGE_PATTERN.match(image):
+        raise HTTPException(status_code=400, detail="Invalid image reference format")
+    
+    old_stdout = sys.stdout
+    sys.stdout = captured_output = StringIO()
+    
+    try:
+        sys.argv = ["fs-log-sqlite.py", "--search", q]
+        if image:
+            sys.argv.append(image)
+            if layer is not None:
+                sys.argv.append(str(layer))
+        fs_log_sqlite.main()
+    finally:
+        sys.stdout = old_stdout
+    
+    return captured_output.getvalue()
 
 
 @app.get("/repositories")
@@ -220,28 +263,6 @@ async def repository_tag_images(
         return JSONResponse(content=response.json(), status_code=200)
 
 
-@app.get("/fslog-search", response_class=PlainTextResponse)
-def fslog_search(q: str, image: str = Query(default=None), layer: int = Query(default=None)):
-    """Search filesystem logs for files matching a pattern."""
-    if image and not IMAGE_PATTERN.match(image):
-        raise HTTPException(status_code=400, detail="Invalid image reference format")
-    
-    old_stdout = sys.stdout
-    sys.stdout = captured_output = StringIO()
-    
-    try:
-        sys.argv = ["fs-log-sqlite.py", "--search", q]
-        if image:
-            sys.argv.append(image)
-            if layer is not None:
-                sys.argv.append(str(layer))
-        fs_log_sqlite.main()
-    finally:
-        sys.stdout = old_stdout
-    
-    return captured_output.getvalue()
-
-
 @app.get("/repositories/{namespace}/{repo}/tags/{tag}/config")
 def get_tag_config(
     namespace: str,
@@ -269,66 +290,48 @@ def get_tag_config(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@app.get("/history", response_class=PlainTextResponse)
-def history(
-    q: str = Query(default=None, description="Filter by owner, repo, or tag"),
-    page: int = Query(default=1, ge=1, description="Page number"),
-    page_size: int = Query(default=30, ge=1, le=100, description="Results per page"),
-    sortby: str = Query(default="scraped_at", description="Column to sort by"),
-    order: str = Query(default="desc", description="Sort order: asc or desc")
+@app.get("/peek", response_class=PlainTextResponse)
+def peek(
+    image: str,
+    layer: str = Query(default="all"),
+    arch: int = Query(default=0),
+    hide_build: bool = Query(default=False, description="Hide build steps output")
 ):
     """
-    List cached scan results from the database.
-    Returns formatted text table with previously peeked layers.
-    
-    Example: /history?q=nginx&page=1&page_size=30&sortby=scraped_at&order=desc
+    Equivalent to: python main.py -t "{image}" --peek-layer={layer} --arch={arch} --force
+    ascen
+    Args:
+        image: Image reference (e.g., "nginx/nginx:latest")
+        layer: Layer to peek - 'all' for all layers, or integer index for specific layer
+        arch: Platform index for multi-arch images
+        hide_build: If true, hide verbose build steps output
     """
-    # Validate sortby
-    if sortby not in VALID_SORTBY_COLUMNS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"sortby must be one of: {', '.join(sorted(VALID_SORTBY_COLUMNS))}"
-        )
+    # Validate image formatnow it's working what are you editing now?
+    if not IMAGE_PATTERN.match(image):
+        raise HTTPException(status_code=400, detail="Invalid image reference format")
     
-    # Validate order
-    if order not in ['asc', 'desc']:
-        raise HTTPException(
-            status_code=400,
-            detail="order must be 'asc' or 'desc'"
-        )
+    # Capture stdout
+    old_stdout = sys.stdout
+    sys.stdout = captured_output = StringIO()
     
-    # Query database
-    conn = init_database()
     try:
-        rows = get_history(
-            conn=conn,
-            q=q,
-            page=page,
-            page_size=page_size,
-            sortby=sortby,
-            order=order
-        )
-    finally:
-        conn.close()
-    
-    # Format output as text table
-    # Column widths: scraped_at(12), owner(<25), repo(<25), tag(<20), layer_index(<4), layer_size
-    header = f"{'scraped_at':<12} | {'owner':<25} | {'repo':<25} | {'tag':<20} | {'idx':<4} | {'layer_size':>12}"
-    separator = f"{'-'*12}-+-{'-'*25}-+-{'-'*25}-+-{'-'*20}-+-{'-'*4}-+-{'-'*12}"
-    
-    lines = [header, separator]
-    
-    for row in rows:
-        # Truncate long strings
-        scraped_at = str(row.get('scraped_at', ''))[:10]
-        owner = str(row.get('owner', ''))[:25]
-        repo = str(row.get('repo', ''))[:25]
-        tag = str(row.get('tag', ''))[:20]
-        layer_index = str(row.get('layer_index', ''))
-        layer_size = row.get('layer_size', 0) or 0
+        # Set argv as if called from CLI
+        sys.argv = [
+            "main.py",
+            "-t", image,
+            f"--peek-layer={layer}",
+            f"--arch={arch}",
+            "--force"
+        ]
+        if hide_build:
+            sys.argv.append("--hide-build")
         
-        lines.append(
-            f"{scraped_at:<12} | {owner:<25} | {repo:<25} | {tag:<20} | {layer_index:<4} | {layer_size:>12}"
-        )
+        # Call main directly
+        main.main()
+        
+    finally:
+        # Restore stdout
+        sys.stdout = old_stdout
     
-    return "\n".join(lines)
+    return captured_output.getvalue()
+
