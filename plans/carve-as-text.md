@@ -85,7 +85,6 @@ return Response(
 
 **After:**
 ```python
-# Build common headers
 headers = {
     "Content-Length": str(len(content)),
     "X-Carve-Efficiency": f"{result.efficiency_pct:.1f}%",
@@ -96,21 +95,19 @@ headers = {
 }
 
 if as_text:
-    # Inline display as plain text
     headers["Content-Disposition"] = f'inline; filename="{filename}"'
     return Response(
         content=content,
         media_type="text/plain; charset=utf-8",
         headers=headers,
     )
-else:
-    # Download as file (existing behavior)
-    headers["Content-Disposition"] = f'attachment; filename="{filename}"'
-    return Response(
-        content=content,
-        media_type=media_type,
-        headers=headers,
-    )
+
+headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+return Response(
+    content=content,
+    media_type=media_type,
+    headers=headers,
+)
 ```
 
 ---
