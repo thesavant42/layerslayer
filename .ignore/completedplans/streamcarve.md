@@ -1,5 +1,5 @@
 File Carving is not yet fully exposed to the API
-
+**COMPLETED**
 **Status of carver.py coupling:**
 
 Based on the codebase search, [`carver.py`](app/modules/keepers/carver.py) is currently:
