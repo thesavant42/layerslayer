@@ -3,10 +3,11 @@ import re
 import importlib.util
 from io import StringIO
 from pathlib import Path
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, APIRouter
 from fastapi.responses import PlainTextResponse, JSONResponse, Response, StreamingResponse
 import httpx
 import requests
+import fastapi_swagger_dark as fsd
 
 # Import main module
 import main
@@ -32,7 +33,16 @@ spec = importlib.util.spec_from_file_location("fs_log_sqlite", "app/modules/fs-l
 fs_log_sqlite = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fs_log_sqlite)
 
-app = FastAPI(title="LSNG Peek API")
+app = FastAPI(title="LSNG Peek API", docs_url=None)
+
+# Create a router for the dark docs
+router = APIRouter()
+
+# Install dark theme on the router
+fsd.install(router)
+
+# Include the router in the app
+app.include_router(router)
 
 # Validate image reference format to prevent injection
 IMAGE_PATTERN = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9._-]*/[a-zA-Z0-9][a-zA-Z0-9._-]*(:[a-zA-Z0-9._-]+)?$')
