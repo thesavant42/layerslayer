@@ -403,11 +403,6 @@ def carve(
     
     headers = {
         "Content-Length": str(len(content)),
-        "X-Carve-Efficiency": f"{result.efficiency_pct:.1f}%",
-        "X-Carve-Bytes-Downloaded": str(result.bytes_downloaded),
-        "X-Carve-Layer-Size": str(result.layer_size),
-        "X-Carve-Layer-Digest": result.layer_digest or "",
-        "X-Carve-Elapsed-Time": f"{result.elapsed_time:.2f}s",
     }
 
     if as_text:
@@ -481,7 +476,6 @@ def download_layer(
     
     headers = {
         "Content-Disposition": f'attachment; filename="{filename}"',
-        "X-Layer-Digest": digest,
     }
     if content_length:
         headers["Content-Length"] = content_length
