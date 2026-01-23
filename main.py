@@ -51,12 +51,14 @@ def main():
     # --- carve mode: extract a single file and exit ---
     # Note: carve_file creates its own RegistryAuth internally
     if args.carve_file:
-        print(f"[*] Carve mode: extracting {args.carve_file} from {image_ref}\n")
+        layer_msg = f" from layer {args.carve_layer}" if args.carve_layer is not None else ""
+        print(f"[*] Carve mode: extracting {args.carve_file} from {image_ref}{layer_msg}\n")
         result = carve_file(
             image_ref=image_ref,
             target_path=args.carve_file,
             output_dir=args.output_dir,
             verbose=not args.quiet,
+            layer_index=args.carve_layer,
         )
         if result.found:
             sys.exit(0)

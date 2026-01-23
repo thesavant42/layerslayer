@@ -118,15 +118,6 @@ Update function call:
 content, result = carve_file_to_bytes(image, path, layer_index=layer)
 ```
 
-Add layer info to response headers:
-
-```python
-headers = {
-    # ... existing headers ...
-    "X-Carve-Layer-Index": str(result.layer_index) if result.layer_index is not None else "",
-}
-```
-
 ---
 
 ### 3. cli.py - Command Line Interface

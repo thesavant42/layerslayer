@@ -46,7 +46,13 @@ def parse_args():
         dest="carve_file",
         help="Extract a specific file from the image (e.g., /etc/passwd)",
     )
-    
+    p.add_argument(
+        "--carve-layer",
+        dest="carve_layer",
+        type=int,
+        default=None,
+        help="Layer index to extract file from (use with --carve-file)",
+    )
     p.add_argument(
         "--output-dir", "-o",
         dest="output_dir",

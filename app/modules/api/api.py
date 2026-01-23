@@ -362,6 +362,7 @@ def peek(
 def carve(
     image: str,
     path: str = Query(..., description="File path in container, e.g., /etc/passwd"),
+    layer: int = Query(default=None, description="Specific layer index to extract from"),
     as_text: bool = Query(default=False, description="Render as plain text in browser instead of downloading"),
 ):
     """
@@ -371,12 +372,13 @@ def carve(
     without downloading the entire layer.
     
     Example: /carve?image=nginx/nginx:alpine&path=/etc/passwd
+    Example: /carve?image=nginx/nginx:alpine&path=/etc/passwd&layer=0
     Example: /carve?image=nginx/nginx:alpine&path=/etc/passwd&as_text=true
     """
     if not IMAGE_PATTERN.match(image):
         raise HTTPException(status_code=400, detail="Invalid image reference format")
     
-    content, result = carve_file_to_bytes(image, path)
+    content, result = carve_file_to_bytes(image, path, layer_index=layer)
     
     if not result.found:
         detail = result.error or f"File not found: {path}"

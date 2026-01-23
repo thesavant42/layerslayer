@@ -49,6 +49,7 @@ class CarveResult:
     efficiency_pct: float = 0.0
     elapsed_time: float = 0.0
     layer_digest: Optional[str] = None
+    layer_index: Optional[int] = None  # Which layer the file came from
     layers_searched: int = 0
     error: Optional[str] = None
     
@@ -63,6 +64,7 @@ class CarveResult:
             "efficiency_pct": self.efficiency_pct,
             "elapsed_time": self.elapsed_time,
             "layer_digest": self.layer_digest,
+            "layer_index": self.layer_index,
             "layers_searched": self.layers_searched,
             "error": self.error,
         }
@@ -367,6 +369,7 @@ def carve_file(
     output_dir: str = DEFAULT_OUTPUT_DIR,
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     verbose: bool = True,
+    layer_index: Optional[int] = None,
 ) -> CarveResult:
     """
     Carve a single file from a Docker image layer.
@@ -381,6 +384,7 @@ def carve_file(
         output_dir: Output directory for carved file (default: ./carved)
         chunk_size: Fetch chunk size in bytes (default: 64KB)
         verbose: Whether to show detailed progress output
+        layer_index: Target specific layer index (default: None searches all layers)
         
     Returns:
         CarveResult with extraction stats and status
@@ -406,11 +410,23 @@ def carve_file(
                 error="No layers found in manifest",
             )
         
+        # Determine which layers to search
+        if layer_index is not None:
+            if layer_index < 0 or layer_index >= len(layers):
+                return CarveResult(
+                    found=False,
+                    target_file=target_path,
+                    error=f"Layer index {layer_index} out of range (0-{len(layers)-1})",
+                )
+            layers_to_search = [(layer_index, layers[layer_index])]
+        else:
+            layers_to_search = list(enumerate(layers))
+        
         if verbose:
             print(f"Found {len(layers)} layer(s). Searching for {target_path}...\n")
         
         # Step 3: Scan each layer
-        for i, layer in enumerate(layers):
+        for i, layer in layers_to_search:
             if verbose:
                 print(f"Scanning layer {i+1}/{len(layers)}: {layer.digest[:20]}...")
                 print(f"  Layer size: {layer.size:,} bytes")
@@ -503,7 +519,8 @@ def carve_file(
                             efficiency_pct=efficiency,
                             elapsed_time=elapsed,
                             layer_digest=layer.digest,
-                            layers_searched=i + 1,
+                            layer_index=i,
+                            layers_searched=len(layers_to_search),
                         )
                     else:
                         if verbose:
@@ -515,13 +532,13 @@ def carve_file(
         
         elapsed = time.time() - start_time
         if verbose:
-            print(f"File not found: {target_path} (searched {len(layers)} layers in {elapsed:.2f}s)")
+            print(f"File not found: {target_path} (searched {len(layers_to_search)} layers in {elapsed:.2f}s)")
         
         return CarveResult(
             found=False,
             target_file=target_path,
             elapsed_time=elapsed,
-            layers_searched=len(layers),
+            layers_searched=len(layers_to_search),
         )
     
     finally:
@@ -538,6 +555,7 @@ def carve_file_to_bytes(
     target_path: str,
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     verbose: bool = False,
+    layer_index: Optional[int] = None,
 ) -> tuple[Optional[bytes], CarveResult]:
     """
     Carve a single file from a Docker image layer and return as bytes.
@@ -550,6 +568,7 @@ def carve_file_to_bytes(
         target_path: Target file path in container (e.g., "/etc/passwd")
         chunk_size: Fetch chunk size in bytes (default: 64KB)
         verbose: Whether to show detailed progress output
+        layer_index: Target specific layer index (default: None searches all layers)
         
     Returns:
         Tuple of (file_bytes, CarveResult). file_bytes is None if not found.
@@ -574,11 +593,23 @@ def carve_file_to_bytes(
                 error="No layers found in manifest",
             )
         
+        # Determine which layers to search
+        if layer_index is not None:
+            if layer_index < 0 or layer_index >= len(layers):
+                return None, CarveResult(
+                    found=False,
+                    target_file=target_path,
+                    error=f"Layer index {layer_index} out of range (0-{len(layers)-1})",
+                )
+            layers_to_search = [(layer_index, layers[layer_index])]
+        else:
+            layers_to_search = list(enumerate(layers))
+        
         if verbose:
             print(f"Found {len(layers)} layer(s). Searching for {target_path}...\n")
         
         # Scan each layer
-        for i, layer in enumerate(layers):
+        for i, layer in layers_to_search:
             if verbose:
                 print(f"Scanning layer {i+1}/{len(layers)}: {layer.digest[:20]}...")
                 print(f"  Layer size: {layer.size:,} bytes")
@@ -664,7 +695,8 @@ def carve_file_to_bytes(
                             efficiency_pct=efficiency,
                             elapsed_time=elapsed,
                             layer_digest=layer.digest,
-                            layers_searched=i + 1,
+                            layer_index=i,
+                            layers_searched=len(layers_to_search),
                         )
                     else:
                         if verbose:
@@ -676,13 +708,13 @@ def carve_file_to_bytes(
         
         elapsed = time.time() - start_time
         if verbose:
-            print(f"File not found: {target_path} (searched {len(layers)} layers in {elapsed:.2f}s)")
+            print(f"File not found: {target_path} (searched {len(layers_to_search)} layers in {elapsed:.2f}s)")
         
         return None, CarveResult(
             found=False,
             target_file=target_path,
             elapsed_time=elapsed,
-            layers_searched=len(layers),
+            layers_searched=len(layers_to_search),
         )
     
     finally:
