@@ -57,10 +57,13 @@ async def search_data(
     order: str = Query(default="desc", description="Sort order: asc or desc")
 ):
     """
-    Search Docker Hub for images, users, and organizations.
-    Returns formatted text table with search results.
+    ## /search.data
     
-    Example: /search.data?q=nginx&page=1&sortby=pull_count&order=desc
+    Search Docker Hub for images, users, and organizations.
+    
+    - Returns formatted text table with search results.
+    
+    - Example: `/search.data?q=nginx&page=1&sortby=pull_count&order=desc`
     """
     # Validate sortby
     if sortby not in ['pull_count', 'updated_at']:
@@ -105,11 +108,16 @@ def history(
     order: str = Query(default="desc", description="Sort order: asc or desc")
 ):
     """
-    List cached scan results from the database.
-    Returns formatted text table with previously peeked layers.
+    ## /history
     
-    Example: /history?q=nginx&page=1&page_size=30&sortby=scraped_at&order=desc
+    List cached scan results from the database.
+    
+    - Returns formatted text table with previously peeked layers.
+    
+    - Example: `/history?q=nginx&page=1&page_size=30&sortby=scraped_at&order=desc`
+    
     """
+    
     # Validate sortby
     if sortby not in VALID_SORTBY_COLUMNS:
         raise HTTPException(
@@ -163,7 +171,12 @@ def history(
 
 @app.get("/fslog", response_class=PlainTextResponse)
 def fslog(image: str, path: str, layer: int = Query(default=None)):
-    """Browse filesystem logs for a Docker image layer."""
+    """
+    ## /fslog
+    
+    Browse filesystem logs for a Docker image layer.
+    
+    """
     if not IMAGE_PATTERN.match(image):
         raise HTTPException(status_code=400, detail="Invalid image reference format")
     
@@ -186,7 +199,12 @@ def fslog(image: str, path: str, layer: int = Query(default=None)):
 
 @app.get("/fslog-search", response_class=PlainTextResponse)
 def fslog_search(q: str, image: str = Query(default=None), layer: int = Query(default=None)):
-    """Search filesystem logs for files matching a pattern."""
+    """
+    ## /fslog-search
+    
+    Search filesystem logs for files matching a pattern.
+    
+    """
     if image and not IMAGE_PATTERN.match(image):
         raise HTTPException(status_code=400, detail="Invalid image reference format")
     
@@ -215,8 +233,13 @@ async def repositories(
     page_size: int = Query(default=None)
 ):
     """
+    ## /repositories
+    
+    
     Pass-through proxy for Docker Hub's /v2/repositories API.
-    Returns the upstream JSON response verbatim.
+    
+    - Returns the upstream JSON response verbatim.
+
     """
     url = f"https://hub.docker.com/v2/repositories/{namespace}"
     params = {}
@@ -241,8 +264,11 @@ async def repository_tags(
     ordering: str = Query(default="last_updated")
 ):
     """
+    ## /tags
+    
     Pass-through proxy for Docker Hub's repository tags API.
-    Returns the upstream JSON response verbatim.
+    
+    - Returns the upstream JSON response verbatim.
     """
     url = f"https://hub.docker.com/v2/repositories/{namespace}/{repo}/tags"
     params = {"ordering": ordering}
@@ -268,8 +294,13 @@ async def repository_tag_images(
     ordering: str = Query(default="last_updated")
 ):
     """
+    ## Images 
+    
     Pass-through proxy for Docker Hub's repository tag images API.
-    Returns the upstream JSON response verbatim.
+    
+    - Returns the upstream JSON response verbatim.
+    - 
+     
     """
     url = f"https://hub.docker.com/v2/repositories/{namespace}/{repo}/tags/{tag}/images"
     params = {"ordering": ordering}
@@ -293,10 +324,18 @@ def get_tag_config(
     arch: str = Query(default=None, description="Target architecture: amd64, arm64, etc.")
 ):
     """
+    ## Get Image Builld Config
+    
     Fetch the full image configuration JSON for a tagged image.
     
-    Returns environment variables, entrypoint, cmd, working directory,
-    labels, build history, and other image metadata.
+    - Returns useful OSINT metadata:
+        - environment variables
+        - entrypoint
+        - 'cmd' history 
+        - working directory
+        - labels
+        - build history 
+        - and other image metadata
     """
     try:
         config = get_image_config(
@@ -320,13 +359,20 @@ def peek(
     hide_build: bool = Query(default=False, description="Hide build steps output")
 ):
     """
-    Equivalent to: python main.py -t "{image}" --peek-layer={layer} --arch={arch} --force
-    ascen
-    Args:
-        image: Image reference (e.g., "nginx/nginx:latest")
-        layer: Layer to peek - 'all' for all layers, or integer index for specific layer
-        arch: Platform index for multi-arch images
-        hide_build: If true, hide verbose build steps output
+    ## /peek
+    
+    Scan headers of tar.gz layer image to inefer filesystem,
+    output is printed by UI as a simlated tty running `ls -la`
+    
+    ### CLI Equivalent 
+    
+    `python main.py -t "{image}" --peek-layer={layer} --arch={arch} --force ascen`
+    
+    - Args:
+        - `image`: Image reference (e.g., "nginx/nginx:latest")
+        - `layer`: Layer to peek - 'all' for all layers, or integer index for specific layer
+        - `arch`: Platform index for multi-arch images
+        - `hide_build`: If true, hide verbose build steps output
     """
     # Validate image formatnow it's working what are you editing now?
     if not IMAGE_PATTERN.match(image):
@@ -366,14 +412,26 @@ def carve(
     as_text: bool = Query(default=False, description="Render as plain text in browser instead of downloading"),
 ):
     """
+    ## Carve
+    
     Carve a single file from a Docker image and return it as a browser download.
     
-    Uses HTTP Range requests to efficiently extract just the target file
+    - Uses HTTP Range requests to efficiently extract just the target file
     without downloading the entire layer.
     
-    Example: /carve?image=nginx/nginx:alpine&path=/etc/passwd
-    Example: /carve?image=nginx/nginx:alpine&path=/etc/passwd&layer=0
-    Example: /carve?image=nginx/nginx:alpine&path=/etc/passwd&as_text=true
+    ### Paramteters
+        
+    - `image` : `nginx/nginx:alpine`   
+        - `namespace/repo:tag`
+    - `path` : `/etc/passwd`
+        - Absolute path of the remote file
+        - Example: `/carve?image=nginx/nginx:alpine&path=/etc/passwd`
+    - `layer` : `0`
+        - idx of the layer with the file to carve
+        - Example: `/carve?image=nginx/nginx:alpine&path=/etc/passwd&layer=0`
+    - `as_text` : `true`
+        - Allows viewing the file in browser instead of saving to disk
+        - Example: /carve?image=nginx/nginx:alpine&path=/etc/passwd&as_text=true
     """
     if not IMAGE_PATTERN.match(image):
         raise HTTPException(status_code=400, detail="Invalid image reference format")
@@ -429,13 +487,22 @@ def download_layer(
     digest: str = Query(..., description="Layer digest, e.g., sha256:abc123..."),
 ):
     """
+    ## Stream a layer
+    
     Stream a layer blob directly to the browser as a download.
     
-    Acts as an authenticated proxy - fetches the layer from the registry
+    - Acts as an authenticated proxy - fetches the layer from the registry
     and streams it directly to the browser without intermediate storage.
     
-    Example: /layer/download?image=nginx/nginx:alpine&digest=sha256:abc123...
+    Example: `/layer/download?image=nginx/nginx:alpine&digest=sha256:abc123...`
+    
+    ### Paramteters
+        
+    - `image` : `nginx/nginx:alpine`   
+        - `namespace/repo:tag`
+    - `digest` : `sha256:88885ce2e36df0fbb0f9313c53d9f5775f37385128b9818a5496806d59dd34e9`
     """
+    
     if not IMAGE_PATTERN.match(image):
         raise HTTPException(status_code=400, detail="Invalid image reference format")
     
