@@ -167,20 +167,20 @@ Add optional `status_only` parameter:
 
 ## Implementation Checklist
 
-### Phase 1: Database Schema
-- [ ] Add `image_configs` table to [`storage.py`](app/modules/keepers/storage.py)
-- [ ] Add `image_layers` table to [`storage.py`](app/modules/keepers/storage.py)
-- [ ] Add migration for existing databases
-- [ ] Create helper functions:
+### Phase 1: Database Schema **COMPLETE**
+- [x] Add `image_configs` table to [`storage.py`](app/modules/keepers/storage.py)
+- [x] Add `image_layers` table to [`storage.py`](app/modules/keepers/storage.py)
+- [x] Add migration for existing databases
+- [x] Create helper functions:
     - `save_image_config()`
     - `get_cached_config()`
     - `get_layer_status()`
     - `update_layer_peeked()`
 
-### Phase 2: Config Caching
-- [ ] Modify [`get_image_config()`](app/modules/finders/config_manifest.py:12) to check cache first
-- [ ] Store config after fetch
-- [ ] Extract and store layer digests in `image_layers` table
+### Phase 2: Config Caching **COMPLETE**
+- [x] Modify [`get_image_config()`](app/modules/finders/config_manifest.py:12) to check cache first
+- [x] Store config after fetch
+- [x] Extract and store layer digests in `image_layers` table
 
 ### Phase 3: API Integration
 - [ ] Add `/peek/status` endpoint to [`api.py`](app/modules/api/api.py)
@@ -190,7 +190,7 @@ Add optional `status_only` parameter:
 
 ### Phase 4: Carve Integration (Optional)
 - [ ] Update [`carve_file_to_bytes()`](app/modules/keepers/carver.py:553) to check `image_layers` table
-- [ ] Add warning when carving unpeeked layer
+    - ~~[ ] Add warning when carving unpeeked layer~~ TBD
 
 ---
 
