@@ -188,7 +188,7 @@ Add optional `status_only` parameter:
 - [x] Update `/peek` to track which layers have been peeked
 - [x] Add `status_only` parameter to `/peek`
 
-### Phase 4: Carve Integration (Optional)
+### Phase 4: Carve Integration
 - [ ] Update [`carve_file_to_bytes()`](app/modules/keepers/carver.py:553) to check `image_layers` table
 
 ---

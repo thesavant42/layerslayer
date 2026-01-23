@@ -813,6 +813,118 @@ def get_config_by_digest(
 
 
 # =============================================================================
+# File Layer Lookup (for Carve optimization)
+# =============================================================================
+
+def find_file_layers(
+    conn: sqlite3.Connection,
+    owner: str,
+    repo: str,
+    tag: str,
+    file_path: str,
+) -> list[dict]:
+    """
+    Find ALL layers containing a specific file path.
+    
+    A file can exist in multiple layers (each layer may modify it).
+    Returns all layers with that file for change tracking / forensics.
+    
+    Args:
+        conn: SQLite connection
+        owner: Image namespace/owner
+        repo: Repository name
+        tag: Image tag
+        file_path: Target file path (e.g., "/etc/passwd")
+        
+    Returns:
+        List of dicts with layer_index, size, mtime for each occurrence,
+        ordered by layer_index ascending (oldest to newest)
+    """
+    cursor = conn.cursor()
+    
+    # Normalize path - remove leading slash and ./ prefix
+    normalized = file_path.strip()
+    if normalized.startswith("./"):
+        normalized = normalized[2:]
+    if normalized.startswith("/"):
+        normalized = normalized[1:]
+    
+    # Query for all matches on normalized name
+    cursor.execute("""
+        SELECT layer_index, size, mtime, layer_digest
+        FROM layer_entries
+        WHERE owner = ? AND repo = ? AND tag = ?
+        AND (name = ? OR name = ?)
+        ORDER BY layer_index ASC
+    """, (owner, repo, tag, normalized, file_path.lstrip("/")))
+    
+    results = []
+    for row in cursor.fetchall():
+        results.append({
+            "layer_index": row["layer_index"],
+            "size": row["size"],
+            "mtime": row["mtime"],
+            "layer_digest": row["layer_digest"],
+        })
+    return results
+
+
+def get_cached_layers(
+    conn: sqlite3.Connection,
+    owner: str,
+    repo: str,
+    tag: str,
+    arch: str = "amd64",
+) -> Optional[list[dict]]:
+    """
+    Get cached layer info (digests and sizes) for an image.
+    
+    Returns layer info from image_layers table if the config is cached,
+    allowing carve operations to skip the manifest fetch.
+    
+    Args:
+        conn: SQLite connection
+        owner: Image namespace/owner
+        repo: Repository name
+        tag: Image tag
+        arch: Architecture (default: amd64)
+        
+    Returns:
+        List of dicts with digest and size per layer, or None if not cached
+    """
+    cursor = conn.cursor()
+    
+    # First get the config digest
+    cursor.execute("""
+        SELECT config_digest
+        FROM image_configs
+        WHERE owner = ? AND repo = ? AND tag = ? AND arch = ?
+    """, (owner, repo, tag, arch))
+    
+    config_row = cursor.fetchone()
+    if not config_row:
+        return None
+    
+    # Get layers for this config
+    cursor.execute("""
+        SELECT layer_index, layer_digest, layer_size
+        FROM image_layers
+        WHERE config_digest = ?
+        ORDER BY layer_index ASC
+    """, (config_row["config_digest"],))
+    
+    layers = []
+    for row in cursor.fetchall():
+        layers.append({
+            "index": row["layer_index"],
+            "digest": row["layer_digest"],
+            "size": row["layer_size"],
+        })
+    
+    return layers if layers else None
+
+
+# =============================================================================
 # History Query
 # =============================================================================
 
