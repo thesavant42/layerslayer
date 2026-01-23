@@ -33,7 +33,16 @@ spec = importlib.util.spec_from_file_location("fs_log_sqlite", "app/modules/fs-l
 fs_log_sqlite = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fs_log_sqlite)
 
-app = FastAPI(title="LSNG Peek API", docs_url=None)
+app = FastAPI(
+    title="Docker Dorker API", 
+    docs_url=None,
+    description="""
+**Docker Dorker API**
+* WIP
+* TBD    
+    """,
+    version="1.0.0"
+    )
 
 # Create a router for the dark docs
 router = APIRouter()
