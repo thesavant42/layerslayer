@@ -94,6 +94,36 @@ def init_database(db_path: str = DEFAULT_DB_PATH) -> sqlite3.Connection:
         )
     """)
     
+    # Create image_configs table - stores cached image configuration JSON
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS image_configs (
+            config_digest TEXT PRIMARY KEY,
+            owner TEXT NOT NULL,
+            repo TEXT NOT NULL,
+            tag TEXT NOT NULL,
+            arch TEXT DEFAULT 'amd64',
+            config_json TEXT NOT NULL,
+            layer_count INTEGER NOT NULL,
+            fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(owner, repo, tag, arch)
+        )
+    """)
+    
+    # Create image_layers table - tracks layer peek status per config
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS image_layers (
+            config_digest TEXT NOT NULL,
+            layer_index INTEGER NOT NULL,
+            layer_digest TEXT NOT NULL,
+            layer_size INTEGER DEFAULT 0,
+            peeked BOOLEAN DEFAULT 0,
+            peeked_at DATETIME,
+            entries_count INTEGER DEFAULT 0,
+            FOREIGN KEY (config_digest) REFERENCES image_configs(config_digest),
+            PRIMARY KEY (config_digest, layer_index)
+        )
+    """)
+    
     # Create indexes for fast lookups
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_layer_digest 
@@ -520,6 +550,267 @@ def get_layer_entries(
         """, (digest,))
     
     return [dict(row) for row in cursor.fetchall()]
+
+# =============================================================================
+# Image Config Caching
+# =============================================================================
+
+def save_image_config(
+    conn: sqlite3.Connection,
+    config_digest: str,
+    owner: str,
+    repo: str,
+    tag: str,
+    config_json: dict,
+    layer_digests: list[str],
+    layer_sizes: list[int] = None,
+    arch: str = "amd64",
+) -> None:
+    """
+    Save image configuration and initialize layer tracking.
+    
+    Stores the full config JSON and creates entries in image_layers
+    for each layer with peeked=0.
+    
+    Args:
+        conn: SQLite connection
+        config_digest: Config blob digest from manifest
+        owner: Image namespace/owner
+        repo: Repository name
+        tag: Image tag
+        config_json: Full config dict from registry
+        layer_digests: Ordered list of layer digests (from rootfs.diff_ids or manifest)
+        layer_sizes: Optional list of layer sizes (same order as layer_digests)
+        arch: Architecture (default: amd64)
+    """
+    cursor = conn.cursor()
+    fetched_at = datetime.now().isoformat()
+    
+    # Serialize config to JSON string
+    config_json_str = json.dumps(config_json)
+    layer_count = len(layer_digests)
+    
+    # Insert or replace image config
+    cursor.execute("""
+        INSERT OR REPLACE INTO image_configs (
+            config_digest, owner, repo, tag, arch,
+            config_json, layer_count, fetched_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        config_digest,
+        owner,
+        repo,
+        tag,
+        arch,
+        config_json_str,
+        layer_count,
+        fetched_at,
+    ))
+    
+    # Delete existing layer entries for this config (in case of refresh)
+    cursor.execute(
+        "DELETE FROM image_layers WHERE config_digest = ?",
+        (config_digest,)
+    )
+    
+    # Insert layer entries with peeked=0
+    if layer_sizes is None:
+        layer_sizes = [0] * layer_count
+    
+    for idx, (digest, size) in enumerate(zip(layer_digests, layer_sizes)):
+        cursor.execute("""
+            INSERT INTO image_layers (
+                config_digest, layer_index, layer_digest, layer_size, peeked
+            ) VALUES (?, ?, ?, ?, 0)
+        """, (
+            config_digest,
+            idx,
+            digest,
+            size,
+        ))
+    
+    conn.commit()
+
+
+def get_cached_config(
+    conn: sqlite3.Connection,
+    owner: str,
+    repo: str,
+    tag: str,
+    arch: str = "amd64",
+) -> Optional[dict]:
+    """
+    Retrieve cached image configuration.
+    
+    Args:
+        conn: SQLite connection
+        owner: Image namespace/owner
+        repo: Repository name
+        tag: Image tag
+        arch: Architecture (default: amd64)
+        
+    Returns:
+        Dict with config_digest, config_json (parsed), layer_count, fetched_at
+        or None if not cached
+    """
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT config_digest, config_json, layer_count, fetched_at
+        FROM image_configs
+        WHERE owner = ? AND repo = ? AND tag = ? AND arch = ?
+    """, (owner, repo, tag, arch))
+    
+    row = cursor.fetchone()
+    if row:
+        return {
+            "config_digest": row["config_digest"],
+            "config_json": json.loads(row["config_json"]),
+            "layer_count": row["layer_count"],
+            "fetched_at": row["fetched_at"],
+        }
+    return None
+
+
+def get_layer_status(
+    conn: sqlite3.Connection,
+    owner: str,
+    repo: str,
+    tag: str,
+    arch: str = "amd64",
+) -> Optional[dict]:
+    """
+    Get layer peek status for an image.
+    
+    Returns layer count, idx-to-digest mapping, and peek status per layer.
+    
+    Args:
+        conn: SQLite connection
+        owner: Image namespace/owner
+        repo: Repository name
+        tag: Image tag
+        arch: Architecture (default: amd64)
+        
+    Returns:
+        Dict with:
+            - config_digest: str
+            - config_cached: bool (always True if result returned)
+            - layer_count: int
+            - layers: list of {idx, digest, size, peeked, peeked_at, entries_count}
+            - peeked_count: int
+            - unpeeked_count: int
+        or None if no cached config
+    """
+    cursor = conn.cursor()
+    
+    # First get the config
+    cursor.execute("""
+        SELECT config_digest, layer_count, fetched_at
+        FROM image_configs
+        WHERE owner = ? AND repo = ? AND tag = ? AND arch = ?
+    """, (owner, repo, tag, arch))
+    
+    config_row = cursor.fetchone()
+    if not config_row:
+        return None
+    
+    config_digest = config_row["config_digest"]
+    layer_count = config_row["layer_count"]
+    
+    # Get all layers for this config
+    cursor.execute("""
+        SELECT layer_index, layer_digest, layer_size, peeked, peeked_at, entries_count
+        FROM image_layers
+        WHERE config_digest = ?
+        ORDER BY layer_index ASC
+    """, (config_digest,))
+    
+    layers = []
+    peeked_count = 0
+    for row in cursor.fetchall():
+        is_peeked = bool(row["peeked"])
+        if is_peeked:
+            peeked_count += 1
+        layers.append({
+            "idx": row["layer_index"],
+            "digest": row["layer_digest"],
+            "size": row["layer_size"],
+            "peeked": is_peeked,
+            "peeked_at": row["peeked_at"],
+            "entries_count": row["entries_count"],
+        })
+    
+    return {
+        "config_digest": config_digest,
+        "config_cached": True,
+        "layer_count": layer_count,
+        "layers": layers,
+        "peeked_count": peeked_count,
+        "unpeeked_count": layer_count - peeked_count,
+    }
+
+
+def update_layer_peeked(
+    conn: sqlite3.Connection,
+    config_digest: str,
+    layer_index: int,
+    entries_count: int = 0,
+) -> None:
+    """
+    Mark a layer as peeked.
+    
+    Args:
+        conn: SQLite connection
+        config_digest: Config digest the layer belongs to
+        layer_index: Layer index to mark as peeked
+        entries_count: Number of filesystem entries found
+    """
+    cursor = conn.cursor()
+    peeked_at = datetime.now().isoformat()
+    
+    cursor.execute("""
+        UPDATE image_layers
+        SET peeked = 1, peeked_at = ?, entries_count = ?
+        WHERE config_digest = ? AND layer_index = ?
+    """, (peeked_at, entries_count, config_digest, layer_index))
+    
+    conn.commit()
+
+
+def get_config_by_digest(
+    conn: sqlite3.Connection,
+    config_digest: str,
+) -> Optional[dict]:
+    """
+    Retrieve cached image configuration by its digest.
+    
+    Args:
+        conn: SQLite connection
+        config_digest: Config blob digest
+        
+    Returns:
+        Dict with owner, repo, tag, arch, config_json (parsed), layer_count, fetched_at
+        or None if not found
+    """
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT owner, repo, tag, arch, config_json, layer_count, fetched_at
+        FROM image_configs
+        WHERE config_digest = ?
+    """, (config_digest,))
+    
+    row = cursor.fetchone()
+    if row:
+        return {
+            "owner": row["owner"],
+            "repo": row["repo"],
+            "tag": row["tag"],
+            "arch": row["arch"],
+            "config_json": json.loads(row["config_json"]),
+            "layer_count": row["layer_count"],
+            "fetched_at": row["fetched_at"],
+        }
+    return None
+
 
 # =============================================================================
 # History Query

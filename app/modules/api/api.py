@@ -18,8 +18,14 @@ from app.modules.finders import get_image_config
 # Import search module
 from app.modules.search import search_dockerhub
 
-# Import storage module for history queries
-from app.modules.keepers.storage import init_database, get_history, VALID_SORTBY_COLUMNS
+# Import storage module for history queries and config caching
+from app.modules.keepers.storage import (
+    init_database,
+    get_history,
+    VALID_SORTBY_COLUMNS,
+    get_layer_status,
+    get_cached_config,
+)
 
 # Import carver for file extraction
 from app.modules.keepers.carver import carve_file_to_bytes
@@ -330,20 +336,24 @@ def get_tag_config(
     namespace: str,
     repo: str,
     tag: str,
-    arch: str = Query(default=None, description="Target architecture: amd64, arm64, etc.")
+    arch: str = Query(default=None, description="Target architecture: amd64, arm64, etc."),
+    force_refresh: bool = Query(default=False, description="Bypass cache and fetch fresh from registry"),
 ):
     """
-    ## Get Image Builld Config
+    ## Get Image Build Config
     
     Fetch the full image configuration JSON for a tagged image.
+    
+    - Configs are cached in SQLite to avoid redundant upstream requests
+    - Use `force_refresh=true` to bypass cache and fetch fresh data
     
     - Returns useful OSINT metadata:
         - environment variables
         - entrypoint
-        - 'cmd' history 
+        - 'cmd' history
         - working directory
         - labels
-        - build history 
+        - build history
         - and other image metadata
     """
     try:
@@ -351,13 +361,92 @@ def get_tag_config(
             namespace=namespace,
             repo=repo,
             tag=tag,
-            arch=arch
+            arch=arch,
+            force_refresh=force_refresh,
         )
         return JSONResponse(content=config, status_code=200)
     except requests.RequestException as e:
         raise HTTPException(status_code=502, detail=f"Registry request failed: {e}")
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/peek/status")
+def peek_status(
+    image: str = Query(..., description="Image reference: namespace/repo:tag"),
+    arch: str = Query(default="amd64", description="Target architecture: amd64, arm64, etc."),
+):
+    """
+    ## Peek Status
+    
+    Get layer peek status for an image without triggering a peek.
+    
+    Returns:
+    - Whether config is cached
+    - Layer count
+    - List of layers with idx, digest, size, and peek status
+    - Count of peeked vs unpeeked layers
+    
+    Use this endpoint to:
+    - Check how many layers an image has before peeking
+    - See which layers have already been peeked
+    - Get the idx-to-digest mapping for precise operations
+    
+    Example: `/peek/status?image=nginx/nginx:alpine`
+    """
+    if not IMAGE_PATTERN.match(image):
+        raise HTTPException(status_code=400, detail="Invalid image reference format")
+    
+    # Parse image reference
+    namespace, repo, tag = parse_image_ref(image)
+    
+    # Query database for layer status
+    conn = init_database()
+    try:
+        status = get_layer_status(conn, namespace, repo, tag, arch)
+        
+        if status is None:
+            # Config not cached - need to fetch it first
+            # Try to get config (which will cache it)
+            try:
+                get_image_config(
+                    namespace=namespace,
+                    repo=repo,
+                    tag=tag,
+                    arch=arch,
+                )
+                # Now query again
+                status = get_layer_status(conn, namespace, repo, tag, arch)
+            except Exception as e:
+                return JSONResponse(
+                    content={
+                        "image": image,
+                        "config_cached": False,
+                        "error": str(e),
+                        "message": "Failed to fetch config from registry",
+                    },
+                    status_code=200,
+                )
+        
+        if status:
+            return JSONResponse(
+                content={
+                    "image": image,
+                    **status,
+                },
+                status_code=200,
+            )
+        else:
+            return JSONResponse(
+                content={
+                    "image": image,
+                    "config_cached": False,
+                    "message": "No cached config found",
+                },
+                status_code=200,
+            )
+    finally:
+        conn.close()
 
 
 @app.get("/peek", response_class=PlainTextResponse)

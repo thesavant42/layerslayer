@@ -8,4 +8,10 @@ from .storage import (
     save_layer_result,
     save_layer_json,
     save_layer_sqlite,
+    # Image config caching
+    save_image_config,
+    get_cached_config,
+    get_layer_status,
+    update_layer_peeked,
+    get_config_by_digest,
 )
