@@ -25,6 +25,7 @@ from app.modules.keepers.storage import (
     VALID_SORTBY_COLUMNS,
     get_layer_status,
     get_cached_config,
+    update_layer_peeked,
 )
 
 # Import carver for file extraction
@@ -449,32 +450,60 @@ def peek_status(
         conn.close()
 
 
-@app.get("/peek", response_class=PlainTextResponse)
+@app.get("/peek")
 def peek(
     image: str,
     layer: str = Query(default="all"),
     arch: int = Query(default=0),
-    hide_build: bool = Query(default=False, description="Hide build steps output")
+    hide_build: bool = Query(default=False, description="Hide build steps output"),
+    status_only: bool = Query(default=False, description="Return status JSON instead of peeking"),
 ):
     """
     ## /peek
     
-    Scan headers of tar.gz layer image to inefer filesystem,
-    output is printed by UI as a simlated tty running `ls -la`
+    Scan headers of tar.gz layer image to infer filesystem,
+    output is printed by UI as a simulated tty running `ls -la`
     
-    ### CLI Equivalent 
+    ### CLI Equivalent
     
-    `python main.py -t "{image}" --peek-layer={layer} --arch={arch} --force ascen`
+    `python main.py -t "{image}" --peek-layer={layer} --arch={arch} --force`
     
     - Args:
         - `image`: Image reference (e.g., "nginx/nginx:latest")
         - `layer`: Layer to peek - 'all' for all layers, or integer index for specific layer
         - `arch`: Platform index for multi-arch images
         - `hide_build`: If true, hide verbose build steps output
+        - `status_only`: If true, return JSON status without triggering a peek (same as /peek/status)
     """
-    # Validate image formatnow it's working what are you editing now?
     if not IMAGE_PATTERN.match(image):
         raise HTTPException(status_code=400, detail="Invalid image reference format")
+    
+    # If status_only, redirect to peek_status logic
+    if status_only:
+        namespace, repo, tag = parse_image_ref(image)
+        arch_str = "amd64"  # Default arch string for status lookup
+        conn = init_database()
+        try:
+            status = get_layer_status(conn, namespace, repo, tag, arch_str)
+            if status is None:
+                try:
+                    get_image_config(namespace=namespace, repo=repo, tag=tag, arch=arch_str)
+                    status = get_layer_status(conn, namespace, repo, tag, arch_str)
+                except Exception as e:
+                    return JSONResponse(
+                        content={"image": image, "config_cached": False, "error": str(e)},
+                        status_code=200,
+                    )
+            return JSONResponse(
+                content={"image": image, **(status or {"config_cached": False})},
+                status_code=200,
+            )
+        finally:
+            conn.close()
+    
+    # Parse image reference for tracking
+    namespace, repo, tag = parse_image_ref(image)
+    arch_str = "amd64"  # Default architecture
     
     # Capture stdout
     old_stdout = sys.stdout
@@ -499,7 +528,26 @@ def peek(
         # Restore stdout
         sys.stdout = old_stdout
     
-    return captured_output.getvalue()
+    # Track which layers were peeked
+    conn = init_database()
+    try:
+        if layer == "all":
+            # Get layer count from cached config
+            status = get_layer_status(conn, namespace, repo, tag, arch_str)
+            if status and "layer_count" in status:
+                for idx in range(status["layer_count"]):
+                    update_layer_peeked(conn, namespace, repo, tag, arch_str, idx)
+        else:
+            # Single layer was peeked
+            try:
+                layer_idx = int(layer)
+                update_layer_peeked(conn, namespace, repo, tag, arch_str, layer_idx)
+            except ValueError:
+                pass  # Invalid layer index, skip tracking
+    finally:
+        conn.close()
+    
+    return PlainTextResponse(captured_output.getvalue())
 
 
 @app.get("/carve")

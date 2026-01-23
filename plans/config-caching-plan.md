@@ -182,15 +182,14 @@ Add optional `status_only` parameter:
 - [x] Store config after fetch
 - [x] Extract and store layer digests in `image_layers` table
 
-### Phase 3: API Integration
-- [ ] Add `/peek/status` endpoint to [`api.py`](app/modules/api/api.py)
-- [ ] Update `/peek` to use cached config when available
-- [ ] Update `/peek` to track which layers have been peeked
-- [ ] Add `status_only` parameter to `/peek`
+### Phase 3: API Integration **COMPLETE**
+- [x] Add `/peek/status` endpoint to [`api.py`](app/modules/api/api.py)
+- [x] Update `/peek` to use cached config when available
+- [x] Update `/peek` to track which layers have been peeked
+- [x] Add `status_only` parameter to `/peek`
 
 ### Phase 4: Carve Integration (Optional)
 - [ ] Update [`carve_file_to_bytes()`](app/modules/keepers/carver.py:553) to check `image_layers` table
-    - ~~[ ] Add warning when carving unpeeked layer~~ TBD
 
 ---
 
