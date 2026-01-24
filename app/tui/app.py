@@ -41,7 +41,7 @@ class DockerDorkerApp(App):
         yield TopPanel("dockerDorker", id="top-panel")
         with Horizontal(id="main-content"):
             yield LeftPanel("Left Panel", id="left-panel")
-            yield RightPanel("Main Panel", id="right-panel")
+            yield RightPanel("Right Panel", id="right-panel")
         yield Footer()
 
     def on_mount(self) -> None:

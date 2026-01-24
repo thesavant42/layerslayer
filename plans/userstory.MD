@@ -7,15 +7,65 @@ I want to find containers related to a topic, "disney" in this example.
 - Beneath the Header is the `Info Panel`. It is in the top portion of the display, and contains the text "dockerDorcker" in white type
 - Beneath the `Info Panel` are the `Left` and `Right` panels.
 
-![TUI frame](screen.png)
+![TUI frame](screenshot.png)
 
+
+Task 1. Need to include a textual "text" type Input Widget in the `TOP PANEL`, that submits to `/search.data`
+    - `http://127.0.0.1:8000/search.data?q=disney&page=1&sortby=updated_at&order=desc`
+- Results Should Display in the `LEFT PANEL`:
+    - `dataTable` with "row" cursor
+    - Text labels must NOT wrap or break tables
+    - **Un-truncated versions of each field to be displayed in `TOP PANEL`**
+```bash
+
+Total: 204 results (page 1)
+
+SLUG                                     FAV  PULLS  CREATED      UPDATED      DESCRIPTION
+----------------------------------------------------------------------------------------------------
+ebusinessdocker/disney                   0    285    04-25-2017   11-02-2017   
+nlds90/disney                            0    162    05-20-2015   10-16-2015   
+thangadurai90/disney                     0    49     03-18-2019   03-20-2019   Sample test for docker compose
+tanaebousfiha/disney                     0    45     10-14-2025   10-14-2025   
+msmengr/disney                           0    42     03-24-2025   04-21-2025   
+dematrix/disney                          0    42     03-24-2025   03-24-2025   Deo test
+springheroku/disney                      0    32     10-03-2022   10-12-2022   
+markcataluna/disney                      0    32     04-21-2025   04-21-2025   test lab
+kodujmy/disney                           0    31     10-12-2022   10-01-2023   
+surajpjoshi/disney                       0    24     11-09-2023   11-09-2023   
+v3yy/disney                              0    21     09-16-2024   09-16-2024   
+sundar21/disney                          0    18     12-07-2021   12-07-2021   
+chaitanyagutti16/disney                  0    18     01-27-2024   01-27-2024   
+wonjongg/disney                          0    12     05-20-2022   05-20-2022   
+hexletsource/disney-userbase             0    254    08-11-2015   08-24-2015   Disney Userbase 
+bennycooly/disney-scraper                0    100K+  10-24-2020   07-22-2022   
+ofcommunity/rorpage-openfaas-disney-display-disney-display 0    10K+   06-15-2018   08-01-2018   
+disneystreaming/pg2k4j                   0    100K+  10-27-2018   06-03-2019   A tool for publishing changes made on a Postgresql database to an Amazon Kinesis Stream
+aciliadevops/disney-local-php            0    5.1K   06-26-2023   01-19-2026   
+aciliadevops/disney-local-php-fpm        0    6.1K   06-26-2023   01-19-2026   
+aciliadevops/disney-local-web            0    4.1K   06-26-2023   01-19-2026   
+gberg927/disney-height-requirements      0    10K+   11-23-2019   03-04-2020   
+dpreardon/disneyreservation              1    223    11-09-2018   02-27-2019   Check the availability of certain restaurants at Walt Disney World.
+dayaron/disneyworld-metrics-datadog      0    255    03-28-2024   05-23-2024   Docker Image that sends Disney World Wait Times to Datadog as custom metrics.
+aciliadevops/disney-local-node           0    1.2K   11-28-2024   01-19-2026   
+mahkumazahn/disney-reservation-checker   0    60     04-25-2021   04-25-2021   Scrapes for Disney Restaurant Reservations 
+aciliadevops/disney-local-php-fpm-8.3    0    993    11-19-2025   01-19-2026   
+pessoalize/pessoalize-disney-admin-v3    0    3.9K   01-16-2022   09-13-2023   
+aciliadevops/disney-local-php-8.3        0    525    11-19-2025   01-19-2026   
+disneyresolve/vuln-container             0    1.6K   04-25-2023   04-25-2023   Vulnerable Container for demo purpose
+```
+
+
+
+
+
+---
 
 ### Start
 - I open the app and see:
 	1. Info Panel, right side: A Text Input widget: Description: "search Docker Hub"
 		- Routes to the `/search.data` [Docker Hub passthrough route](http://localhost:8000/search.data?q=disney)
     2. [A table of recently assesed containers](http://localhost:8000/history) in the LEFT PANEL
-	
+	http://127.0.0.1:8000/history?page=1&page_size=30&sortby=scraped_at&order=desc
 
 ### search.data
 - I search the recents, and, finding 0 matches, opt for #3, `/search.data` [here](http://localhost:8000/search.data?q=disney)
@@ -88,18 +138,14 @@ Once I have the namespace (owner of a repo), the repo, and the tag, I "[peek](/p
 - [x] Need proper progress tracking for layers not-yet-peeked / peek-a-queue
 
 - [ ] Layer Peek UI Flow:
-    1. Get the Image config(s) for a TAG (Variable architecture, TAGs are per-repository)
-    2. Review the config(s) from step 1. Build Instructions, meta data, file size, etc... all provide information about which layers are worth "peeking"
-    3. Peek the layer(s) user has indicated by way of the IDX values, which are present in the config.
-    4. Display fslog-style output for the peeked layers:
-        1. one layer at a time by highlighting it, or
-        2. All layers peeked-so-far by selecting a meta layer
+    - 1. Get the Image config(s) for a TAG (Variable architecture, TAGs are per-repository)
+    - 2. Review the config(s) from step 1. Build Instructions, meta data, file size, etc... all provide information about which layers are worth "peeking"
+    - 3. Peek the layer(s) user has indicated by way of the IDX values, which are present in the config.
+    - 4. Display fslog-style output for the peeked layers:
+        - 1. one layer at a time by highlighting it, or
+        - 2. All layers peeked-so-far by selecting a meta layer
 - [ ] Carve Flow from Peek UI
-    1. After a layer has been peeked, user can review layer contents in fslog view
-        - Identify file to peek, by full path and layer IDX to pass to carve
-        - fslog display needs a way to indicate 1. file lto carve, 2. whether to display as text or to save.
-            - https://github.com/davep/textual-fspicker - for saving files in TUI mode
-            - https://github.com/Textualize/textual-plotext to visualize layer sizes
+    - 1. After a layer has been peeked, user can review layer contents in `/fslog` view
+        - Identify file to peek, by full path and layer `IDX` to pass to carve
 
-
- **Design TUI architecture** - the backend is ready, only the UI is missing
+ **Design TUI architecture** - the backend is ready, UI is framed, needs to be filled in and wired up.
