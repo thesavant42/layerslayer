@@ -107,8 +107,8 @@ async def search_dockerhub(
         data = response.json()
     
     results, total = get_results(data)
-    return format_results_text(results, total, page)
-
+    #return format_results_text(results, total, page)
+    return json.dumps({"results": results, "total": total, "page": page})
 
 def main():
     """CLI entry point for standalone usage."""
