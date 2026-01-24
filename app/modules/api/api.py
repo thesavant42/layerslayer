@@ -554,7 +554,7 @@ def peek(
 def carve(
     image: str,
     path: str = Query(..., description="File path in container, e.g., /etc/passwd"),
-    layer: int = Query(default=None, description="Specific layer index to extract from"),
+    layer: int = Query(..., description="Layer index to extract from (REQUIRED). Use /peek/status to discover layer indices."),
     as_text: bool = Query(default=False, description="Render as plain text in browser instead of downloading"),
 ):
     """
@@ -565,19 +565,22 @@ def carve(
     - Uses HTTP Range requests to efficiently extract just the target file
     without downloading the entire layer.
     
-    ### Paramteters
+    **IMPORTANT:** The `layer` parameter is REQUIRED. Use `/peek/status` to discover
+    which layer(s) contain your target file before carving.
+    
+    ### Parameters
         
-    - `image` : `nginx/nginx:alpine`   
+    - `image` : `nginx/nginx:alpine`
         - `namespace/repo:tag`
     - `path` : `/etc/passwd`
         - Absolute path of the remote file
-        - Example: `/carve?image=nginx/nginx:alpine&path=/etc/passwd`
-    - `layer` : `0`
-        - idx of the layer with the file to carve
+    - `layer` : `0` (REQUIRED)
+        - Layer index containing the file to carve
+        - Use `/peek/status?image=...` to discover layer indices
         - Example: `/carve?image=nginx/nginx:alpine&path=/etc/passwd&layer=0`
     - `as_text` : `true`
         - Allows viewing the file in browser instead of saving to disk
-        - Example: /carve?image=nginx/nginx:alpine&path=/etc/passwd&as_text=true
+        - Example: `/carve?image=nginx/nginx:alpine&path=/etc/passwd&layer=0&as_text=true`
     """
     if not IMAGE_PATTERN.match(image):
         raise HTTPException(status_code=400, detail="Invalid image reference format")

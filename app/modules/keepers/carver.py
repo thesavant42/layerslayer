@@ -367,10 +367,10 @@ def extract_and_save(
 def carve_file(
     image_ref: str,
     target_path: str,
+    layer_index: int,
     output_dir: str = DEFAULT_OUTPUT_DIR,
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     verbose: bool = True,
-    layer_index: Optional[int] = None,
 ) -> CarveResult:
     """
     Carve a single file from a Docker image layer.
@@ -379,13 +379,17 @@ def carve_file(
     decompresses on-the-fly, and stops as soon as the target file
     is fully extracted.
     
+    IMPORTANT: layer_index is REQUIRED. Use /peek to discover which layers
+    contain the target file. This prevents accidentally scanning all layers
+    and ensures you get the specific version of the file you need.
+    
     Args:
         image_ref: Image reference (e.g., "nginx:alpine", "ubuntu:24.04")
         target_path: Target file path in container (e.g., "/etc/passwd")
+        layer_index: Layer index to extract from (REQUIRED). Use /peek to find layer indices.
         output_dir: Output directory for carved file (default: ./carved)
         chunk_size: Fetch chunk size in bytes (default: 64KB)
         verbose: Whether to show detailed progress output
-        layer_index: Target specific layer index (default: None searches all layers)
         
     Returns:
         CarveResult with extraction stats and status
@@ -411,17 +415,14 @@ def carve_file(
                 error="No layers found in manifest",
             )
         
-        # Determine which layers to search
-        if layer_index is not None:
-            if layer_index < 0 or layer_index >= len(layers):
-                return CarveResult(
-                    found=False,
-                    target_file=target_path,
-                    error=f"Layer index {layer_index} out of range (0-{len(layers)-1})",
-                )
-            layers_to_search = [(layer_index, layers[layer_index])]
-        else:
-            layers_to_search = list(enumerate(layers))
+        # Validate layer_index (required parameter)
+        if layer_index < 0 or layer_index >= len(layers):
+            return CarveResult(
+                found=False,
+                target_file=target_path,
+                error=f"Layer index {layer_index} out of range. Valid range: 0-{len(layers)-1}. Use /peek to discover layer indices.",
+            )
+        layers_to_search = [(layer_index, layers[layer_index])]
         
         if verbose:
             print(f"Found {len(layers)} layer(s). Searching for {target_path}...\n")
@@ -554,9 +555,9 @@ def carve_file(
 def carve_file_to_bytes(
     image_ref: str,
     target_path: str,
+    layer_index: int,
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     verbose: bool = False,
-    layer_index: Optional[int] = None,
 ) -> tuple[Optional[bytes], CarveResult]:
     """
     Carve a single file from a Docker image layer and return as bytes.
@@ -564,12 +565,16 @@ def carve_file_to_bytes(
     Same incremental HTTP Range request + streaming decompression approach
     as carve_file(), but returns the file content instead of saving to disk.
     
+    IMPORTANT: layer_index is REQUIRED. Use /peek to discover which layers
+    contain the target file. This prevents accidentally scanning all layers
+    and ensures you get the specific version of the file you need.
+    
     Args:
         image_ref: Image reference (e.g., "nginx:alpine", "ubuntu:24.04")
         target_path: Target file path in container (e.g., "/etc/passwd")
+        layer_index: Layer index to extract from (REQUIRED). Use /peek to find layer indices.
         chunk_size: Fetch chunk size in bytes (default: 64KB)
         verbose: Whether to show detailed progress output
-        layer_index: Target specific layer index (default: None searches all layers)
         
     Returns:
         Tuple of (file_bytes, CarveResult). file_bytes is None if not found.
@@ -594,17 +599,14 @@ def carve_file_to_bytes(
                 error="No layers found in manifest",
             )
         
-        # Determine which layers to search
-        if layer_index is not None:
-            if layer_index < 0 or layer_index >= len(layers):
-                return None, CarveResult(
-                    found=False,
-                    target_file=target_path,
-                    error=f"Layer index {layer_index} out of range (0-{len(layers)-1})",
-                )
-            layers_to_search = [(layer_index, layers[layer_index])]
-        else:
-            layers_to_search = list(enumerate(layers))
+        # Validate layer_index (required parameter)
+        if layer_index < 0 or layer_index >= len(layers):
+            return None, CarveResult(
+                found=False,
+                target_file=target_path,
+                error=f"Layer index {layer_index} out of range. Valid range: 0-{len(layers)-1}. Use /peek to discover layer indices.",
+            )
+        layers_to_search = [(layer_index, layers[layer_index])]
         
         if verbose:
             print(f"Found {len(layers)} layer(s). Searching for {target_path}...\n")
@@ -735,11 +737,12 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python carver.py ubuntu:24.04 /etc/passwd
-  python carver.py nginx:alpine /etc/nginx/nginx.conf
-  python carver.py alpine:edge /etc/os-release
-  python carver.py aciliadevops/disney-local-web:latest /etc/passwd
-  python carver.py alpine /etc/os-release  # defaults to :latest
+  python carver.py ubuntu:24.04 /etc/passwd --layer-index 0
+  python carver.py nginx:alpine /etc/nginx/nginx.conf -l 2
+  python carver.py alpine:edge /etc/os-release --layer-index 0
+
+Note: --layer-index is REQUIRED. Use the peek functionality to discover
+which layer(s) contain your target file before carving.
         """
     )
     
@@ -767,6 +770,12 @@ Examples:
         action="store_true",
         help="Suppress detailed progress output"
     )
+    parser.add_argument(
+        "--layer-index", "-l",
+        type=int,
+        required=True,
+        help="Layer index to extract from (REQUIRED). Use peek to discover layer indices."
+    )
     
     args = parser.parse_args()
     
@@ -774,6 +783,7 @@ Examples:
     result = carve_file(
         image_ref=args.image,
         target_path=args.filepath,
+        layer_index=args.layer_index,
         output_dir=args.output_dir,
         chunk_size=args.chunk_size * 1024,
         verbose=not args.quiet,
