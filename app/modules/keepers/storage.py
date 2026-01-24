@@ -751,20 +751,45 @@ def get_layer_status(
 
 def update_layer_peeked(
     conn: sqlite3.Connection,
-    config_digest: str,
+    owner: str,
+    repo: str,
+    tag: str,
+    arch: str,
     layer_index: int,
     entries_count: int = 0,
-) -> None:
+) -> bool:
     """
     Mark a layer as peeked.
     
+    Looks up config_digest from image_configs table using owner/repo/tag/arch,
+    then updates the corresponding layer in image_layers.
+    
     Args:
         conn: SQLite connection
-        config_digest: Config digest the layer belongs to
+        owner: Image namespace/owner
+        repo: Repository name
+        tag: Image tag
+        arch: Architecture (e.g., "amd64")
         layer_index: Layer index to mark as peeked
         entries_count: Number of filesystem entries found
+        
+    Returns:
+        True if layer was marked as peeked, False if config not found
     """
     cursor = conn.cursor()
+    
+    # Look up config_digest from image identifiers
+    cursor.execute("""
+        SELECT config_digest
+        FROM image_configs
+        WHERE owner = ? AND repo = ? AND tag = ? AND arch = ?
+    """, (owner, repo, tag, arch))
+    
+    row = cursor.fetchone()
+    if not row:
+        return False  # Config not cached, cannot update
+    
+    config_digest = row["config_digest"]
     peeked_at = datetime.now().isoformat()
     
     cursor.execute("""
@@ -774,6 +799,7 @@ def update_layer_peeked(
     """, (peeked_at, entries_count, config_digest, layer_index))
     
     conn.commit()
+    return True
 
 
 def get_config_by_digest(
