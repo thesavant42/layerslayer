@@ -3,4 +3,5 @@ tqdm
 fastapi
 uvicorn
 fastapi_swagger_dark
-textual 
+textual
+httpx

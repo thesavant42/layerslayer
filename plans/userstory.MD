@@ -2,14 +2,20 @@
 
 I want to find containers related to a topic, "disney" in this example.
 
-## Start
-- I open the app and see:
-	1. [a table of recently assesed containers](http://localhost:8000/history)
-	2. An option to ["search recent"](http://localhost:8000/history?q=disney&page=2) (meaning recetly assessed containers)
-		a. Search for key word in namespace, repo, or tag in sqlite
-	3. An option to "search Docker Hub"
-		- Routes to the `/search.data` [Docker Hub passthrough route](http://localhost:8000/search.data?q=disney)
 
+- This is the base of the TUI. The Textual `header` widget is present on the same row as the title text "dockerDocker by @thesavant42"
+- Beneath the Header is the `Info Panel`. It is in the top portion of the display, and contains the text "dockerDorcker" in white type
+- Beneath the `Info Panel` are the `Left` and `Right` panels.
+
+![TUI frame](screen.png)
+
+
+### Start
+- I open the app and see:
+	1. Info Panel, right side: A Text Input widget: Description: "search Docker Hub"
+		- Routes to the `/search.data` [Docker Hub passthrough route](http://localhost:8000/search.data?q=disney)
+    2. [A table of recently assesed containers](http://localhost:8000/history) in the LEFT PANEL
+	
 
 ### search.data
 - I search the recents, and, finding 0 matches, opt for #3, `/search.data` [here](http://localhost:8000/search.data?q=disney)
@@ -73,17 +79,16 @@ Once I have the namespace (owner of a repo), the repo, and the tag, I "[peek](/p
 ---
 
 
-## Current Status : Not Started
+## Current Status : Underway
+    - https://textual.textualize.io/widgets/select/
+        - [ ] select table for tags, drop-down to choose which tag to view image layers for
+- [ ] `input` widget for hooking up to `/search.data?` API endpoint
 
-- [ ] There is no UI at this point in time.
-    - I have created an [ascii diagram sketch here.](/plans/plan-tui/uisketch.md) 
-	- I want to make a Textual TUI and enable the [textual-web](https://github.com/Textualize/textual-web) library.
-- [ ] select table for tags, drop-down to choose which tag to view image layers for
-- [ ] Layer Peek debug prints need to be moved to a debug function (from main.py output)
+- [ ] Layer Peek debug prints need to be moved to a debug function (from [main.py](main.py) output)
 - [x] Need proper progress tracking for layers not-yet-peeked / peek-a-queue
 
 - [ ] Layer Peek UI Flow:
-    1. Get the Image config(s) for a TAG (Variable architecture)
+    1. Get the Image config(s) for a TAG (Variable architecture, TAGs are per-repository)
     2. Review the config(s) from step 1. Build Instructions, meta data, file size, etc... all provide information about which layers are worth "peeking"
     3. Peek the layer(s) user has indicated by way of the IDX values, which are present in the config.
     4. Display fslog-style output for the peeked layers:
