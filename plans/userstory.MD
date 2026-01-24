@@ -73,84 +73,26 @@ Once I have the namespace (owner of a repo), the repo, and the tag, I "[peek](/p
 ---
 
 
-## Open Questions:
-
-Q: Do we cache the image configs to the sqlite database when we enumerate them?
-	- If so, do we validate whether its been cached before reading or writing?
-A: **Answer: NO - Image configs are NOT cached.**
-
-The [`get_image_config()`](app/modules/finders/config_manifest.py:12) function fetches configs directly from the registry every time. The SQLite database only stores:
-- `layer_metadata` - layer digest, index, size, entry counts
-- `layer_entries` - filesystem entries from peeked layers
-
-**Gap identified:** Image configs (ENV vars, CMD, history, labels) are fetched on every request. Consider caching them if performance becomes an issue.
-
-
-Q: When carving a layer we accept a layer idx but do not require one, nor do we require a lookup in the database. 
-Do we present the user with a warning if 
-	1. a carve has been requested, and 
-	2. a layer has not been provided, and 
-	3. There's no idx for that carve in the database?
-A: **Answer: NO - There is no warning.**
-
-The [`carve_file_to_bytes()`](app/modules/keepers/carver.py:553) function:
-- If `layer_index=None`, it searches ALL layers (lines 605-606)
-- There is no database lookup to check if the layer has been peeked
-- The carver operates completely independently of the SQLite database
-
-**Gap identified:** The carver does not consult the database at all. A user could carve from a layer they've never inspected, without any warning.
-
-Q: Is there at present a mapping of idx to sha256 digest? When addressing by index there's no way for a user to know if the next layer will be out of range.
-A: **Answer: PARTIAL - The mapping exists in SQLite but is not exposed to users.**
-
-The `layer_metadata` table stores both `layer_index` and `layer_digest`:
-
-| owner | repo | tag | layer_index | layer_digest |
-|-------|------|-----|-------------|--------------|
-| alpine | git | v2.52.0 | 0 | sha256:fb78f26... |
-| alpine | git | v2.52.0 | 1 | sha256:e0018a9... |
-| alpine | git | v2.52.0 | 2 | sha256:225ffaa... |
-
-However:
-1. **No API endpoint exposes layer count** - Users cannot know how many layers exist before accessing them
-2. **Multi-arch images have duplicate indices** - Same owner/repo/tag/index can have different digests (different architectures)
-3. **Out-of-range handling** - The carver returns an error message but there's no way to preemptively check
-
-**Gap identified:** Need an endpoint like `/repositories/{ns}/{repo}/tags/{tag}/layers` that returns layer count and digest mapping.
-
----
-
 ## Current Status : Not Achieved
 
 - [ ] There is no UI at this point in time.
 	- I want to make a Textual TUI and enable the [textual-web](https://github.com/Textualize/textual-web) library.
 - [ ] select table for tags, drop-down to choose which tag to view image layers for
 - [ ] Layer Peek debug prints need to be moved to a debug function
-- [ ] Need proper progress tracking for layers not-yet-peeked / peek-a-queue
+- [x] Need proper progress tracking for layers not-yet-peeked / peek-a-queue
+
 - [ ] Layer Peek UI Flow:
-	- Option A: JIT layer peeking
-		Assuming all containers begin with layer[0]
-		/fslog view the path at layer[0]
-		- remaining layers[1+] are peeked in the background
-		- Alert when all layers have been peeked and are ready
-		- Users only need the <image_ref> ({namespace}/{repo}:{tag})
-		- Downside: Could be extremely slow
-	- Option B: JIT, selective layers
-		- Like Option A, but instead of background and viewing all layers, pick the layer to enter from,
-			- need a way to +/- navigate each layer
-		- Upside: trade off of speed and efficiency
-		- Downside: Coupld miss important data
-		If I could visually indicate layers that have been peeked or not I could create a workflow around 
-
---
+    1. Get the Image config(s) for a TAG (Variable architecture)
+    2. Review the config(s) from step 1. Build Instructions, meta data, file size, etc... all provide information about which layers are worth "peeking"
+    3. Peek the layer(s) user has indicated by way of the IDX values, which are present in the config.
+    4. Display fslog-style output for the peeked layers:
+        1. one layer at a time by highlighting it, or
+        2. All layers peeked-so-far by selecting a meta layer
+- [ ] Carve Flow from Peek UI
+    1. After a layer has been peeked, user can review layer contents in fslog view
+        - Identify file to peek, by full path and layer IDX to pass to carve
+        - fslog display needs a way to indicate 1. file lto carve, 2. whether to display as text or to save.
 
 
-## Recommended Next Steps
 
-1. **Decide on caching strategy** for image configs (Q1) [Tracked Here](/plans/configsplan.md)
-
-2. **Add optional warning** when carving without layer index and no DB record (Q2)  
-    - May not be necessary for mvp if we control the flow in ui/ux
-3. **Create layer listing endpoint** that exposes layer count and idx-to-digest mapping (Q3)
-- /peek/history
-4. **Design TUI architecture** - the backend is ready, only the UI is missing
+ **Design TUI architecture** - the backend is ready, only the UI is missing
