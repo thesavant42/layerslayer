@@ -120,6 +120,7 @@ def main():
     parser.add_argument('--file', help='Load from local JSON file (for testing)')
     args = parser.parse_args()
     
+    # TODO Remove this testing function for loafing from file
     if args.file:
         with open(args.file, 'r', encoding='utf-8') as f:
             data = json.load(f)
