@@ -1,0 +1,46 @@
+/* dockerDorker Stylesheet */
+
+/* Screen uses vertical layout by default - widgets stack top to bottom */
+
+/* Header styling - built-in widget with dock:top */
+/* No additional styling needed - Header has its own internal CSS */
+
+
+
+/* Top panel - flows below header in vertical layout (not docked) */
+#top-panel {
+    height: 1fr;
+    padding: 1 2;
+    background: $surface;
+    border: solid $primary;
+}
+
+
+
+/* Main content area - horizontal split for left/right panels */
+#main-content {
+    height: 2fr;
+}
+
+/* Left panel - 50% width */
+#left-panel {
+    width: 1fr;
+    height: 100%;
+    padding: 1 2;
+    background: $surface;
+    border: solid $secondary;
+}
+
+/* Right panel - 50% width */
+#right-panel {
+    width: 1fr;
+    height: 100%;
+    padding: 1 2;
+    background: $surface;
+    border: solid $secondary;
+}
+
+/* Footer styling - uses built-in dock:bottom */
+Footer {
+    dock: bottom;
+}
