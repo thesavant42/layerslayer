@@ -9,10 +9,24 @@
 
 /* Top panel - flows below header in vertical layout (not docked) */
 #top-panel {
-    height: 1fr;
+    height: auto;
+    min-height: 5;
     padding: 1 2;
     background: $surface;
     border: solid $primary;
+    layout: vertical;
+}
+
+/* Search input styling */
+#search-input {
+    width: 100%;
+    margin-bottom: 1;
+}
+
+/* Search status text */
+#search-status {
+    height: auto;
+    color: $text-muted;
 }
 
 
@@ -22,13 +36,14 @@
     height: 2fr;
 }
 
-/* Left panel - 50% width */
+/* Left panel - 50% width with scrolling for results */
 #left-panel {
     width: 1fr;
     height: 100%;
     padding: 1 2;
     background: $surface;
     border: solid $secondary;
+    overflow-y: auto;
 }
 
 /* Right panel - 50% width */

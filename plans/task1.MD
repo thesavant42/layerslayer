@@ -1,36 +1,20 @@
-## USER STORY
-
-I want to find containers related to a topic, "disney" in this example.
-
-### Start
-- I open the app and see:
-	1. Info Panel, right side: A Text Input widget: Description: "search Docker Hub"
-		- Routes to the `/search.data` [Docker Hub passthrough route](http://localhost:8000/search.data?q=disney)
-    2. [A table of recently assesed containers](http://localhost:8000/history) in the LEFT PANEL
-	http://127.0.0.1:8000/history?page=1&page_size=30&sortby=scraped_at&order=desc
-
-### search.data
-- I search the recents, and, finding 0 matches, opt for #3, `/search.data` [here](http://localhost:8000/search.data?q=disney)
-	- Each result is for 1 respository in includes the namespace/owner of the repository.
-	- If the namespace, repository name, or description seem worth investigating I will want to dig in on a repository.
-	- To view files or folders we need to get the [TAGs](###Tags) available in a repository via the `/repositories/{namespace}/{repo}/tags` API.
-
----
+# USER STORY
 
 ## Task 1: Add Search box
 
-- This is the base of the TUI. The Textual `header` widget is present on the same row as the title text "dockerDocker by @thesavant42"
+
+- [This is the base](/app/tui/app.py) of the TUI. The Textual `header` widget is present on the same row as the title text "dockerDocker by @thesavant42"
 - Beneath the Header is the `Top-Panel`
 - Beneath the `Top-Panel` are the `Left Panel` and `Right Panel`.
 
 ![TUI frame](screenshot.png)
 
 
-Task 1. Need to include a textual "text" type Input Widget in the `TOP PANEL`, that submits to `/search.data`
+Task 1. Need to include a textual "text" type [Input Widget](./plans/input.md/) in the `TOP PANEL`, that submits to `/search.data`
     - `http://127.0.0.1:8000/search.data?q=disney&page=1&sortby=updated_at&order=desc`
 
 
-- Results Should Display in the `LEFT PANEL`:
+- Results should Display in the `LEFT PANEL`:
     - `dataTable` with "row" cursor
     - Text labels must NOT wrap or break tables
     - **Un-truncated versions of each field to be displayed in `TOP PANEL`**
