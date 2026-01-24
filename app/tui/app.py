@@ -38,9 +38,9 @@ class DockerDorkerApp(App):
     def compose(self) -> ComposeResult:
         """Compose the UI layout."""
         yield Header(show_clock=True)
-        yield TopPanel("dockerDorker", id="top-panel")
+        yield TopPanel("Search Box Goes Here", id="top-panel")
         with Horizontal(id="main-content"):
-            yield LeftPanel("Left Panel", id="left-panel")
+            yield LeftPanel("Search Results go Here", id="left-panel")
             yield RightPanel("Right Panel", id="right-panel")
         yield Footer()
 
