@@ -73,12 +73,13 @@ Once I have the namespace (owner of a repo), the repo, and the tag, I "[peek](/p
 ---
 
 
-## Current Status : Not Achieved
+## Current Status : Not Started
 
 - [ ] There is no UI at this point in time.
+    - I have created an [ascii diagram sketch here.](/plans/plan-tui/uisketch.md) 
 	- I want to make a Textual TUI and enable the [textual-web](https://github.com/Textualize/textual-web) library.
 - [ ] select table for tags, drop-down to choose which tag to view image layers for
-- [ ] Layer Peek debug prints need to be moved to a debug function
+- [ ] Layer Peek debug prints need to be moved to a debug function (from main.py output)
 - [x] Need proper progress tracking for layers not-yet-peeked / peek-a-queue
 
 - [ ] Layer Peek UI Flow:
@@ -92,7 +93,8 @@ Once I have the namespace (owner of a repo), the repo, and the tag, I "[peek](/p
     1. After a layer has been peeked, user can review layer contents in fslog view
         - Identify file to peek, by full path and layer IDX to pass to carve
         - fslog display needs a way to indicate 1. file lto carve, 2. whether to display as text or to save.
-
+            - https://github.com/davep/textual-fspicker - for saving files in TUI mode
+            - https://github.com/Textualize/textual-plotext to visualize layer sizes
 
 
  **Design TUI architecture** - the backend is ready, only the UI is missing
