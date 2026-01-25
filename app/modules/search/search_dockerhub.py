@@ -39,6 +39,18 @@ def get_results(data):
     return [], 0
 
 
+def get_pagination(data):
+    """Extract pagination info from flat array structure."""
+    page = 1
+    page_size = 30
+    for i, v in enumerate(data):
+        if v == "page":
+            page = resolve(data, data[i + 1]) or 1
+        elif v == "pageSize":
+            page_size = resolve(data, data[i + 1]) or 30
+    return {"page": page, "page_size": page_size}
+
+
 def format_date(iso_str):
     """Convert ISO date to MM-DD-YYYY format."""
     if not iso_str:
@@ -78,37 +90,34 @@ def print_results(results, total):
 async def search_dockerhub(
     query: str,
     page: int = 1,
-    sortby: str = "updated_at",
+    sort: str = "updated_at",
     order: str = "desc"
 ) -> str:
     """
-    Search Docker Hub and return formatted text table.
+    Search Docker Hub and return raw JSON passthrough.
     
     Args:
         query: Search term
         page: Page number (default 1)
-        sortby: Sort field - 'pull_count' or 'updated_at' (default 'updated_at')
+        sort: Sort field - 'pull_count' or 'updated_at' (default 'updated_at')
         order: Sort order - 'asc' or 'desc' (default 'desc')
     
     Returns:
-        Formatted text table string
+        Raw JSON string from Docker Hub (passthrough)
     """
     url = "https://hub.docker.com/search.data"
     params = {
         'q': query,
         'page': page,
         'order': order,
-        'sortby': sortby
+        'sort': sort
     }
     
     async with httpx.AsyncClient() as client:
         response = await client.get(url, params=params, timeout=30)
         response.raise_for_status()
-        data = response.json()
-    
-    results, total = get_results(data)
-    #return format_results_text(results, total, page)
-    return json.dumps({"results": results, "total": total, "page": page})
+        # Return raw Docker Hub response as passthrough
+        return response.text
 
 def main():
     """CLI entry point for standalone usage."""
@@ -135,7 +144,7 @@ def main():
             'order': args.order
         }
         if args.sort:
-            params['sortby'] = args.sort
+            params['sort'] = args.sort
         
         try:
             response = requests.get(url, params=params, timeout=30)

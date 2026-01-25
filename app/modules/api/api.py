@@ -69,7 +69,7 @@ IMAGE_PATTERN = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_-]*/[a-zA-Z0-9][a-zA-Z0-9_-]
 async def search_data(
     q: str = Query(..., description="Search query"),
     page: int = Query(default=1, ge=1, description="Page number"),
-    sortby: str = Query(default="updated_at", description="Sort field: pull_count or updated_at"),
+    sort: str = Query(default="updated_at", description="Sort field: pull_count or updated_at"),
     order: str = Query(default="desc", description="Sort order: asc or desc")
 ):
     """
@@ -79,13 +79,13 @@ async def search_data(
     
     - Returns formatted text table with search results.
     
-    - Example: `/search.data?q=nginx&page=1&sortby=pull_count&order=desc`
+    - Example: `/search.data?q=nginx&page=1&sort=pull_count&order=desc`
     """
-    # Validate sortby
-    if sortby not in ['pull_count', 'updated_at']:
+    # Validate sort
+    if sort not in ['pull_count', 'updated_at']:
         raise HTTPException(
             status_code=400,
-            detail="sortby must be 'pull_count' or 'updated_at'"
+            detail="sort must be 'pull_count' or 'updated_at'"
         )
     
     # Validate order
@@ -99,7 +99,7 @@ async def search_data(
         result = await search_dockerhub(
             query=q,
             page=page,
-            sortby=sortby,
+            sort=sort,
             order=order
         )
         return result

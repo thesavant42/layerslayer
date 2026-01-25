@@ -13,6 +13,16 @@ from textual.containers import Horizontal
 from textual.widgets import Header, Footer, Static, Input, DataTable
 from textual import work
 import httpx
+import sys
+from pathlib import Path
+
+# Add project root to path for imports when running directly
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+# Import parsing functions for raw Docker Hub format
+from app.modules.search.search_dockerhub import get_results, get_pagination
 
 
 class TopPanel(Static):
@@ -106,15 +116,19 @@ class DockerDorkerApp(App):
                 )
                 response.raise_for_status()
                 
+                # Parse raw Docker Hub flat array format
                 data = response.json()
-                self.current_page = data["page"]
-                self.total_results = data["total"]
+                results, total = get_results(data)
+                pagination = get_pagination(data)
+                
+                self.current_page = pagination["page"]
+                self.total_results = total
                 status.update("")
                 
                 if clear:
                     table.clear()
                 
-                for r in data["results"]:
+                for r in results:
                     table.add_row(
                         r.get("id", ""),
                         str(r.get("star_count", 0)),
