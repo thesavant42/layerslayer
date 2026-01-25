@@ -20,6 +20,7 @@ import httpx
 import json
 import sys
 from pathlib import Path
+from rich.text import Text
 
 # Add project root to path for imports when running directly
 project_root = Path(__file__).parent.parent.parent
@@ -28,6 +29,146 @@ if str(project_root) not in sys.path:
 
 # Import parsing functions for raw Docker Hub format
 from app.modules.search.search_dockerhub import get_results, format_date
+
+
+def format_history_date(iso_date: str) -> str:
+    """Convert ISO date to MM-DD-YYYY format.
+    
+    Args:
+        iso_date: ISO 8601 date string like '2025-01-27T04:14:00.804659581Z'
+        
+    Returns:
+        Formatted date string like '01-27-2025'
+    """
+    if not iso_date:
+        return ""
+    try:
+        # Parse ISO format and reformat
+        date_part = iso_date.split("T")[0]  # '2025-01-27'
+        parts = date_part.split("-")  # ['2025', '01', '27']
+        if len(parts) == 3:
+            return f"{parts[1]}-{parts[2]}-{parts[0]}"  # MM-DD-YYYY
+    except Exception:
+        pass
+    return iso_date
+
+
+def flatten_nested(obj: dict | list, prefix: str = "") -> list[tuple[str, str]]:
+    """Flatten nested dict/list into (field, value) tuples with dot notation."""
+    rows = []
+    
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            field = f"{prefix}.{key}" if prefix else key
+            if isinstance(value, dict):
+                rows.extend(flatten_nested(value, field))
+            elif isinstance(value, list):
+                if len(value) == 0:
+                    rows.append((field, "(empty list)"))
+                else:
+                    for i, item in enumerate(value):
+                        item_field = f"{field}[{i}]"
+                        if isinstance(item, dict):
+                            rows.extend(flatten_nested(item, item_field))
+                        else:
+                            rows.append((item_field, str(item)))
+            elif value is None:
+                rows.append((field, "(null)"))
+            else:
+                rows.append((field, str(value)))
+    elif isinstance(obj, list):
+        for i, item in enumerate(obj):
+            item_field = f"{prefix}[{i}]" if prefix else f"[{i}]"
+            if isinstance(item, dict):
+                rows.extend(flatten_nested(item, item_field))
+            else:
+                rows.append((item_field, str(item)))
+    
+    return rows
+
+
+def format_config(config: dict) -> list[tuple[str, str]]:
+    """Format OCI config JSON for display per tags-TASK.md requirements.
+    
+    Groups data in order:
+    1. architecture, os (top-level)
+    2. config.* values
+    3. history entries combined: MM-DD-YYYY - created_by (skip empty_layer)
+    4. rootfs.type and rootfs.diff_ids
+    
+    Args:
+        config: OCI config JSON dict
+        
+    Returns:
+        List of (field_name, value_string) tuples
+    """
+    rows = []
+    
+    # 1. Architecture and OS at top
+    if "architecture" in config:
+        rows.append(("architecture", str(config["architecture"])))
+    if "os" in config:
+        rows.append(("os", str(config["os"])))
+    
+    # 2. Useful config.* values only (Env, Cmd, Entrypoint, Labels, WorkingDir, ExposedPorts)
+    if "config" in config and isinstance(config["config"], dict):
+        cfg = config["config"]
+        
+        # Env variables
+        if "Env" in cfg and isinstance(cfg["Env"], list):
+            for env_val in cfg["Env"]:
+                rows.append(("", str(env_val)))
+        
+        # Cmd
+        if "Cmd" in cfg and isinstance(cfg["Cmd"], list):
+            rows.append(("Cmd", " ".join(cfg["Cmd"])))
+        
+        # Entrypoint
+        if "Entrypoint" in cfg and isinstance(cfg["Entrypoint"], list):
+            rows.append(("Entrypoint", " ".join(cfg["Entrypoint"])))
+        
+        # WorkingDir
+        if "WorkingDir" in cfg and cfg["WorkingDir"]:
+            rows.append(("WorkingDir", str(cfg["WorkingDir"])))
+        
+        # ExposedPorts
+        if "ExposedPorts" in cfg and isinstance(cfg["ExposedPorts"], dict):
+            for port in cfg["ExposedPorts"].keys():
+                rows.append(("ExposedPort", str(port)))
+        
+        # Labels
+        if "Labels" in cfg and isinstance(cfg["Labels"], dict):
+            for key, val in cfg["Labels"].items():
+                rows.append(("", f"{key}={val}"))
+    
+    # 3. History entries - combine date + created_by, skip empty_layer, no field label
+    if "history" in config and isinstance(config["history"], list):
+        for i, entry in enumerate(config["history"]):
+            if not isinstance(entry, dict):
+                continue
+            
+            created = entry.get("created", "")
+            created_by = entry.get("created_by", "")
+            
+            # Format: MM-DD-YYYY - command (no field label, just the value)
+            date_str = format_history_date(created)
+            if date_str and created_by:
+                rows.append(("", f"{date_str} - {created_by}"))
+            elif created_by:
+                rows.append(("", created_by))
+            elif date_str:
+                rows.append(("", date_str))
+    
+    # 4. rootfs.type and rootfs.diff_ids
+    if "rootfs" in config and isinstance(config["rootfs"], dict):
+        rootfs = config["rootfs"]
+        if "type" in rootfs:
+            rows.append(("rootfs.type", str(rootfs["type"])))
+        if "diff_ids" in rootfs and isinstance(rootfs["diff_ids"], list):
+            for i, diff_id in enumerate(rootfs["diff_ids"]):
+                rows.append((f"rootfs.diff_ids[{i}]", str(diff_id)))
+    
+    return rows
 
 
 class TopPanel(Static):
@@ -55,8 +196,7 @@ class RightPanel(Static):
             with TabPane("Repo Overview", id="repo-overview"):
                 yield Static("Select a repository to view tags", id="repo-info")
                 yield Select([], id="tag-select", prompt="Select a tag...")
-                with VerticalScroll(id="config-scroll"):
-                    yield Static("", id="config-display")
+                yield DataTable(id="config-table", cursor_type="row")
 
 
 def parse_slug(slug: str) -> tuple[str, str]:
@@ -193,8 +333,13 @@ class DockerDorkerApp(App):
             self._loading_page = False
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Handle row selection - trigger tag enumeration."""
+        """Handle row selection - trigger tag enumeration for results-table only."""
         table = event.data_table
+        
+        # Only handle results-table
+        if table.id != "results-table":
+            return
+        
         cursor_row = event.cursor_row
         
         # Get the row data using cursor position
@@ -220,9 +365,9 @@ class DockerDorkerApp(App):
         repo_info = self.query_one("#repo-info", Static)
         repo_info.update(f"Loading tags for {namespace}/{repo}...")
         
-        # Clear previous config display
-        config_display = self.query_one("#config-display", Static)
-        config_display.update("")
+        # Clear previous config table
+        config_table = self.query_one("#config-table", DataTable)
+        config_table.clear(columns=True)
         
         # Trigger tag enumeration
         self.enumerate_tags(namespace, repo)
@@ -237,9 +382,9 @@ class DockerDorkerApp(App):
         
         tag = str(event.value)
         
-        # Update display to show loading
-        config_display = self.query_one("#config-display", Static)
-        config_display.update(f"Loading config for tag: {tag}...")
+        # Update repo info to show loading
+        repo_info = self.query_one("#repo-info", Static)
+        repo_info.update(f"Loading config for tag: {tag}...")
         
         # Fetch the config manifest
         self.fetch_tag_config(self.selected_namespace, self.selected_repo, tag)
@@ -285,8 +430,9 @@ class DockerDorkerApp(App):
 
     @work(exclusive=True, group="config")
     async def fetch_tag_config(self, namespace: str, repo: str, tag: str) -> None:
-        """Fetch config manifest for tag."""
-        config_display = self.query_one("#config-display", Static)
+        """Fetch config manifest for tag and populate DataTable."""
+        config_table = self.query_one("#config-table", DataTable)
+        repo_info = self.query_one("#repo-info", Static)
         
         try:
             async with httpx.AsyncClient() as client:
@@ -298,16 +444,27 @@ class DockerDorkerApp(App):
                 
                 config = response.json()
                 
-                # Format JSON with indentation for readability
-                formatted_json = json.dumps(config, indent=2)
+                # Clear and setup single column (no header)
+                config_table.clear(columns=True)
+                config_table.show_header = False
+                config_table.add_column("DATA", width=180)
                 
-                # Update config display
-                config_display.update(formatted_json)
+                # Format and add all rows with Text to prevent markup parsing
+                rows = format_config(config)
+                for field, value in rows:
+                    # Combine field and value into single column
+                    if field:
+                        config_table.add_row(Text(f"{field}: {value}"))
+                    else:
+                        config_table.add_row(Text(value))
+                
+                # Update status
+                repo_info.update(f"{namespace}/{repo}:{tag} - {len(rows)} fields")
                 
         except httpx.RequestError as e:
-            config_display.update(f"Request error: {e}")
+            repo_info.update(f"Request error: {e}")
         except httpx.HTTPStatusError as e:
-            config_display.update(f"HTTP error: {e.response.status_code}")
+            repo_info.update(f"HTTP error: {e.response.status_code}")
 
 
 if __name__ == "__main__":

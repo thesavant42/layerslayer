@@ -74,16 +74,11 @@
     color: $text-muted;
 }
 
-/* Config scroll container */
-#config-scroll {
+/* Config DataTable */
+#config-table {
     height: 1fr;
     border: solid $primary;
     margin: 1;
-}
-
-/* Config display for JSON */
-#config-display {
-    padding: 1;
 }
 
 /* Footer styling - uses built-in dock:bottom */
