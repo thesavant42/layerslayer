@@ -76,7 +76,7 @@ class DockerDorkerApp(App):
         table = self.query_one("#results-table", DataTable)
         table.add_column("SLUG", width=50)
         table.add_column("FAV", width=4)
-        table.add_column("PULLS", width=8)
+        table.add_column("PULLS", width=6)
         table.add_column("UPDATED", width=12)
         table.add_column("DESCRIPTION", width=80)
 
