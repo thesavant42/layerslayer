@@ -183,7 +183,7 @@ class TopPanel(Static):
         yield Static("", id="search-status")
 
 
-class LeftPanel(Static):
+class LeftPanel(Static): # TODO Can this be removed?
     """Left panel widget (50% width)."""
     pass
 
