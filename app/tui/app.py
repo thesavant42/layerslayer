@@ -44,6 +44,11 @@ class DockerDorkerApp(App):
     TITLE = "dockerDorker"
     SUB_TITLE = "by @thesavant42"
 
+    # Pagination state
+    current_query: str = ""
+    current_page: int = 1
+    total_results: int = 0
+
     def compose(self) -> ComposeResult:
         """Compose the UI layout."""
         yield Header(show_clock=True)
@@ -65,14 +70,26 @@ class DockerDorkerApp(App):
         if not query:
             return
         
-        # Update status and trigger the worker
+        self.current_query = query
+        self.current_page = 1
         status = self.query_one("#search-status", Static)
         status.update(f"Searching for: {query}...")
-        self.search_docker_hub(query)
+        self.fetch_page(query, page=1, clear=True)
+
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """Detect when cursor reaches last row to trigger pagination."""
+        table = self.query_one("#results-table", DataTable)
+        
+        # Check if cursor is on last row and more results exist
+        if event.cursor_row == table.row_count - 1:
+            loaded_count = table.row_count
+            if loaded_count < self.total_results:
+                self.current_page += 1
+                self.fetch_page(self.current_query, self.current_page, clear=True)
 
     @work(exclusive=True)
-    async def search_docker_hub(self, query: str) -> None:
-        """Worker to perform the search API call."""
+    async def fetch_page(self, query: str, page: int, clear: bool = False) -> None:
+        """Worker to fetch a page of results."""
         status = self.query_one("#search-status", Static)
         table = self.query_one("#results-table", DataTable)
         
@@ -82,7 +99,7 @@ class DockerDorkerApp(App):
                     "http://127.0.0.1:8000/search.data",
                     params={
                         "q": query,
-                        "page": 1,
+                        "page": page,
                         "sortby": "updated_at",
                         "order": "desc"
                     }
@@ -90,8 +107,12 @@ class DockerDorkerApp(App):
                 response.raise_for_status()
                 
                 data = response.json()
+                self.current_page = data["page"]
+                self.total_results = data["total"]
                 status.update("")
-                table.clear()
+                
+                if clear:
+                    table.clear()
                 
                 for r in data["results"]:
                     table.add_row(
