@@ -9,11 +9,15 @@ A basic UI structure with:
 """
 
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal
-from textual.widgets import Header, Footer, Static, Input, DataTable
+from textual.containers import Horizontal, VerticalScroll
+from textual.widgets import (
+    Header, Footer, Static, Input, DataTable,
+    TabbedContent, TabPane, Select
+)
 from textual.binding import Binding
 from textual import work
 import httpx
+import json
 import sys
 from pathlib import Path
 
@@ -44,8 +48,31 @@ class LeftPanel(Static):
 
 
 class RightPanel(Static):
-    """Right panel widget (50% width)."""
-    pass
+    """Right panel widget with tabbed content for repo details."""
+    
+    def compose(self) -> ComposeResult:
+        with TabbedContent():
+            with TabPane("Repo Overview", id="repo-overview"):
+                yield Static("Select a repository to view tags", id="repo-info")
+                yield Select([], id="tag-select", prompt="Select a tag...")
+                with VerticalScroll(id="config-scroll"):
+                    yield Static("", id="config-display")
+
+
+def parse_slug(slug: str) -> tuple[str, str]:
+    """Extract namespace and repo from slug.
+    
+    Args:
+        slug: Repository slug like 'library/nginx' or 'username/reponame'
+        
+    Returns:
+        Tuple of (namespace, repo)
+    """
+    parts = slug.split("/", 1)
+    if len(parts) == 2:
+        return parts[0], parts[1]
+    # Handle single-part slugs - assume 'library' namespace
+    return "library", parts[0]
 
 
 class DockerDorkerApp(App):
@@ -60,6 +87,11 @@ class DockerDorkerApp(App):
     current_page: int = 1
     total_results: int = 0
     _loading_page: bool = False  # Flag to prevent pagination loops
+    
+    # Tag enumeration state
+    selected_namespace: str = ""
+    selected_repo: str = ""
+    available_tags: list = []
 
     def compose(self) -> ComposeResult:
         """Compose the UI layout."""
@@ -67,7 +99,7 @@ class DockerDorkerApp(App):
         yield TopPanel(id="top-panel")
         with Horizontal(id="main-content"):
             yield DataTable(id="results-table", cursor_type="row")
-            yield RightPanel("Right Panel", id="right-panel")
+            yield RightPanel(id="right-panel")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -159,6 +191,123 @@ class DockerDorkerApp(App):
             status.update(f"HTTP error: {e.response.status_code}")
         finally:
             self._loading_page = False
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Handle row selection - trigger tag enumeration."""
+        table = event.data_table
+        cursor_row = event.cursor_row
+        
+        # Get the row data using cursor position
+        if cursor_row < 0 or cursor_row >= table.row_count:
+            return
+        
+        # Get row data - returns tuple of cell values in column order
+        row_data = table.get_row_at(cursor_row)
+        if not row_data:
+            return
+        
+        # First column (index 0) is SLUG
+        slug = str(row_data[0])
+        if not slug:
+            return
+        
+        # Parse namespace and repo from slug
+        namespace, repo = parse_slug(slug)
+        self.selected_namespace = namespace
+        self.selected_repo = repo
+        
+        # Update repo info display
+        repo_info = self.query_one("#repo-info", Static)
+        repo_info.update(f"Loading tags for {namespace}/{repo}...")
+        
+        # Clear previous config display
+        config_display = self.query_one("#config-display", Static)
+        config_display.update("")
+        
+        # Trigger tag enumeration
+        self.enumerate_tags(namespace, repo)
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """Handle tag selection - fetch config manifest."""
+        if event.select.id != "tag-select":
+            return
+        
+        if event.value is None or event.value == Select.BLANK:
+            return
+        
+        tag = str(event.value)
+        
+        # Update display to show loading
+        config_display = self.query_one("#config-display", Static)
+        config_display.update(f"Loading config for tag: {tag}...")
+        
+        # Fetch the config manifest
+        self.fetch_tag_config(self.selected_namespace, self.selected_repo, tag)
+
+    @work(exclusive=True, group="tags")
+    async def enumerate_tags(self, namespace: str, repo: str) -> None:
+        """Fetch tags for repository."""
+        repo_info = self.query_one("#repo-info", Static)
+        tag_select = self.query_one("#tag-select", Select)
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"http://127.0.0.1:8000/repositories/{namespace}/{repo}/tags",
+                    params={
+                        "page": 1,
+                        "page_size": 30,
+                        "ordering": "last_updated"
+                    }
+                )
+                response.raise_for_status()
+                
+                data = response.json()
+                results = data.get("results", [])
+                count = data.get("count", 0)
+                
+                # Store available tags
+                self.available_tags = results
+                
+                # Build options for Select widget: list of (display_text, value) tuples
+                options = [(tag["name"], tag["name"]) for tag in results if "name" in tag]
+                
+                # Update Select widget with new options
+                tag_select.set_options(options)
+                
+                # Update repo info with tag count
+                repo_info.update(f"{namespace}/{repo} - {count} tags ({len(options)} shown)")
+                
+        except httpx.RequestError as e:
+            repo_info.update(f"Request error: {e}")
+        except httpx.HTTPStatusError as e:
+            repo_info.update(f"HTTP error: {e.response.status_code}")
+
+    @work(exclusive=True, group="config")
+    async def fetch_tag_config(self, namespace: str, repo: str, tag: str) -> None:
+        """Fetch config manifest for tag."""
+        config_display = self.query_one("#config-display", Static)
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"http://127.0.0.1:8000/repositories/{namespace}/{repo}/tags/{tag}/config",
+                    params={"force_refresh": False}
+                )
+                response.raise_for_status()
+                
+                config = response.json()
+                
+                # Format JSON with indentation for readability
+                formatted_json = json.dumps(config, indent=2)
+                
+                # Update config display
+                config_display.update(formatted_json)
+                
+        except httpx.RequestError as e:
+            config_display.update(f"Request error: {e}")
+        except httpx.HTTPStatusError as e:
+            config_display.update(f"HTTP error: {e.response.status_code}")
 
 
 if __name__ == "__main__":

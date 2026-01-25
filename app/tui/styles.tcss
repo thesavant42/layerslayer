@@ -58,9 +58,32 @@
 #right-panel {
     width: 1fr;
     height: 100%;
-    padding: 1 2;
     background: $surface;
     border: solid $secondary;
+}
+
+/* Tag select dropdown */
+#tag-select {
+    width: 100%;
+    margin: 1;
+}
+
+/* Repo info label */
+#repo-info {
+    padding: 1;
+    color: $text-muted;
+}
+
+/* Config scroll container */
+#config-scroll {
+    height: 1fr;
+    border: solid $primary;
+    margin: 1;
+}
+
+/* Config display for JSON */
+#config-display {
+    padding: 1;
 }
 
 /* Footer styling - uses built-in dock:bottom */
