@@ -2,85 +2,75 @@
 
 ## Overview
 
-This plan addresses two main requirements:
-1. Add visual page indicator and navigation buttons for pagination
-2. Align Left and Right panels horizontally by relocating the search bar
+Add a pagination widget to the TUI that:
+1. Shows current page position and total results
+2. Provides navigation buttons (first/prev/next/last) and jump-to input
+3. Aligns Left and Right panels horizontally by positioning it beneath tabs
 
 ---
 
 ## Current State Analysis
 
-### Current Layout Structure (app.py lines 240-247)
+### Current Layout Structure ([`app.py`](app/tui/app.py:240-247))
 ```
 Header
-TopPanel (#top-panel) <-- Contains search input
+TopPanel (#top-panel)      <-- Search input lives here
   Horizontal (#main-content)
     LeftPanel (#left-panel)
+      TabbedContent
+        TabPane "Search Results"
+          DataTable (#results-table)   <-- No pagination indicator
     RightPanel (#right-panel)
 Footer
 ```
 
-### Issues Identified
-- TopPanel creates vertical offset between Left/Right panel content
-- No pagination indicator showing current page position
-- No navigation buttons for page control (only keyboard-based at row boundaries)
-- Dead space below results table in Left panel
+### Problem
+- No visible pagination indicator
+- Left panel header area (tabs) is shorter than Right panel header area (tabs + tag-select + repo-info)
+- User cannot see: current page, total pages, total results
 
 ---
 
-## Proposed Changes
+## Proposed Solution
 
-### 1. Relocate Search Widgets from TopPanel to LeftPanel
-
-**File: app/tui/app.py**
-
-#### Modify TopPanel class (lines 174-183)
-```python
-# BEFORE (lines 177-183):
-def compose(self) -> ComposeResult:
-    yield Input(
-        placeholder="Search Docker Hub...",
-        id="search-input",
-        type="text"
-    )
-    yield Static("", id="search-status")
-
-# AFTER:
-def compose(self) -> ComposeResult:
-    # TopPanel now empty - reserved for future use
-    yield Static("", id="top-placeholder")
+### Desired Pagination Format
+```
+[<<] [<]  Page 1 / 3  (219 results)  [>] [>>]   Jump to: [___]
 ```
 
-#### Modify LeftPanel class (lines 186-193)
-```python
-# BEFORE (lines 189-192):
-def compose(self) -> ComposeResult:
-    with TabbedContent():
-        with TabPane("Search Results", id="search-results-tab"):
-            yield DataTable(id="results-table", cursor_type="row")
+### Placement
+- BENEATH the TabbedContent tabs
+- ABOVE the #results-table widget
+- This adds height to left panel header area, aligning it with right panel
 
-# AFTER:
-def compose(self) -> ComposeResult:
-    # Search input moved here from TopPanel
-    yield Input(
-        placeholder="Search Docker Hub...",
-        id="search-input",
-        type="text"
-    )
-    yield Static("", id="search-status")
-    with TabbedContent():
-        with TabPane("Search Results", id="search-results-tab"):
-            yield DataTable(id="results-table", cursor_type="row")
-    # Pagination controls at bottom
-    with Horizontal(id="pagination-controls"):
-        yield Button("<< Prev", id="prev-page-btn", variant="default")
-        yield Static("Page 0 of 0", id="page-indicator")
-        yield Button("Next >>", id="next-page-btn", variant="default")
+### After Layout
+```
++---------------------------------------------------------------+
+|                          HEADER                               |
++---------------------------------------------------------------+
+| [        search bar                                        ]  |
++-------------------------------+-------------------------------+
+|      Search Results           |       Repo Overview           |
+|-------------------------------|-------------------------------|
+| [<<][<] Pg 1/3 (219) [>][>>]  | drichnerdisney/ollama - 1 tag |
+| Jump to: [___]                | [  TAGS SELECT             ]  |
+|-------------------------------|-------------------------------|
+| SLUG | FAV | PULLS | UPDATED  | architecture: amd64           |
+| ...  (scrollable rows)  ...   | os: linux                     |
+|                               | ...                           |
++-------------------------------+-------------------------------+
 ```
 
-#### Add Button import (line 14)
+---
+
+## Implementation Details
+
+### File: app/tui/app.py
+
+#### 1. Add Button import ([line 14](app/tui/app.py:14))
+
 ```python
-# BEFORE (lines 13-16):
+# BEFORE:
 from textual.widgets import (
     Header, Footer, Static, Input, DataTable,
     TabbedContent, TabPane, Select
@@ -93,29 +83,109 @@ from textual.widgets import (
 )
 ```
 
----
+#### 2. Create PaginationBar widget class (insert after line 193, before RightPanel)
 
-### 2. Add Pagination Button Event Handlers
+```python
+class PaginationBar(Static):
+    """Pagination controls for results table."""
+    
+    def compose(self) -> ComposeResult:
+        with Horizontal(id="pagination-row"):
+            yield Button("<<", id="first-page-btn", variant="default")
+            yield Button("<", id="prev-page-btn", variant="default")
+            yield Static("Page 0 / 0 (0 results)", id="page-indicator")
+            yield Button(">", id="next-page-btn", variant="default")
+            yield Button(">>", id="last-page-btn", variant="default")
+        with Horizontal(id="jump-row"):
+            yield Static("Jump to:", id="jump-label")
+            yield Input(placeholder="", id="jump-input", type="integer")
+```
 
-**File: app/tui/app.py**
+#### 3. Modify LeftPanel class ([lines 186-193](app/tui/app.py:186-193))
 
-#### Add button click handler (after line 289, in DockerDorkerApp class)
+```python
+# BEFORE:
+class LeftPanel(Static):
+    """Left panel widget with tabbed content for search results."""
+    
+    def compose(self) -> ComposeResult:
+        with TabbedContent():
+            with TabPane("Search Results", id="search-results-tab"):
+                yield DataTable(id="results-table", cursor_type="row")
+
+# AFTER:
+class LeftPanel(Static):
+    """Left panel widget with tabbed content for search results."""
+    
+    def compose(self) -> ComposeResult:
+        with TabbedContent():
+            with TabPane("Search Results", id="search-results-tab"):
+                yield PaginationBar(id="pagination-bar")
+                yield DataTable(id="results-table", cursor_type="row")
+```
+
+#### 4. Add pagination button handler (insert after [line 289](app/tui/app.py:289))
+
 ```python
 def on_button_pressed(self, event: Button.Pressed) -> None:
     """Handle pagination button clicks."""
-    if event.button.id == "prev-page-btn":
+    if not self.current_query:
+        return
+    
+    results_per_page = 25  # Docker Hub default
+    max_pages = (self.total_results + results_per_page - 1) // results_per_page if self.total_results > 0 else 1
+    
+    if event.button.id == "first-page-btn":
+        if self.current_page > 1:
+            self.fetch_page(self.current_query, 1, clear=True)
+    elif event.button.id == "prev-page-btn":
         if self.current_page > 1:
             self.fetch_page(self.current_query, self.current_page - 1, clear=True)
     elif event.button.id == "next-page-btn":
-        results_per_page = 25  # Default Docker Hub page size
-        max_pages = (self.total_results + results_per_page - 1) // results_per_page
         if self.current_page < max_pages:
             self.fetch_page(self.current_query, self.current_page + 1, clear=True)
+    elif event.button.id == "last-page-btn":
+        if self.current_page < max_pages:
+            self.fetch_page(self.current_query, max_pages, clear=True)
 ```
 
-#### Update page indicator in fetch_page method (after line 317)
+#### 5. Add jump-to input handler (insert after button handler)
+
 ```python
-# BEFORE (lines 316-318):
+def on_input_submitted(self, event: Input.Submitted) -> None:
+    """Handle input submission - search or jump-to-page."""
+    if event.input.id == "search-input":
+        # Existing search logic
+        query = event.value.strip()
+        if not query:
+            return
+        self.current_query = query
+        self.current_page = 1
+        status = self.query_one("#search-status", Static)
+        status.update(f"Searching for: {query}...")
+        self.fetch_page(query, page=1, clear=True)
+    
+    elif event.input.id == "jump-input":
+        # Jump to page logic
+        if not self.current_query:
+            return
+        try:
+            target_page = int(event.value.strip())
+            results_per_page = 25
+            max_pages = (self.total_results + results_per_page - 1) // results_per_page if self.total_results > 0 else 1
+            if 1 <= target_page <= max_pages and target_page != self.current_page:
+                self.fetch_page(self.current_query, target_page, clear=True)
+            event.input.value = ""  # Clear input after jump
+        except ValueError:
+            pass
+```
+
+Note: This replaces the existing [`on_input_submitted`](app/tui/app.py:259-269) method with one that handles both search and jump inputs.
+
+#### 6. Update pagination display in fetch_page (modify [lines 316-318](app/tui/app.py:316-318))
+
+```python
+# BEFORE:
 self.current_page = page
 self.total_results = total
 status.update("")
@@ -129,174 +199,114 @@ status.update("")
 results_per_page = 25
 max_pages = (total + results_per_page - 1) // results_per_page if total > 0 else 1
 page_indicator = self.query_one("#page-indicator", Static)
-page_indicator.update(f"Page {page} of {max_pages} ({total} results)")
+page_indicator.update(f"Page {page} / {max_pages} ({total} results)")
 
-# Enable/disable buttons based on position
+# Enable/disable navigation buttons
+first_btn = self.query_one("#first-page-btn", Button)
 prev_btn = self.query_one("#prev-page-btn", Button)
 next_btn = self.query_one("#next-page-btn", Button)
+last_btn = self.query_one("#last-page-btn", Button)
+
+first_btn.disabled = (page <= 1)
 prev_btn.disabled = (page <= 1)
 next_btn.disabled = (page >= max_pages)
+last_btn.disabled = (page >= max_pages)
 ```
 
 ---
 
-### 3. Style Changes
+### File: app/tui/styles.tcss
 
-**File: app/tui/styles.tcss**
+#### 1. Add pagination bar styles (insert after [line 62](app/tui/styles.tcss:62))
 
-#### Reduce TopPanel height (lines 11-18)
 ```css
-/* BEFORE: */
-#top-panel {
+/* Pagination bar container */
+#pagination-bar {
     height: auto;
-    min-height: 5;
-    padding: 1 2;
+    min-height: 4;
+    padding: 0 1;
     background: $surface;
-    border: solid $primary;
-    layout: vertical;
 }
 
-/* AFTER: */
-#top-panel {
-    height: 0;
-    min-height: 0;
-    padding: 0;
-    display: none;
-}
-```
-
-#### Add pagination control styles (add after line 62)
-```css
-/* Pagination controls container */
-#pagination-controls {
+/* Pagination row with nav buttons */
+#pagination-row {
     height: auto;
-    min-height: 3;
-    padding: 1;
     align: center middle;
-    background: $surface;
+    padding: 0;
+}
+
+/* Jump-to row */
+#jump-row {
+    height: auto;
+    align: left middle;
+    padding: 0;
 }
 
 /* Page indicator text */
 #page-indicator {
     width: auto;
-    min-width: 20;
+    min-width: 24;
     text-align: center;
-    padding: 0 2;
+    padding: 0 1;
     color: $text;
 }
 
-/* Pagination buttons */
-#prev-page-btn, #next-page-btn {
-    min-width: 10;
+/* Navigation buttons - thin styling */
+#first-page-btn, #prev-page-btn, #next-page-btn, #last-page-btn {
+    min-width: 4;
+    width: 4;
+    border: none;
+    padding: 0;
+    margin: 0 1;
 }
 
-#prev-page-btn:disabled, #next-page-btn:disabled {
-    opacity: 0.5;
-}
-```
-
-#### Adjust left panel to accommodate search input (modify lines 39-47)
-```css
-/* BEFORE: */
-#left-panel {
-    width: 1fr;
-    height: 100%;
-    padding: 1 2;
-    background: $surface;
-    border: solid $secondary;
-    overflow-y: auto;
+#first-page-btn:disabled, #prev-page-btn:disabled,
+#next-page-btn:disabled, #last-page-btn:disabled {
+    opacity: 0.3;
 }
 
-/* AFTER: */
-#left-panel {
-    width: 1fr;
-    height: 100%;
-    padding: 1 2;
-    background: $surface;
-    border: solid $secondary;
-    overflow-y: auto;
-    layout: vertical;
-}
-
-/* Search input in left panel */
-#left-panel #search-input {
-    width: 100%;
-    margin-bottom: 1;
-}
-
-#left-panel #search-status {
-    height: auto;
+/* Jump label */
+#jump-label {
+    width: auto;
+    padding: 0 1;
     color: $text-muted;
-    margin-bottom: 1;
+}
+
+/* Jump input - 3 character width */
+#jump-input {
+    width: 5;
+    min-width: 5;
+    max-width: 5;
 }
 ```
 
 ---
 
-## Visual Representation
-
-### Before:
-```
-+---------------------------------------------------------------+
-|                          HEADER                               |
-+---------------------------------------------------------------+
-| [        search bar                                        ]  |
-| (status text)                                                 |
-+-------------------------------+-------------------------------+
-|      Search Results           |       Repo Overview           |
-|-------------------------------|-------------------------------|
-| SLUG | FAV | PULLS | UPDATED  | [  TAGS SELECT             ]  |
-| ...  (scrollable rows)  ...   | architecture: amd64           |
-|                               | os: linux                     |
-|       (dead space)            | ...                           |
-+-------------------------------+-------------------------------+
-```
-
-### After:
-```
-+---------------------------------------------------------------+
-|                          HEADER                               |
-+-------------------------------+-------------------------------+
-| [   search bar             ]  | [  TAGS SELECT             ]  |
-| (status text)                 | (repo info)                   |
-|-------------------------------|-------------------------------|
-|      Search Results           |       Repo Overview           |
-|-------------------------------|-------------------------------|
-| SLUG | FAV | PULLS | UPDATED  | architecture: amd64           |
-| ...  (scrollable rows)  ...   | os: linux                     |
-| ...  (more visible rows) ...  | ...                           |
-|-------------------------------|                               |
-| [<< Prev] Page 1 of 5 [Next>>]|                               |
-+-------------------------------+-------------------------------+
-```
-
----
-
-## Summary of File Changes
+## Summary of Changes
 
 ### app/tui/app.py
+
 | Location | Change |
 |----------|--------|
-| Line 14 | Add `Button` to imports |
-| Lines 177-183 | Empty TopPanel compose method |
-| Lines 189-192 | Restructure LeftPanel with search input and pagination |
-| After line 289 | Add `on_button_pressed` handler |
-| Lines 316-318 | Update pagination indicator in `fetch_page` |
+| [Line 14](app/tui/app.py:14) | Add `Button` to imports |
+| After [line 193](app/tui/app.py:193) | Add `PaginationBar` class |
+| [Lines 186-193](app/tui/app.py:186-193) | Modify `LeftPanel` to include `PaginationBar` |
+| After [line 289](app/tui/app.py:289) | Add `on_button_pressed` handler |
+| [Lines 259-269](app/tui/app.py:259-269) | Replace `on_input_submitted` to handle both search and jump |
+| [Lines 316-318](app/tui/app.py:316-318) | Update pagination indicator and button states in `fetch_page` |
 
 ### app/tui/styles.tcss
+
 | Location | Change |
 |----------|--------|
-| Lines 11-18 | Hide TopPanel |
-| Lines 39-47 | Add vertical layout to left-panel |
-| After line 62 | Add pagination control styles |
+| After [line 62](app/tui/styles.tcss:62) | Add pagination bar and component styles |
 
 ---
 
-## Implementation Notes
+## Behavior Notes
 
-1. The pagination indicator updates automatically when results load
-2. Previous/Next buttons disable at boundaries (page 1 and last page)
-3. Keyboard navigation at row boundaries still works as before
-4. TopPanel class remains but is hidden via CSS (preserves code structure)
-5. Search input retains same ID so existing event handlers work unchanged
-
+1. **Button states**: First/Prev disabled on page 1; Next/Last disabled on last page
+2. **Jump input**: 3-char width, integer-only, clears after successful jump
+3. **Display format**: "Page X / Y (Z results)" where X=current, Y=total pages, Z=total results
+4. **Page calculation**: `max_pages = ceil(total_results / 25)`
+5. **Alignment**: The pagination bar adds height to left panel header area, aligning with right panel's tag-select + repo-info area
