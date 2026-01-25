@@ -22,7 +22,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 # Import parsing functions for raw Docker Hub format
-from app.modules.search.search_dockerhub import get_results, get_pagination
+from app.modules.search.search_dockerhub import get_results
 
 
 class TopPanel(Static):
@@ -110,7 +110,7 @@ class DockerDorkerApp(App):
                     params={
                         "q": query,
                         "page": page,
-                        "sortby": "updated_at",
+                        "sort": "updated_at",
                         "order": "desc"
                     }
                 )
@@ -119,9 +119,9 @@ class DockerDorkerApp(App):
                 # Parse raw Docker Hub flat array format
                 data = response.json()
                 results, total = get_results(data)
-                pagination = get_pagination(data)
                 
-                self.current_page = pagination["page"]
+                # Use the page parameter we sent, total from results
+                self.current_page = page
                 self.total_results = total
                 status.update("")
                 
