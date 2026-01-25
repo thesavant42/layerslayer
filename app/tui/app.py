@@ -23,7 +23,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 # Import parsing functions for raw Docker Hub format
-from app.modules.search.search_dockerhub import get_results
+from app.modules.search.search_dockerhub import get_results, format_date
 
 
 class TopPanel(Static):
@@ -74,7 +74,11 @@ class DockerDorkerApp(App):
         """Set the Dracula theme when the app mounts."""
         self.theme = "dracula"
         table = self.query_one("#results-table", DataTable)
-        table.add_columns("SLUG", "STARS", "PULLS", "UPDATED")
+        table.add_column("SLUG", width=50)
+        table.add_column("FAV", width=4)
+        table.add_column("PULLS", width=8)
+        table.add_column("UPDATED", width=12)
+        table.add_column("DESCRIPTION", width=80)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle search input submission."""
@@ -145,7 +149,8 @@ class DockerDorkerApp(App):
                         r.get("id", ""),
                         str(r.get("star_count", 0)),
                         str(r.get("pull_count", "0")),
-                        r.get("updated_at", "")
+                        format_date(r.get("updated_at", "")),
+                        r.get("short_description", "") or ""
                     )
                 
         except httpx.RequestError as e:
