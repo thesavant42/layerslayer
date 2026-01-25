@@ -173,7 +173,7 @@ def format_config(config: dict) -> list[tuple[str, str]]:
 
 class TopPanel(Static):
     """Top panel widget with search input."""
-    
+    # Do not set height to 0 Do not Collapse Do NOT delete!
     def compose(self) -> ComposeResult:
         yield Input(
             placeholder="Search Docker Hub...",
@@ -183,14 +183,18 @@ class TopPanel(Static):
         yield Static("", id="search-status")
 
 
-class LeftPanel(Static): # TODO Can this be removed?
-    """Left panel widget (50% width)."""
-    pass
+class LeftPanel(Static):
+    """Left panel widget with tabbed content for search results."""
+    
+    def compose(self) -> ComposeResult:
+        with TabbedContent():
+            with TabPane("Search Results", id="search-results-tab"):
+                yield DataTable(id="results-table", cursor_type="row")
 
 
 class RightPanel(Static):
-    """Right panel widget with tabbed content for repo details."""
-    
+    """Right panel widget with tabbed content for image build details."""
+    # TODO Fix these labels, this is TAGS overview, not REPOs
     def compose(self) -> ComposeResult:
         with TabbedContent():
             with TabPane("Repo Overview", id="repo-overview"):
@@ -238,7 +242,7 @@ class DockerDorkerApp(App):
         yield Header(show_clock=True)
         yield TopPanel(id="top-panel")
         with Horizontal(id="main-content"):
-            yield DataTable(id="results-table", cursor_type="row")
+            yield LeftPanel(id="left-panel")
             yield RightPanel(id="right-panel")
         yield Footer()
 

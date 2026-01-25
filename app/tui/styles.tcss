@@ -46,12 +46,19 @@
     overflow-y: auto;
 }
 
-/* Results DataTable - 50% width with scrolling */
+
+#left-panel TabbedContent {
+    height: 1fr;
+}
+
+#search-results-tab {
+    height: 1fr;
+}
+
+/* Results DataTable - now inside LeftPanel TabbedContent */
 #results-table {
-    width: 1fr;
-    height: 100%;
-    background: $surface;
-    border: solid $secondary;
+    height: 1fr;
+    width: 100%;
 }
 
 /* Right panel - 50% width */
