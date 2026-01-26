@@ -119,3 +119,96 @@ DataTable > .datatable--header {
 Footer {
     dock: bottom;
 }
+
+/* FS Simulator Tab Styling */
+#fs-simulator-tab {
+    height: 1fr;
+}
+
+#fs-status {
+    padding: 0 1;
+    color: $text-muted;
+    height: auto;
+}
+
+#fs-breadcrumb {
+    padding: 0 1;
+    color: $accent;
+    height: auto;
+}
+
+#fs-table {
+    height: 1fr;
+    width: 100%;
+}
+
+/* File Action Modal */
+FileActionModal {
+    align: center middle;
+}
+
+#file-action-dialog {
+    width: 60;
+    height: auto;
+    padding: 1 2;
+    background: $surface;
+    border: thick $primary;
+}
+
+#file-action-title {
+    text-align: center;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#file-action-path {
+    text-align: center;
+    color: $text-muted;
+}
+
+#file-action-layer {
+    text-align: center;
+    color: $accent;
+    margin-bottom: 1;
+}
+
+#file-action-dialog Button {
+    width: 100%;
+    margin-top: 1;
+}
+
+/* Text Viewer Modal */
+TextViewerModal {
+    align: center middle;
+}
+
+#text-viewer-dialog {
+    width: 90%;
+    height: 85%;
+    padding: 1 2;
+    background: $surface;
+    border: thick $primary;
+}
+
+#text-viewer-title {
+    text-align: center;
+    text-style: bold;
+    margin-bottom: 1;
+    color: $accent;
+}
+
+#text-viewer-scroll {
+    height: 1fr;
+    border: solid $primary-lighten-2;
+    background: $surface-darken-1;
+}
+
+#text-viewer-content {
+    padding: 1;
+}
+
+#btn-close-viewer {
+    width: 20;
+    margin-top: 1;
+    align: center middle;
+}

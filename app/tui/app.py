@@ -9,14 +9,16 @@ A basic UI structure with:
 """
 
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, VerticalScroll
+from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.screen import ModalScreen
 from textual.widgets import (
     Header, Footer, Static, Input, DataTable,
-    TabbedContent, TabPane, Select, Button
+    TabbedContent, TabPane, Select, Button, Label
 )
 from textual.binding import Binding
 from textual import work
 import httpx
+import io
 import json
 import sys
 import re
@@ -214,6 +216,63 @@ class RightPanel(Static):
                 yield Static("Select a repository to view tags", id="repo-info")
                 yield Select([], id="tag-select", prompt="Select a tag...")
                 yield DataTable(id="config-table", cursor_type="row")
+
+
+class FileActionModal(ModalScreen):
+    """Modal to choose file action: View as Text or Save/Download."""
+    
+    BINDINGS = [("escape", "cancel", "Cancel")]
+    
+    def __init__(self, filename: str, full_path: str, layer_idx: int):
+        super().__init__()
+        self.filename = filename
+        self.full_path = full_path
+        self.layer_idx = layer_idx
+    
+    def compose(self) -> ComposeResult:
+        with Vertical(id="file-action-dialog"):
+            yield Label(f"File: {self.filename}", id="file-action-title")
+            yield Label(f"Path: {self.full_path}", id="file-action-path")
+            yield Label(f"Layer: {self.layer_idx}", id="file-action-layer")
+            yield Button("View as Text", id="btn-view-text", variant="primary")
+            yield Button("Save/Download", id="btn-save-file", variant="default")
+            yield Button("Cancel", id="btn-cancel", variant="warning")
+    
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-view-text":
+            self.dismiss(result={"action": "view", "path": self.full_path, "layer": self.layer_idx, "filename": self.filename})
+        elif event.button.id == "btn-save-file":
+            self.dismiss(result={"action": "save", "path": self.full_path, "layer": self.layer_idx, "filename": self.filename})
+        else:
+            self.dismiss(result=None)
+    
+    def action_cancel(self) -> None:
+        self.dismiss(result=None)
+
+
+class TextViewerModal(ModalScreen):
+    """Modal to display file content as text."""
+    
+    BINDINGS = [("escape", "close", "Close"), ("q", "close", "Close")]
+    
+    def __init__(self, title: str, content: str):
+        super().__init__()
+        self.title_text = title
+        self.content_text = content
+    
+    def compose(self) -> ComposeResult:
+        with Vertical(id="text-viewer-dialog"):
+            yield Label(self.title_text, id="text-viewer-title")
+            with VerticalScroll(id="text-viewer-scroll"):
+                yield Static(self.content_text, id="text-viewer-content")
+            yield Button("Close", id="btn-close-viewer")
+    
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-close-viewer":
+            self.dismiss()
+    
+    def action_close(self) -> None:
+        self.dismiss()
 
 
 def parse_slug(slug: str) -> tuple[str, str]:
@@ -491,12 +550,13 @@ class DockerDorkerApp(App):
         self.check_and_load_fslog()
     
     def _handle_fs_row_selection(self, row_data: tuple) -> None:
-        """Handle selection in fs-table for directory navigation."""
+        """Handle selection in fs-table for directory navigation and file actions."""
         if self._loading_fs:
             return
         
-        # NAME column is index 3
+        # NAME column is index 3, LAYER column is index 4
         name = str(row_data[3])
+        layer_col = str(row_data[4]) if len(row_data) > 4 else ""
         
         # Handle .. navigation (parent directory)
         if name == "..":
@@ -515,6 +575,136 @@ class DockerDorkerApp(App):
             else:
                 self.fs_path = f"{self.fs_path}/{dir_name}"
             self.load_fslog()
+            return
+        
+        # Handle symlinks - extract the actual name before " -> "
+        actual_name = name
+        if " -> " in name:
+            actual_name = name.split(" -> ")[0].strip()
+        
+        # FILE SELECTED - determine layer and trigger carve workflow
+        # Determine effective layer from row data or current view
+        effective_layer: int | None = None
+        
+        if layer_col and layer_col.startswith("L"):
+            # Extract layer from column (e.g., "L15" -> 15)
+            try:
+                effective_layer = int(layer_col[1:])
+            except ValueError:
+                pass
+        
+        if effective_layer is None and self.fs_layer is not None:
+            # Use current single-layer view
+            effective_layer = self.fs_layer
+        
+        if effective_layer is None:
+            # Cannot determine layer - show error
+            fs_status = self.query_one("#fs-status", Static)
+            fs_status.update("Error: Cannot determine layer. Select a specific layer first.")
+            self.notify("Select a specific layer to carve files", severity="error")
+            return
+        
+        # Build full path
+        if self.fs_path == "/":
+            full_path = f"/{actual_name}"
+        else:
+            full_path = f"{self.fs_path}/{actual_name}"
+        
+        # Show file action modal
+        self.push_screen(
+            FileActionModal(actual_name, full_path, effective_layer),
+            callback=self._on_file_action_chosen
+        )
+    
+    def _on_file_action_chosen(self, result: dict | None) -> None:
+        """Handle modal result for file action."""
+        if result is None:
+            return
+        
+        action = result.get("action")
+        file_path = result.get("path")
+        layer = result.get("layer")
+        filename = result.get("filename")
+        
+        if action == "view":
+            self.carve_file_as_text(file_path, layer, filename)
+        elif action == "save":
+            self.carve_file_download(file_path, layer, filename)
+    
+    @work(exclusive=True, group="carve")
+    async def carve_file_as_text(self, file_path: str, layer: int, filename: str) -> None:
+        """Fetch file content and display as text."""
+        fs_status = self.query_one("#fs-status", Static)
+        
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                fs_status.update(f"Fetching {file_path} from layer {layer}...")
+                
+                response = await client.get(
+                    "http://127.0.0.1:8000/carve",
+                    params={
+                        "image": self.fs_image,
+                        "path": file_path,
+                        "layer": layer,
+                        "as_text": True
+                    }
+                )
+                response.raise_for_status()
+                
+                content = response.text
+                
+                # Display in text viewer modal
+                title = f"{filename} (Layer {layer})"
+                self.push_screen(TextViewerModal(title, content))
+                fs_status.update(f"Viewing: {file_path}")
+                
+        except httpx.RequestError as e:
+            fs_status.update(f"Request error: {e}")
+            self.notify(f"Failed to fetch file: {e}", severity="error")
+        except httpx.HTTPStatusError as e:
+            fs_status.update(f"HTTP error: {e.response.status_code}")
+            self.notify(f"Failed to fetch file: HTTP {e.response.status_code}", severity="error")
+    
+    @work(exclusive=True, group="carve")
+    async def carve_file_download(self, file_path: str, layer: int, filename: str) -> None:
+        """Download file and save using deliver_binary."""
+        fs_status = self.query_one("#fs-status", Static)
+        
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                fs_status.update(f"Downloading {file_path} from layer {layer}...")
+                
+                response = await client.get(
+                    "http://127.0.0.1:8000/carve",
+                    params={
+                        "image": self.fs_image,
+                        "path": file_path,
+                        "layer": layer,
+                        "as_text": False
+                    }
+                )
+                response.raise_for_status()
+                
+                # Get raw bytes
+                raw_bytes = response.content
+                
+                # Use deliver_binary to save
+                binary_stream = io.BytesIO(raw_bytes)
+                
+                delivery_key = self.deliver_binary(
+                    binary_stream,
+                    save_filename=filename
+                )
+                
+                fs_status.update(f"Saved: {filename}")
+                self.notify(f"File saved: {filename}", title="Download Complete")
+                
+        except httpx.RequestError as e:
+            fs_status.update(f"Request error: {e}")
+            self.notify(f"Failed to download file: {e}", severity="error")
+        except httpx.HTTPStatusError as e:
+            fs_status.update(f"HTTP error: {e.response.status_code}")
+            self.notify(f"Failed to download file: HTTP {e.response.status_code}", severity="error")
 
     def on_select_changed(self, event: Select.Changed) -> None:
         """Handle tag selection - fetch config manifest."""
