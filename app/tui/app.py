@@ -91,6 +91,31 @@ def flatten_nested(obj: dict | list, prefix: str = "") -> list[tuple[str, str]]:
     return rows
 
 
+def is_binary_content(content: str) -> bool:
+    """Detect if content appears to be binary data.
+    
+    Checks for:
+    1. Null bytes (\\x00) - definitive binary indicator
+    2. High ratio of non-printable characters (>10%)
+    
+    Args:
+        content: String content to check
+        
+    Returns:
+        True if content appears to be binary data
+    """
+    if '\x00' in content:
+        return True
+    
+    # Sample first 1000 chars to check non-printable ratio
+    sample = content[:1000]
+    if not sample:
+        return False
+    
+    non_printable = sum(1 for c in sample if not c.isprintable() and c not in '\n\r\t')
+    return non_printable / len(sample) > 0.1  # >10% non-printable = binary
+
+
 def format_config(config: dict) -> list[tuple[str, str]]:
     """Format OCI config JSON for display per tags-TASK.md requirements.
     
@@ -264,7 +289,8 @@ class TextViewerModal(ModalScreen):
         with Vertical(id="text-viewer-dialog"):
             yield Label(self.title_text, id="text-viewer-title")
             with VerticalScroll(id="text-viewer-scroll"):
-                yield Static(self.content_text, id="text-viewer-content")
+                # Wrap content in Text() to prevent markup parsing crashes
+                yield Static(Text(self.content_text), id="text-viewer-content")
             yield Button("Close", id="btn-close-viewer")
     
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -725,6 +751,16 @@ class DockerDorkerApp(App):
                 response.raise_for_status()
                 
                 content = response.text
+                
+                # Check if content is binary before displaying
+                if is_binary_content(content):
+                    fs_status.update(f"Cannot display binary file: {file_path}")
+                    self.notify(
+                        f"'{filename}' appears to be a binary file and cannot be displayed as text. Use Save/Download instead.",
+                        severity="warning",
+                        title="Binary File Detected"
+                    )
+                    return
                 
                 # Display in text viewer modal
                 title = f"{filename} (Layer {layer})"
