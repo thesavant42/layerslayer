@@ -134,9 +134,41 @@ Where will fslog output be displayed?
 
 - Once I've found the repository image I want to investigate (**for this example: drichnerdisney/ollama:v1**) and I've `/peeked` and seen the `/fslog` in the previous step, I've identified files that I want to save.
 
-- The LSNG API offers two options to download a file: 
+- The LSNG API offers two options to download a file:
     - 1. saving as bytes as a typical download,
     - 2. or streamed as plain text to be viewed in the panel as a richlog widget
+
+### Implementation Summary
+
+- [x] Task: File selection triggers action modal (View as Text / Save/Download)
+- [x] Task: View as Text uses `/carve?as_text=true` and displays in TextViewerModal
+- [x] Task: Save/Download shows SaveFileModal with unique filename (includes layer number)
+- [x] Task: Download uses Textual's `deliver_binary()` for cross-platform saving
+
+**COMPLETED**
+
+### User Flow
+
+1. Select a **file** (not directory) in the FS Simulator table
+2. **FileActionModal** appears with options:
+   - "View as Text" - fetches content and displays in scrollable modal
+   - "Save/Download" - opens filename prompt
+   - "Cancel" - returns to FS browser
+3. For **View as Text**: Content displayed in TextViewerModal (press Escape or Q to close)
+4. For **Save/Download**:
+   - SaveFileModal pre-fills filename with `{name}_L{layer}.{ext}` to prevent clobbering
+   - User can edit filename before saving
+   - File saves to system Downloads folder (or browser download in web mode)
+
+### Key Details
+
+- Layer number is extracted from either:
+  - The LAYER column in merged view (e.g., "L15")
+  - The current `fs_layer` in single-layer view
+- Symlinks are handled by extracting the actual filename before " -> "
+- Errors display in status bar and as notifications
+
+---
 
 1. Streams the file to the browser in the REST API, with raw bytes and setting the content type as appropriate. 
     - http://localhost:8000/carve?image=drichnerdisney/ollama:v1&path=/root/.ollama/id_ed25519&layer=36`
