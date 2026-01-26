@@ -1,5 +1,8 @@
 # Layerslayer
 
+![Logo](/docs/layerslayer_banner.png)
+
+
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/thesavant42/layerslayer)
 
 
@@ -14,8 +17,17 @@ TL;DR -
 **Layerslayer** is a CLI tool for browsing, inspecting, and selectively downloading Docker image layers via the Docker Registry HTTP API v2. 
 Instead of pulling entire images, you can "peek" inside each layer to reconstruct an inferred filesystem, view manifest file build steps, and choose exactly which blobs to save.
 
+![tags](/docs/screencaps/tags.png)
 
 ## **NEW**
+
+
+![saveas](/docs/screencaps/saveas.png)
+
+If you try to view a binary as plain text you now get a helpful error (instead of a crash)
+
+![warning](/docs/screencaps/binary-oops.png)
+
 
 Implemented --peek-layer CLI flag and /peek API endpoint.
 
@@ -45,10 +57,14 @@ Implemented --peek-layer CLI flag and /peek API endpoint.
 `GET /peek?image=library/alpine:latest&layer=2&arch=0`
 
 
+![privkey](/docs/screencaps/privkey.png)
+
+
 ## Features
 
-- **NEW: API Mode**
-    - `uvicorn app.modules.api.api:app --host 127.0.0.1 --port 8000 `
+- **API Mode**
+    - ~~`uvicorn app.modules.api.api:app --host 127.0.0.1 --port 8000`~~
+    - `python  main.py -A`
 
 - **Interactive Mode**
   Step through platform selection, build steps, layer listing, and per-layer peek/download prompts.
