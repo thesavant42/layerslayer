@@ -66,14 +66,7 @@ lrwxrwxrwx       0.0 B  2024-04-22 06:08  lib64 -> usr/lib64
 drwxr-xr-x       0.0 B  2025-01-26 18:03  media/
 drwxr-xr-x       0.0 B  2025-01-26 18:03  mnt/
 drwxr-xr-x       0.0 B  2025-01-26 18:03  opt/
-drwxr-xr-x       0.0 B  2024-04-22 06:08  proc/
-drwx------       0.0 B  2025-01-26 18:09  root/
-drwxr-xr-x       0.0 B  2025-01-26 18:09  run/
-lrwxrwxrwx       0.0 B  2024-04-22 06:08  sbin -> usr/sbin
-drwxr-xr-x       0.0 B  2025-01-26 18:03  srv/
-drwxr-xr-x       0.0 B  2024-04-22 06:08  sys/
-drwxrwxrwx       0.0 B  2025-01-26 18:09  tmp/
-drwxr-xr-x       0.0 B  2025-01-26 18:03  usr/
+[]...]
 ```
 
 This is a backstop file system display that utilizes the correct tables in the sqlite database, but does not return structured data, it's not yet a widget.
@@ -96,14 +89,6 @@ drwxr-xr-x       0.0 B  2025-01-26 18:03  apt/
 drwxr-xr-x       0.0 B  2025-01-26 18:09  cloud/
 drwxr-xr-x       0.0 B  2025-01-26 18:09  cron.d/
 drwxr-xr-x       0.0 B  2025-01-26 18:09  cron.daily/
--rw-r--r--      2.9 KB  2024-04-12 05:40  debconf.conf
--rw-r--r--      11.0 B  2024-04-22 06:04  debian_version
-drwxr-xr-x       0.0 B  2025-01-26 18:09  default/
-drwxr-xr-x       0.0 B  2025-01-26 18:09  dpkg/
--rw-r--r--     685.0 B  2024-04-08 07:38  e2scrub.conf
--rw-r--r--     106.0 B  2025-01-26 18:03  environment
--rw-r--r--      37.0 B  2025-01-26 18:03  fstab
--rw-r--r--      2.5 KB  2024-01-30 16:34  gai.conf
 [...]
 ```
 
@@ -111,15 +96,12 @@ drwxr-xr-x       0.0 B  2025-01-26 18:09  dpkg/
 
 - By **not** providing a layer idx value, all layers will be displayed in a unified output.
     - `http://localhost:8000/fslog?image=drichnerdisney/ollama:v1&path=/`
-    - A file that is superceded is marked as overrideen, but is still addressable. 
+    - A file that is superceded by a later layer is marked as `overridden`, but is still addressable. 
     - Symbolic links are indicated as such and can be followed to their intended destination.
 
 ### Example of overridden output
 
 ```bash
-drwxr-xr-x       0.0 B  2025-10-08 22:11  etc/                                               [L27] (overridden)
-drwxr-xr-x       0.0 B  2025-10-08 22:11  etc/                                               [L25] (overridden)
-drwxr-xr-x       0.0 B  2025-10-08 22:11  etc/                                               [L24] (overridden)
 drwxr-xr-x       0.0 B  2025-10-08 22:11  etc/                                               [L15] (overridden)
 drwxr-xr-x       0.0 B  2025-10-08 22:07  etc/                                               [L14] (overridden)
 drwxr-xr-x       0.0 B  2025-10-08 22:07  etc/                                               [L13] (overridden)
