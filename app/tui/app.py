@@ -189,6 +189,7 @@ class LeftPanel(Static):
     def compose(self) -> ComposeResult:
         with TabbedContent():
             with TabPane("Search Results", id="search-results-tab"):
+                yield Static("", id="left-spacer")
                 yield DataTable(id="results-table", cursor_type="row")
 
 

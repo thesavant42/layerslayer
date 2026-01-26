@@ -40,7 +40,6 @@
 #left-panel {
     width: 1fr;
     height: 100%;
-    padding: 1 2;
     background: $surface;
     border: solid $secondary;
     overflow-y: auto;
@@ -53,6 +52,11 @@
 
 #search-results-tab {
     height: 1fr;
+}
+
+/* Spacer to align with right panel widgets */
+#left-spacer {
+    height: 9;
 }
 
 /* Results DataTable - now inside LeftPanel TabbedContent */
