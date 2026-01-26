@@ -212,3 +212,43 @@ TextViewerModal {
     margin-top: 1;
     align: center middle;
 }
+
+/* Save File Modal */
+SaveFileModal {
+    align: center middle;
+}
+
+#save-file-dialog {
+    width: 70;
+    height: auto;
+    padding: 1 2;
+    background: $surface;
+    border: thick $primary;
+}
+
+#save-file-title {
+    text-align: center;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#save-file-source {
+    text-align: center;
+    color: $text-muted;
+    margin-bottom: 1;
+}
+
+#save-filename-input {
+    width: 100%;
+    margin-bottom: 1;
+}
+
+#save-file-buttons {
+    width: 100%;
+    height: auto;
+    align: center middle;
+}
+
+#save-file-buttons Button {
+    margin: 0 1;
+}

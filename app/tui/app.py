@@ -275,6 +275,56 @@ class TextViewerModal(ModalScreen):
         self.dismiss()
 
 
+class SaveFileModal(ModalScreen):
+    """Modal to choose save filename before downloading."""
+    
+    BINDINGS = [("escape", "cancel", "Cancel")]
+    
+    def __init__(self, default_filename: str, file_path: str, layer_idx: int):
+        super().__init__()
+        self.default_filename = default_filename
+        self.file_path = file_path
+        self.layer_idx = layer_idx
+    
+    def compose(self) -> ComposeResult:
+        with Vertical(id="save-file-dialog"):
+            yield Label("Save File As", id="save-file-title")
+            yield Label(f"Source: {self.file_path} (Layer {self.layer_idx})", id="save-file-source")
+            yield Input(value=self.default_filename, id="save-filename-input", placeholder="Enter filename...")
+            with Horizontal(id="save-file-buttons"):
+                yield Button("Save", id="btn-confirm-save", variant="primary")
+                yield Button("Cancel", id="btn-cancel-save", variant="warning")
+    
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-confirm-save":
+            filename_input = self.query_one("#save-filename-input", Input)
+            filename = filename_input.value.strip()
+            if filename:
+                self.dismiss(result={
+                    "filename": filename,
+                    "path": self.file_path,
+                    "layer": self.layer_idx
+                })
+            else:
+                self.notify("Please enter a filename", severity="warning")
+        else:
+            self.dismiss(result=None)
+    
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Handle Enter key in the filename input."""
+        if event.input.id == "save-filename-input":
+            filename = event.value.strip()
+            if filename:
+                self.dismiss(result={
+                    "filename": filename,
+                    "path": self.file_path,
+                    "layer": self.layer_idx
+                })
+    
+    def action_cancel(self) -> None:
+        self.dismiss(result=None)
+
+
 def parse_slug(slug: str) -> tuple[str, str]:
     """Extract namespace and repo from slug.
     
@@ -629,7 +679,30 @@ class DockerDorkerApp(App):
         if action == "view":
             self.carve_file_as_text(file_path, layer, filename)
         elif action == "save":
-            self.carve_file_download(file_path, layer, filename)
+            # Generate a unique default filename with layer number
+            # Split filename into name and extension
+            if "." in filename:
+                name_parts = filename.rsplit(".", 1)
+                default_filename = f"{name_parts[0]}_L{layer}.{name_parts[1]}"
+            else:
+                default_filename = f"{filename}_L{layer}"
+            
+            # Show save filename modal
+            self.push_screen(
+                SaveFileModal(default_filename, file_path, layer),
+                callback=self._on_save_filename_chosen
+            )
+    
+    def _on_save_filename_chosen(self, result: dict | None) -> None:
+        """Handle save filename modal result."""
+        if result is None:
+            return
+        
+        filename = result.get("filename")
+        file_path = result.get("path")
+        layer = result.get("layer")
+        
+        self.carve_file_download(file_path, layer, filename)
     
     @work(exclusive=True, group="carve")
     async def carve_file_as_text(self, file_path: str, layer: int, filename: str) -> None:
