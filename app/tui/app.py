@@ -12,7 +12,7 @@ from textual.app import App, ComposeResult
 from textual.containers import Horizontal, VerticalScroll
 from textual.widgets import (
     Header, Footer, Static, Input, DataTable,
-    TabbedContent, TabPane, Select
+    TabbedContent, TabPane, Select, Button
 )
 from textual.binding import Binding
 from textual import work
@@ -191,6 +191,12 @@ class LeftPanel(Static):
             with TabPane("Search Results", id="search-results-tab"):
                 yield Static("", id="left-spacer")
                 yield DataTable(id="results-table", cursor_type="row")
+                with Horizontal(id="pagination-bar"):
+                    yield Button("<<", id="btn-first")
+                    yield Button("<", id="btn-prev")
+                    yield Button(">", id="btn-next")
+                    yield Button(">>", id="btn-last")
+                    yield Static("Page 1 of -- (-- Results)", id="pagination-status")
 
 
 class RightPanel(Static):
@@ -251,11 +257,15 @@ class DockerDorkerApp(App):
         """Set the Dracula theme when the app mounts."""
         self.theme = "dracula"
         table = self.query_one("#results-table", DataTable)
+        table.zebra_stripes = True
         table.add_column("SLUG", width=50)
         table.add_column("FAV", width=4)
         table.add_column("PULLS", width=6)
         table.add_column("UPDATED", width=12)
         table.add_column("DESCRIPTION", width=80)
+        
+        config_table = self.query_one("#config-table", DataTable)
+        config_table.zebra_stripes = True
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle search input submission."""
@@ -317,6 +327,7 @@ class DockerDorkerApp(App):
                 self.current_page = page
                 self.total_results = total
                 status.update("")
+                self.update_pagination_display()
                 
                 if clear:
                     table.clear()
@@ -336,6 +347,36 @@ class DockerDorkerApp(App):
             status.update(f"HTTP error: {e.response.status_code}")
         finally:
             self._loading_page = False
+
+    def update_pagination_display(self) -> None:
+        """Update pagination status text."""
+        status = self.query_one("#pagination-status", Static)
+        if self.total_results:
+            total_pages = max(1, -(-self.total_results // 30))
+            status.update(f"Page {self.current_page} of {total_pages} ({self.total_results} Results)")
+        else:
+            status.update("Page 1 of -- (-- Results)")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle pagination button presses."""
+        if not self.current_query or self._loading_page:
+            return
+        
+        total_pages = max(1, -(-self.total_results // 30))
+        
+        if event.button.id == "btn-first":
+            target = 1
+        elif event.button.id == "btn-prev":
+            target = max(1, self.current_page - 1)
+        elif event.button.id == "btn-next":
+            target = min(total_pages, self.current_page + 1)
+        elif event.button.id == "btn-last":
+            target = total_pages
+        else:
+            return
+        
+        if target != self.current_page:
+            self.fetch_page(self.current_query, target, clear=True)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Handle row selection - trigger tag enumeration for results-table only."""

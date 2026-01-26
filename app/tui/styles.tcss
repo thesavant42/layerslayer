@@ -65,6 +65,29 @@
     width: 100%;
 }
 
+/* DataTable header styling - accent color instead of surface */
+DataTable > .datatable--header {
+    background: $accent;
+}
+
+/* Pagination bar - docked to bottom so table fills space above */
+#pagination-bar {
+    height: 3;
+    align: center middle;
+    padding: 0 1;
+}
+
+#pagination-bar Button {
+    border: double $primary;
+    min-width: 4;
+    margin: 0 1;
+}
+
+#pagination-status {
+    margin-left: 2;
+    color: $text-muted;
+}
+
 /* Right panel - 50% width */
 #right-panel {
     width: 1fr;
