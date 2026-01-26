@@ -19,8 +19,10 @@ from textual import work
 import httpx
 import json
 import sys
+import re
 from pathlib import Path
 from rich.text import Text
+from urllib.parse import quote
 
 # Add project root to path for imports when running directly
 project_root = Path(__file__).parent.parent.parent
@@ -184,10 +186,10 @@ class TopPanel(Static):
 
 
 class LeftPanel(Static):
-    """Left panel widget with tabbed content for search results."""
+    """Left panel widget with tabbed content for search results and FS simulator."""
     
     def compose(self) -> ComposeResult:
-        with TabbedContent():
+        with TabbedContent(id="left-tabs"):
             with TabPane("Search Results", id="search-results-tab"):
                 yield Static("", id="left-spacer")
                 yield DataTable(id="results-table", cursor_type="row")
@@ -197,6 +199,10 @@ class LeftPanel(Static):
                     yield Button(">", id="btn-next")
                     yield Button(">>", id="btn-last")
                     yield Static("Page 1 of -- (-- Results)", id="pagination-status")
+            with TabPane("FS Simulator", id="fs-simulator-tab"):
+                yield Static("Select a layer from config to browse filesystem", id="fs-status")
+                yield Static("Path: /", id="fs-breadcrumb")
+                yield DataTable(id="fs-table", cursor_type="row")
 
 
 class RightPanel(Static):
@@ -242,7 +248,14 @@ class DockerDorkerApp(App):
     # Tag enumeration state
     selected_namespace: str = ""
     selected_repo: str = ""
+    selected_tag: str = ""
     available_tags: list = []
+    
+    # FS Simulator state
+    fs_image: str = ""           # Current image: "namespace/repo:tag"
+    fs_path: str = "/"           # Current directory path
+    fs_layer: int | None = None  # None = merged view, int = single layer
+    _loading_fs: bool = False    # Flag to prevent loading loops
 
     def compose(self) -> ComposeResult:
         """Compose the UI layout."""
@@ -266,6 +279,15 @@ class DockerDorkerApp(App):
         
         config_table = self.query_one("#config-table", DataTable)
         config_table.zebra_stripes = True
+        
+        # Setup FS Simulator table
+        fs_table = self.query_one("#fs-table", DataTable)
+        fs_table.zebra_stripes = True
+        fs_table.add_column("MODE", width=12)
+        fs_table.add_column("SIZE", width=10)
+        fs_table.add_column("DATE", width=18)
+        fs_table.add_column("NAME", width=60)
+        fs_table.add_column("LAYER", width=8)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle search input submission."""
@@ -379,44 +401,120 @@ class DockerDorkerApp(App):
             self.fetch_page(self.current_query, target, clear=True)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Handle row selection - trigger tag enumeration for results-table only."""
+        """Handle row selection for results-table, config-table, and fs-table."""
         table = event.data_table
-        
-        # Only handle results-table
-        if table.id != "results-table":
-            return
-        
         cursor_row = event.cursor_row
         
         # Get the row data using cursor position
         if cursor_row < 0 or cursor_row >= table.row_count:
             return
         
-        # Get row data - returns tuple of cell values in column order
         row_data = table.get_row_at(cursor_row)
         if not row_data:
             return
         
-        # First column (index 0) is SLUG
-        slug = str(row_data[0])
-        if not slug:
+        # Handle results-table - trigger tag enumeration
+        if table.id == "results-table":
+            # First column (index 0) is SLUG
+            slug = str(row_data[0])
+            if not slug:
+                return
+            
+            # Parse namespace and repo from slug
+            namespace, repo = parse_slug(slug)
+            self.selected_namespace = namespace
+            self.selected_repo = repo
+            
+            # Update repo info display
+            repo_info = self.query_one("#repo-info", Static)
+            repo_info.update(f"Loading tags for {namespace}/{repo}...")
+            
+            # Clear previous config table
+            config_table = self.query_one("#config-table", DataTable)
+            config_table.clear(columns=True)
+            
+            # Trigger tag enumeration
+            self.enumerate_tags(namespace, repo)
+        
+        # Handle config-table - trigger FS Simulator
+        elif table.id == "config-table":
+            self._handle_config_row_selection(row_data)
+        
+        # Handle fs-table - directory navigation
+        elif table.id == "fs-table":
+            self._handle_fs_row_selection(row_data)
+    
+    def _handle_config_row_selection(self, row_data: tuple) -> None:
+        """Handle selection in config-table to trigger FS Simulator."""
+        # Get the row text (single column DATA)
+        cell_value = row_data[0]
+        # Handle Text objects from rich
+        if hasattr(cell_value, 'plain'):
+            row_text = cell_value.plain
+        else:
+            row_text = str(cell_value)
+        
+        # Check if this is a rootfs.type or rootfs.diff_ids row
+        if row_text.startswith("rootfs.type:"):
+            # Merged view - all layers
+            self.fs_layer = None
+            self._trigger_fs_simulator()
+        elif row_text.startswith("rootfs.diff_ids["):
+            # Single layer view - extract layer index
+            match = re.match(r'rootfs\.diff_ids\[(\d+)\]:', row_text)
+            if match:
+                layer_idx = int(match.group(1))
+                self.fs_layer = layer_idx
+                self._trigger_fs_simulator()
+    
+    def _trigger_fs_simulator(self) -> None:
+        """Start the FS Simulator flow: check peek status, peek if needed, load fslog."""
+        if not self.selected_namespace or not self.selected_repo or not self.selected_tag:
+            fs_status = self.query_one("#fs-status", Static)
+            fs_status.update("Error: No image selected. Select a tag first.")
             return
         
-        # Parse namespace and repo from slug
-        namespace, repo = parse_slug(slug)
-        self.selected_namespace = namespace
-        self.selected_repo = repo
+        # Build image reference
+        self.fs_image = f"{self.selected_namespace}/{self.selected_repo}:{self.selected_tag}"
+        self.fs_path = "/"
         
-        # Update repo info display
-        repo_info = self.query_one("#repo-info", Static)
-        repo_info.update(f"Loading tags for {namespace}/{repo}...")
+        # Update status
+        fs_status = self.query_one("#fs-status", Static)
+        layer_desc = f"layer {self.fs_layer}" if self.fs_layer is not None else "all layers (merged)"
+        fs_status.update(f"Loading {self.fs_image} - {layer_desc}...")
         
-        # Clear previous config table
-        config_table = self.query_one("#config-table", DataTable)
-        config_table.clear(columns=True)
+        # Switch to FS Simulator tab
+        left_tabs = self.query_one("#left-tabs", TabbedContent)
+        left_tabs.active = "fs-simulator-tab"
         
-        # Trigger tag enumeration
-        self.enumerate_tags(namespace, repo)
+        # Start the peek check and load workflow
+        self.check_and_load_fslog()
+    
+    def _handle_fs_row_selection(self, row_data: tuple) -> None:
+        """Handle selection in fs-table for directory navigation."""
+        if self._loading_fs:
+            return
+        
+        # NAME column is index 3
+        name = str(row_data[3])
+        
+        # Handle .. navigation (parent directory)
+        if name == "..":
+            if self.fs_path != "/":
+                # Go to parent directory
+                self.fs_path = "/".join(self.fs_path.rstrip("/").split("/")[:-1]) or "/"
+                self.load_fslog()
+            return
+        
+        # Handle directory navigation (ends with /)
+        if name.endswith("/"):
+            dir_name = name.rstrip("/")
+            # Build new path
+            if self.fs_path == "/":
+                self.fs_path = f"/{dir_name}"
+            else:
+                self.fs_path = f"{self.fs_path}/{dir_name}"
+            self.load_fslog()
 
     def on_select_changed(self, event: Select.Changed) -> None:
         """Handle tag selection - fetch config manifest."""
@@ -427,6 +525,7 @@ class DockerDorkerApp(App):
             return
         
         tag = str(event.value)
+        self.selected_tag = tag  # Store for FS Simulator use
         
         # Update repo info to show loading
         repo_info = self.query_one("#repo-info", Static)
@@ -511,6 +610,185 @@ class DockerDorkerApp(App):
             repo_info.update(f"Request error: {e}")
         except httpx.HTTPStatusError as e:
             repo_info.update(f"HTTP error: {e.response.status_code}")
+
+    @work(exclusive=True, group="fslog")
+    async def check_and_load_fslog(self) -> None:
+        """Check peek status and peek if needed, then load fslog."""
+        self._loading_fs = True
+        fs_status = self.query_one("#fs-status", Static)
+        
+        try:
+            image_encoded = quote(self.fs_image, safe='')
+            
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                # Step 1: Check peek status
+                fs_status.update(f"Checking peek status for {self.fs_image}...")
+                
+                status_response = await client.get(
+                    "http://127.0.0.1:8000/peek",
+                    params={
+                        "image": self.fs_image,
+                        "status_only": True
+                    }
+                )
+                status_response.raise_for_status()
+                status_data = status_response.json()
+                
+                # Determine which layers need peeking
+                layers_to_peek = []
+                
+                if self.fs_layer is not None:
+                    # Single layer mode - check if this specific layer is peeked
+                    layers = status_data.get("layers", [])
+                    for layer in layers:
+                        if layer.get("idx") == self.fs_layer and not layer.get("peeked", False):
+                            layers_to_peek.append(self.fs_layer)
+                            break
+                else:
+                    # Merged mode - check all layers
+                    layers = status_data.get("layers", [])
+                    for layer in layers:
+                        if not layer.get("peeked", False):
+                            layers_to_peek.append(layer.get("idx"))
+                
+                # Step 2: Peek any unpeeked layers
+                if layers_to_peek:
+                    for layer_idx in layers_to_peek:
+                        fs_status.update(f"Peeking layer {layer_idx} of {self.fs_image}...")
+                        
+                        peek_response = await client.get(
+                            "http://127.0.0.1:8000/peek",
+                            params={
+                                "image": self.fs_image,
+                                "layer": str(layer_idx),
+                                "status_only": False,
+                                "hide_build": True
+                            },
+                            timeout=120.0  # Layer peeking can take time
+                        )
+                        peek_response.raise_for_status()
+                
+                # Step 3: Load fslog
+                await self._do_load_fslog()
+                
+        except httpx.RequestError as e:
+            fs_status.update(f"Request error: {e}")
+        except httpx.HTTPStatusError as e:
+            fs_status.update(f"HTTP error: {e.response.status_code}")
+        finally:
+            self._loading_fs = False
+    
+    @work(exclusive=True, group="fslog")
+    async def load_fslog(self) -> None:
+        """Load fslog for current path (called during directory navigation)."""
+        self._loading_fs = True
+        try:
+            await self._do_load_fslog()
+        finally:
+            self._loading_fs = False
+    
+    async def _do_load_fslog(self) -> None:
+        """Internal method to load fslog data and populate table."""
+        fs_status = self.query_one("#fs-status", Static)
+        fs_breadcrumb = self.query_one("#fs-breadcrumb", Static)
+        fs_table = self.query_one("#fs-table", DataTable)
+        
+        layer_desc = f"layer {self.fs_layer}" if self.fs_layer is not None else "all layers"
+        fs_status.update(f"Loading {self.fs_path} from {self.fs_image} ({layer_desc})...")
+        
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                # Build request params
+                params = {
+                    "image": self.fs_image,
+                    "path": self.fs_path
+                }
+                if self.fs_layer is not None:
+                    params["layer"] = self.fs_layer
+                
+                response = await client.get(
+                    "http://127.0.0.1:8000/fslog",
+                    params=params
+                )
+                response.raise_for_status()
+                
+                # Parse plain text response (ls -la style output)
+                content = response.text
+                lines = content.strip().split("\n") if content.strip() else []
+                
+                # Clear and repopulate table
+                fs_table.clear()
+                
+                # Add .. breadcrumb row if not at root
+                if self.fs_path != "/":
+                    fs_table.add_row("", "", "", "..", "")
+                
+                # Parse and add each entry
+                for line in lines:
+                    entry = self._parse_fslog_line(line)
+                    if entry:
+                        fs_table.add_row(
+                            entry["mode"],
+                            entry["size"],
+                            entry["date"],
+                            entry["name"],
+                            entry.get("layer", "")
+                        )
+                
+                # Update breadcrumb and status
+                fs_breadcrumb.update(f"Path: {self.fs_path}")
+                entry_count = len(lines)
+                fs_status.update(f"{self.fs_image} - {self.fs_path} - {entry_count} entries ({layer_desc})")
+                
+        except httpx.RequestError as e:
+            fs_status.update(f"Request error: {e}")
+        except httpx.HTTPStatusError as e:
+            fs_status.update(f"HTTP error: {e.response.status_code}")
+    
+    def _parse_fslog_line(self, line: str) -> dict | None:
+        """Parse a single fslog line into entry dict.
+        
+        Expected format (from fs-log-sqlite.py):
+        drwxr-xr-x       0.0 B  2024-04-22 06:08  bin/
+        lrwxrwxrwx       0.0 B  2024-04-22 06:08  bin -> usr/bin
+        drwxr-xr-x       0.0 B  2025-10-08 22:11  etc/   [L15] (overridden)
+        """
+        line = line.strip()
+        if not line:
+            return None
+        
+        # Pattern for merged view with layer info: [L15] (overridden)
+        # Format: mode  size  date time  name  [layer_info] (overridden)?
+        merged_pattern = r'^([drwxlst-]{10})\s+([\d.]+\s+[BKMG]B?)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+(.+?)\s+\[L(\d+)\](?:\s+\(overridden\))?$'
+        merged_match = re.match(merged_pattern, line)
+        
+        if merged_match:
+            mode, size, date_time, name, layer = merged_match.groups()
+            return {
+                "mode": mode,
+                "size": size.strip(),
+                "date": date_time,
+                "name": name.strip(),
+                "layer": f"L{layer}"
+            }
+        
+        # Pattern for single layer view (no layer info)
+        # Format: mode  size  date time  name
+        single_pattern = r'^([drwxlst-]{10})\s+([\d.]+\s+[BKMG]B?)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+(.+)$'
+        single_match = re.match(single_pattern, line)
+        
+        if single_match:
+            mode, size, date_time, name = single_match.groups()
+            return {
+                "mode": mode,
+                "size": size.strip(),
+                "date": date_time,
+                "name": name.strip(),
+                "layer": ""
+            }
+        
+        # Fallback: try to extract what we can
+        return None
 
 
 if __name__ == "__main__":
