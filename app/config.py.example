@@ -1,0 +1,7 @@
+"""
+Docker Hub credentials for authenticated rate limits.
+Leave empty for anonymous access.
+"""
+
+DOCKERHUB_IDENTIFIER = ""  # Docker Hub username
+DOCKERHUB_SECRET = ""       # PAT or password

@@ -28,3 +28,5 @@ logs/
 downloads/
 app/loot/
 app/data/*.db
+
+app/config.py

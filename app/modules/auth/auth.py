@@ -10,6 +10,8 @@ Provides RegistryAuth class for all registry API calls with:
 import requests
 from typing import Optional
 
+from app.config import DOCKERHUB_IDENTIFIER, DOCKERHUB_SECRET
+
 
 class RegistryAuth:
     """
@@ -42,13 +44,19 @@ class RegistryAuth:
         Fetch a fresh pull token.
         
         Uses params dict approach (cleaner than f-string URL, handles encoding).
+        If credentials are configured, uses authenticated request for higher rate limits.
         """
+        auth = None
+        if DOCKERHUB_IDENTIFIER and DOCKERHUB_SECRET:
+            auth = (DOCKERHUB_IDENTIFIER, DOCKERHUB_SECRET)
+        
         resp = requests.get(
             self.AUTH_URL,
             params={
                 "service": "registry.docker.io",
                 "scope": f"repository:{self.namespace}/{self.repo}:pull"
             },
+            auth=auth,
             timeout=10
         )
         resp.raise_for_status()
