@@ -7,14 +7,16 @@
 }
 
 #fs-breadcrumb {
-    padding: 0 1 1 1;
+    padding: 3 3 3 3;
     color: $accent;
     height: auto;
+    text-style: bold;
 }
 
 #fs-table {
     height: 1fr;
     width: 100%;
+    border: solid $primary;
 }
 
 /* FS Simulator spacer - aligns with right panel bottom */

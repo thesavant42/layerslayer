@@ -41,12 +41,12 @@
 }
 
 #pagination-bar Button {
-    border: tall $primary;
+    border: round $primary;
     min-width: 4;
-    margin: 0 1;
+    margin: 0 0 0 0;
 }
 
 #pagination-status {
     margin-left: 2;
-    color: $text-muted;
+    color: $primary;
 }

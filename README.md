@@ -21,6 +21,40 @@ Instead of pulling entire images, you can "peek" inside each layer to reconstruc
 
 ## **NEW**
 
+TUI refactoring complete. The monolithic files have been reorganized into logical submodules:
+
+New TUI Directory Structure:
+
+```txt
+app/tui/
+├── __init__.py              # Package exports DockerDorkerApp
+├── app.py                   # Slimmed from 1093 to ~450 lines
+├── styles.tcss              # Core layout only (~50 lines)
+├── modals/
+│   ├── __init__.py          # Exports FileActionModal, TextViewerModal, SaveFileModal
+│   ├── file_action.py       # FileActionModal class
+│   ├── save_file.py         # SaveFileModal class
+│   ├── text_viewer.py       # TextViewerModal class
+│   └── styles.tcss          # All modal styles (~100 lines)
+├── utils/
+│   ├── __init__.py          # Exports all formatters
+│   └── formatters.py        # format_history_date, flatten_nested, is_binary_content, format_config, parse_slug
+└── widgets/
+    ├── __init__.py          # Exports SearchPanel, RepoPanel, FSSimulator, parse_fslog_line
+    ├── search_panel/        # Search input, results table, pagination
+    │   ├── __init__.py
+    │   ├── search_panel.py
+    │   └── styles.tcss
+    ├── repo_panel/          # Tag selection, config display
+    │   ├── __init__.py
+    │   ├── repo_panel.py
+    │   └── styles.tcss
+    └── fs_simulator/        # Filesystem browser widget
+        ├── __init__.py
+        ├── fs_simulator.py
+        └── styles.tcss
+
+```
 
 ![saveas](/docs/screencaps/saveas.png)
 
@@ -29,48 +63,17 @@ If you try to view a binary as plain text you now get a helpful error (instead o
 ![warning](/docs/screencaps/binary-oops.png)
 
 
-Implemented --peek-layer CLI flag and /peek API endpoint.
-
-### Changes made:
-
-- main.py - Replaced --peek-all with --peek-layer=<value>:
-
-    `--peek-layer=all` - peeks all layers (previous `--peek-all` behavior)
-    `--peek-layer=N` - peeks only layer at index N
-    - Fixed `sys.exit(1)` calls to use return (API compatibility)
-    `api.py` - Replaced `/peek-all` with `/peek:`
-    
-    `GET /peek?image=...&layer=all` - all layers
-    `GET /peek?image=...&layer=2` - specific layer
-    Usage:
-
-# CLI - all layers
-`python main.py -t library/alpine:latest --peek-layer=all --arch=0`
-
-# CLI - specific layer
-`python main.py -t library/alpine:latest --peek-layer=2 --arch=0`
-
-# API - all layers  
-`GET /peek?image=library/alpine:latest&layer=all&arch=0`
-
-# API - specific layer
-`GET /peek?image=library/alpine:latest&layer=2&arch=0`
-
-
 ![privkey](/docs/screencaps/privkey.png)
 
 
 ## Features
 
 - **API Mode**
-    - ~~`uvicorn app.modules.api.api:app --host 127.0.0.1 --port 8000`~~
     - `python  main.py -A`
+- Enable this to use with the TUI
 
 - **Interactive Mode**
-  Step through platform selection, build steps, layer listing, and per-layer peek/download prompts.
-
-- **Batch Mode**
-  - `--peek-all`: Peek all layers (list filesystem contents) without downloading  the entire layer image.
+  - Deprecated in favor of TUI
 
 - **File Carving** (NEW)
   Extract a specific file from a Docker image without downloading the entire layer.
@@ -83,10 +86,10 @@ Implemented --peek-layer CLI flag and /peek API endpoint.
 python main.py [options]
 ```
 
-### Interactive Mode
+### API Mode
 
 ```bash
-python main.py --interactive
+python main.py -A
 ```
 
 See [docs/USAGE.md](docs/USAGE.md) for more examples.
