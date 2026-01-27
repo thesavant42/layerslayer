@@ -76,7 +76,7 @@ DataTable > .datatable--header {
 }
 
 #pagination-bar Button {
-    border: double $primary;
+    border: tall $primary;
     min-width: 4;
     margin: 0 1;
 }
@@ -143,6 +143,11 @@ Footer {
 #fs-table {
     height: 1fr;
     width: 100%;
+}
+
+/* FS Simulator spacer - aligns with right panel bottom */
+#fs-simulator-spacer {
+    height: 4;
 }
 
 /* File Action Modal */

@@ -227,6 +227,7 @@ class LeftPanel(Static):
                 yield Static("Select a layer from config to browse filesystem", id="fs-status")
                 yield Static("Path: /", id="fs-breadcrumb")
                 yield DataTable(id="fs-table", cursor_type="row")
+                yield Static("", id="fs-simulator-spacer")
 
 
 class RightPanel(Static):
