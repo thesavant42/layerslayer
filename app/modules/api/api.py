@@ -61,7 +61,7 @@ fsd.install(router)
 app.include_router(router)
 
 # Validate image reference format to prevent injection
-IMAGE_PATTERN = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_-]*/[a-zA-Z0-9][a-zA-Z0-9_-]*(:[a-zA-Z0-9_-]+)?$')
+IMAGE_PATTERN = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9._-]*/[a-zA-Z0-9][a-zA-Z0-9._-]*(:[a-zA-Z0-9._-]+)?$')
 
 
 
