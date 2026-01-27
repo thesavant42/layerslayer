@@ -399,8 +399,8 @@ class DockerDorkerApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
-        """Set the Dracula theme when the app mounts."""
-        self.theme = "dracula"
+        """Set the flexoki theme when the app mounts."""
+        self.theme = "flexoki"
         table = self.query_one("#results-table", DataTable)
         table.zebra_stripes = True
         table.add_column("SLUG", width=50)
