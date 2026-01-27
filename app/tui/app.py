@@ -3,13 +3,13 @@ dockerDorkerUI
 
 A basic UI structure with:
 - Header (docked top)
-- Top Panel (1/3) with search input
-- Left/Right Panels (50/50 split, 2/3 height)
+- Left Panel with search input and tabbed results/FS simulator
+- Right Panel with repo overview and tag selection
 - Footer (docked bottom)
 """
 
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical, VerticalScroll, Center
 from textual.screen import ModalScreen
 from textual.widgets import (
     Header, Footer, Static, Input, DataTable,
@@ -200,32 +200,29 @@ def format_config(config: dict) -> list[tuple[str, str]]:
     return rows
 
 
-class TopPanel(Static):
-    """Top panel widget with search input."""
-    # Do not set height to 0 Do not Collapse Do NOT delete!
-    def compose(self) -> ComposeResult:
-        yield Input(
-            placeholder="Search Docker Hub...",
-            id="search-input",
-            type="text"
-        )
-        yield Static("", id="search-status")
-
-
 class LeftPanel(Static):
     """Left panel widget with tabbed content for search results and FS simulator."""
     
     def compose(self) -> ComposeResult:
         with TabbedContent(id="left-tabs"):
             with TabPane("Search Results", id="search-results-tab"):
-                yield Static("", id="left-spacer")
+                # Search widgets (migrated from TopPanel) - inside tab so hidden when FS Simulator is active
+                yield Static("Search Docker Hub", id="search-label")
+                yield Input(
+                    placeholder="Enter search term...",
+                    id="search-input",
+                    type="text"
+                )
+                yield Static("", id="search-status")
                 yield DataTable(id="results-table", cursor_type="row")
-                with Horizontal(id="pagination-bar"):
-                    yield Button("<<", id="btn-first")
-                    yield Button("<", id="btn-prev")
-                    yield Button(">", id="btn-next")
-                    yield Button(">>", id="btn-last")
-                    yield Static("Page 1 of -- (-- Results)", id="pagination-status")
+                # Pagination bar - AFTER the table so it appears below results
+                with Center(id="pagination-container"):
+                    with Horizontal(id="pagination-bar"):
+                        yield Button("<<", id="btn-first")
+                        yield Button("<", id="btn-prev")
+                        yield Button(">", id="btn-next")
+                        yield Button(">>", id="btn-last")
+                        yield Static("Page 1 of -- (-- Results)", id="pagination-status")
             with TabPane("FS Simulator", id="fs-simulator-tab"):
                 yield Static("Select a layer from config to browse filesystem", id="fs-status")
                 yield Static("Path: /", id="fs-breadcrumb")
@@ -395,7 +392,6 @@ class DockerDorkerApp(App):
     def compose(self) -> ComposeResult:
         """Compose the UI layout."""
         yield Header(show_clock=True)
-        yield TopPanel(id="top-panel")
         with Horizontal(id="main-content"):
             yield LeftPanel(id="left-panel")
             yield RightPanel(id="right-panel")

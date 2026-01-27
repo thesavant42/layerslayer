@@ -6,27 +6,24 @@
 /* No additional styling needed - Header has its own internal CSS */
 
 
-
-/* Top panel - flows below header in vertical layout (not docked) */
-#top-panel {
-    height: auto;
-    min-height: 5;
-    padding: 1 2;
-    background: $surface;
-    border: solid $primary;
-    layout: vertical;
+/* Search label - title above search input */
+#search-label {
+    padding: 1;
+    color: $accent;
+    text-style: bold;
 }
 
-/* Search input styling */
+/* Search input styling - now in LeftPanel */
 #search-input {
     width: 100%;
-    margin-bottom: 1;
+    margin: 0 1;
 }
 
-/* Search status text */
+/* Search status text - now in LeftPanel */
 #search-status {
     height: auto;
     color: $text-muted;
+    padding: 0 1;
 }
 
 
@@ -54,27 +51,29 @@
     height: 1fr;
 }
 
-/* Spacer to align with right panel widgets */
-#left-spacer {
-    height: 9;
-}
-
 /* Results DataTable - now inside LeftPanel TabbedContent */
 #results-table {
     height: 1fr;
     width: 100%;
+    border: solid $primary;
+    margin: 1;
 }
 
 /* DataTable header styling - accent color instead of surface */
 DataTable > .datatable--header {
-    background: $accent;
+    background: $secondary;
 }
 
-/* Pagination bar - docked to bottom so table fills space above */
-#pagination-bar {
+/* Pagination container - Center wrapper for centering */
+#pagination-container {
     height: 3;
-    align: center middle;
-    padding: 0 1;
+    width: 100%;
+}
+
+/* Pagination bar - centered below table */
+#pagination-bar {
+    height: auto;
+    width: auto;
 }
 
 #pagination-bar Button {
@@ -208,8 +207,8 @@ TextViewerModal {
 }
 
 #btn-close-viewer {
-    width: 20;
-    margin-top: 1;
+    width: 10;
+    margin-top: 1;              /* 1 */
     align: center middle;
 }
 
