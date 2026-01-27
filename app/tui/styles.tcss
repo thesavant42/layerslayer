@@ -1,32 +1,10 @@
-/* dockerDorker Stylesheet */
+/* dockerDorker Core Stylesheet */
+/* Widget-specific styles are in their respective submodules */
 
 /* Screen uses vertical layout by default - widgets stack top to bottom */
 
 /* Header styling - built-in widget with dock:top */
 /* No additional styling needed - Header has its own internal CSS */
-
-
-/* Search label - title above search input */
-#search-label {
-    padding: 1 1;
-    color: $accent;
-    text-style: bold;
-}
-
-/* Search input styling - now in LeftPanel */
-#search-input {
-    width: 100%;
-    margin: 1 0;
-}
-
-/* Search status text - now in LeftPanel */
-#search-status {
-    height: auto;
-    color: $text-muted;
-    padding: 0 1;
-}
-
-
 
 /* Main content area - horizontal split for left/right panels */
 #main-content {
@@ -50,42 +28,6 @@
     height: 1fr;
 }
 
-/* Results DataTable - now inside LeftPanel TabbedContent */
-#results-table {
-    height: 1fr;
-    width: 100%;
-    border: solid $primary;
-    margin: 1;
-}
-
-/* DataTable header styling - accent color instead of surface */
-DataTable > .datatable--header {
-    background: $secondary;
-}
-
-/* Pagination container - Center wrapper for centering */
-#pagination-container {
-    height: 3;
-    width: 100%;
-}
-
-/* Pagination bar - centered below table */
-#pagination-bar {
-    height: auto;
-    width: auto;
-}
-
-#pagination-bar Button {
-    border: tall $primary;
-    min-width: 4;
-    margin: 0 1;
-}
-
-#pagination-status {
-    margin-left: 2;
-    color: $text-muted;
-}
-
 /* Right panel - 50% width */
 #right-panel {
     width: 1fr;
@@ -94,28 +36,9 @@ DataTable > .datatable--header {
     border: solid $secondary;
 }
 
-/* Tag select dropdown */
-#tag-select {
-    width: 100%;
-    margin: 1 1 3 1;
-}
-
-/* Repo info label */
-#repo-info {
-    padding: 1;
-    color: $text-muted;
-}
-
-/* Config DataTable */
-#config-table {
-    height: 1fr;
-    border: solid $primary;
-    margin: 1;
-}
-
-/* Right panel spacer - aligns with left panel pagination bar */
-#right-panel-spacer {
-    height: 3;
+/* DataTable header styling - accent color instead of surface (shared) */
+DataTable > .datatable--header {
+    background: $secondary;
 }
 
 /* Footer styling - uses built-in dock:bottom */
@@ -123,140 +46,7 @@ Footer {
     dock: bottom;
 }
 
-/* FS Simulator Tab Styling */
+/* FS Simulator Tab height */
 #fs-simulator-tab {
     height: 1fr;
-}
-
-#fs-status {
-    padding: 1 1 1 1;
-    color: $text-muted;
-    height: auto;
-}
-
-#fs-breadcrumb {
-    padding: 0 1 1 1;
-    color: $accent;
-    height: auto;
-}
-
-#fs-table {
-    height: 1fr;
-    width: 100%;
-}
-
-/* FS Simulator spacer - aligns with right panel bottom */
-#fs-simulator-spacer {
-    height: 4;
-}
-
-/* File Action Modal */
-FileActionModal {
-    align: center middle;
-}
-
-#file-action-dialog {
-    width: 60;
-    height: auto;
-    padding: 1 2;
-    background: $surface;
-    border: thick $primary;
-}
-
-#file-action-title {
-    text-align: center;
-    text-style: bold;
-    margin-bottom: 1;
-}
-
-#file-action-path {
-    text-align: center;
-    color: $text-muted;
-}
-
-#file-action-layer {
-    text-align: center;
-    color: $accent;
-    margin-bottom: 1;
-}
-
-#file-action-dialog Button {
-    width: 100%;
-    margin-top: 1;
-}
-
-/* Text Viewer Modal */
-TextViewerModal {
-    align: center middle;
-}
-
-#text-viewer-dialog {
-    width: 90%;
-    height: 85%;
-    padding: 1 2;
-    background: $surface;
-    border: thick $primary;
-}
-
-#text-viewer-title {
-    text-align: center;
-    text-style: bold;
-    margin-bottom: 1;
-    color: $accent;
-}
-
-#text-viewer-scroll {
-    height: 1fr;
-    border: solid $primary-lighten-2;
-    background: $surface-darken-1;
-}
-
-#text-viewer-content {
-    padding: 1;
-}
-
-#btn-close-viewer {
-    width: 10;
-    margin-top: 1;              /* 1 */
-    align: center middle;
-}
-
-/* Save File Modal */
-SaveFileModal {
-    align: center middle;
-}
-
-#save-file-dialog {
-    width: 70;
-    height: auto;
-    padding: 1 2;
-    background: $surface;
-    border: thick $primary;
-}
-
-#save-file-title {
-    text-align: center;
-    text-style: bold;
-    margin-bottom: 1;
-}
-
-#save-file-source {
-    text-align: center;
-    color: $text-muted;
-    margin-bottom: 1;
-}
-
-#save-filename-input {
-    width: 100%;
-    margin-bottom: 1;
-}
-
-#save-file-buttons {
-    width: 100%;
-    height: auto;
-    align: center middle;
-}
-
-#save-file-buttons Button {
-    margin: 0 1;
 }

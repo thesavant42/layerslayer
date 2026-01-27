@@ -1,0 +1,52 @@
+/* Search Panel Styles */
+
+/* Search label - title above search input */
+#search-label {
+    padding: 1 1;
+    color: $accent;
+    text-style: bold;
+}
+
+/* Search input styling */
+#search-input {
+    width: 100%;
+    margin: 1 0;
+}
+
+/* Search status text */
+#search-status {
+    height: auto;
+    color: $text-muted;
+    padding: 0 1;
+}
+
+/* Results DataTable */
+#results-table {
+    height: 1fr;
+    width: 100%;
+    border: solid $primary;
+    margin: 1;
+}
+
+/* Pagination container - Center wrapper for centering */
+#pagination-container {
+    height: 3;
+    width: 100%;
+}
+
+/* Pagination bar - centered below table */
+#pagination-bar {
+    height: auto;
+    width: auto;
+}
+
+#pagination-bar Button {
+    border: tall $primary;
+    min-width: 4;
+    margin: 0 1;
+}
+
+#pagination-status {
+    margin-left: 2;
+    color: $text-muted;
+}

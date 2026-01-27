@@ -1,0 +1,25 @@
+/* Repo Panel Styles */
+
+/* Tag select dropdown */
+#tag-select {
+    width: 100%;
+    margin: 1 1 3 1;
+}
+
+/* Repo info label */
+#repo-info {
+    padding: 1;
+    color: $text-muted;
+}
+
+/* Config DataTable */
+#config-table {
+    height: 1fr;
+    border: solid $primary;
+    margin: 1;
+}
+
+/* Right panel spacer - aligns with left panel pagination bar */
+#right-panel-spacer {
+    height: 3;
+}
