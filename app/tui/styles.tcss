@@ -8,7 +8,7 @@
 
 /* Search label - title above search input */
 #search-label {
-    padding: 1;
+    padding: 1 1;
     color: $accent;
     text-style: bold;
 }
@@ -16,7 +16,7 @@
 /* Search input styling - now in LeftPanel */
 #search-input {
     width: 100%;
-    margin: 0 1;
+    margin: 1 0;
 }
 
 /* Search status text - now in LeftPanel */
@@ -41,7 +41,6 @@
     border: solid $secondary;
     overflow-y: auto;
 }
-
 
 #left-panel TabbedContent {
     height: 1fr;
@@ -98,7 +97,7 @@ DataTable > .datatable--header {
 /* Tag select dropdown */
 #tag-select {
     width: 100%;
-    margin: 1;
+    margin: 1 1 3 1;
 }
 
 /* Repo info label */
@@ -114,6 +113,11 @@ DataTable > .datatable--header {
     margin: 1;
 }
 
+/* Right panel spacer - aligns with left panel pagination bar */
+#right-panel-spacer {
+    height: 3;
+}
+
 /* Footer styling - uses built-in dock:bottom */
 Footer {
     dock: bottom;
@@ -125,13 +129,13 @@ Footer {
 }
 
 #fs-status {
-    padding: 0 1;
+    padding: 1 1 1 1;
     color: $text-muted;
     height: auto;
 }
 
 #fs-breadcrumb {
-    padding: 0 1;
+    padding: 0 1 1 1;
     color: $accent;
     height: auto;
 }

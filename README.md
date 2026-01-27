@@ -77,10 +77,6 @@ Implemented --peek-layer CLI flag and /peek API endpoint.
   Uses HTTP
  Range requests to fetch compressed data incrementally, decompresses on-the-fly, and stops as soon as the target file is fully extracted.
 
-### Docs
-
-See [docs/DOCS.md](docs/DOCS.md) for a map of the technical documentation.
-
 ## Usage
 
 ```bash

@@ -238,6 +238,7 @@ class RightPanel(Static):
                 yield Static("Select a repository to view tags", id="repo-info")
                 yield Select([], id="tag-select", prompt="Select a tag...")
                 yield DataTable(id="config-table", cursor_type="row")
+                yield Static("", id="right-panel-spacer")
 
 
 class FileActionModal(ModalScreen):
