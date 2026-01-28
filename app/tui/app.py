@@ -10,6 +10,7 @@ A basic UI structure with:
 
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
+from textual.content import Content
 from textual.widgets import (
     Header, Footer, Static, Input, DataTable,
     TabbedContent, TabPane, Select, Button
@@ -552,11 +553,15 @@ class DockerDorkerApp(App):
                 config_table.add_column("DATA", width=180)
                 
                 rows = format_config(config)
+                HIGHLIGHT_FIELDS = {"WorkingDir", "rootfs.type"}
                 for field, value in rows:
                     if field:
-                        config_table.add_row(Text(f"{field}: {value}"))
+                        if field in HIGHLIGHT_FIELDS:
+                            config_table.add_row(Content.from_markup(f"[bold $accent]{field}: {value}[/]"))
+                        else:
+                            config_table.add_row(f"{field}: {value}")
                     else:
-                        config_table.add_row(Text(value))
+                        config_table.add_row(value)
                 
                 repo_info.update(f"{namespace}/{repo}:{tag} - {len(rows)} fields")
                 
