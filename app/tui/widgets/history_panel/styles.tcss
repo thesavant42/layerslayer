@@ -1,0 +1,46 @@
+/* History Panel Styles */
+
+#history-label {
+    padding: 1 1;
+    color: $accent;
+    text-style: bold;
+}
+
+#history-filter-input {
+    width: 100%;
+    margin: 1 0;
+}
+
+#history-status {
+    height: auto;
+    color: $text-muted;
+    padding: 0 1;
+}
+
+#history-table {
+    height: 1fr;
+    width: 100%;
+    border: solid $primary;
+    margin: 1;
+}
+
+#history-pagination-container {
+    height: 3;
+    width: 100%;
+}
+
+#history-pagination-bar {
+    height: auto;
+    width: auto;
+}
+
+#history-pagination-bar Button {
+    border: round $primary;
+    min-width: 4;
+    margin: 0 0 0 0;
+}
+
+#history-pagination-status {
+    margin-left: 2;
+    color: $primary;
+}

@@ -21,9 +21,14 @@ Instead of pulling entire images, you can "peek" inside each layer to reconstruc
 
 ## **NEW**
 
-TUI refactoring complete. The monolithic files have been reorganized into logical submodules:
+- Added a "History" tab for quick access to previously-peeked layer data.
 
-New TUI Directory Structure:
+![history](/docs/screencaps/history.png)
+
+
+- TUI refactoring complete. The monolithic files have been reorganized into logical submodules:
+
+### New TUI Directory Structure:
 
 ```txt
 app/tui/

@@ -34,7 +34,7 @@ from app.modules.search.search_dockerhub import get_results, format_date
 # Import from refactored submodules
 from app.tui.utils import format_config, is_binary_content, parse_slug
 from app.tui.modals import FileActionModal, TextViewerModal, SaveFileModal
-from app.tui.widgets import SearchPanel, RepoPanel, FSSimulator, parse_fslog_line
+from app.tui.widgets import SearchPanel, RepoPanel, FSSimulator, HistoryPanel, parse_fslog_line
 
 
 class LeftPanel(Static):
@@ -52,9 +52,11 @@ class RightPanel(Static):
     """Right panel widget with tabbed content for image build details."""
     
     def compose(self) -> ComposeResult:
-        with TabbedContent():
+        with TabbedContent(id="right-tabs"):
             with TabPane("Repo Overview", id="repo-overview"):
                 yield RepoPanel(id="repo-panel")
+            with TabPane("History", id="history-tab"):
+                yield HistoryPanel(id="history-panel")
 
 
 class DockerDorkerApp(App):
@@ -66,6 +68,7 @@ class DockerDorkerApp(App):
         "widgets/search_panel/styles.tcss",
         "widgets/repo_panel/styles.tcss",
         "widgets/fs_simulator/styles.tcss",
+        "widgets/history_panel/styles.tcss",
     ]
     TITLE = "dockerDorker"
     SUB_TITLE = "by @thesavant42"
@@ -87,6 +90,11 @@ class DockerDorkerApp(App):
     fs_path: str = "/"
     fs_layer: int | None = None
     _loading_fs: bool = False
+
+    # History state
+    history_query: str = ""
+    history_page: int = 1
+    _loading_history: bool = False
 
     def compose(self) -> ComposeResult:
         """Compose the UI layout."""
@@ -111,18 +119,30 @@ class DockerDorkerApp(App):
         # Setup FS table
         fs_simulator = self.query_one("#fs-simulator", FSSimulator)
         fs_simulator.setup_table()
+        
+        # Setup history table
+        history_panel = self.query_one("#history-panel", HistoryPanel)
+        history_panel.setup_table()
+        
+        # Load initial history
+        self.fetch_history_page(page=1)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle search input submission."""
         query = event.value.strip()
-        if not query:
-            return
         
-        self.current_query = query
-        self.current_page = 1
-        status = self.query_one("#search-status", Static)
-        status.update(f"Searching for: {query}...")
-        self.fetch_page(query, page=1, clear=True)
+        if event.input.id == "search-input":
+            if not query:
+                return
+            self.current_query = query
+            self.current_page = 1
+            status = self.query_one("#search-status", Static)
+            status.update(f"Searching for: {query}...")
+            self.fetch_page(query, page=1, clear=True)
+        elif event.input.id == "history-filter-input":
+            self.history_query = query
+            self.history_page = 1
+            self.fetch_history_page(query=query, page=1, clear=True)
 
     def on_key(self, event) -> None:
         """Handle key events for pagination at boundaries."""
@@ -193,27 +213,46 @@ class DockerDorkerApp(App):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle pagination button presses."""
-        if not self.current_query or self._loading_page:
-            return
+        button_id = event.button.id
         
-        total_pages = max(1, -(-self.total_results // 30))
+        # Search pagination buttons
+        if button_id in ("btn-first", "btn-prev", "btn-next", "btn-last"):
+            if not self.current_query or self._loading_page:
+                return
+            
+            total_pages = max(1, -(-self.total_results // 30))
+            
+            if button_id == "btn-first":
+                target = 1
+            elif button_id == "btn-prev":
+                target = max(1, self.current_page - 1)
+            elif button_id == "btn-next":
+                target = min(total_pages, self.current_page + 1)
+            elif button_id == "btn-last":
+                target = total_pages
+            else:
+                return
+            
+            if target != self.current_page:
+                self.fetch_page(self.current_query, target, clear=True)
         
-        if event.button.id == "btn-first":
-            target = 1
-        elif event.button.id == "btn-prev":
-            target = max(1, self.current_page - 1)
-        elif event.button.id == "btn-next":
-            target = min(total_pages, self.current_page + 1)
-        elif event.button.id == "btn-last":
-            target = total_pages
-        else:
-            return
-        
-        if target != self.current_page:
-            self.fetch_page(self.current_query, target, clear=True)
+        # History pagination buttons
+        elif button_id in ("btn-history-first", "btn-history-prev", "btn-history-next", "btn-history-last"):
+            if self._loading_history:
+                return
+            
+            if button_id == "btn-history-first":
+                self.fetch_history_page(query=self.history_query, page=1, clear=True)
+            elif button_id == "btn-history-prev":
+                if self.history_page > 1:
+                    self.fetch_history_page(query=self.history_query, page=self.history_page - 1, clear=True)
+            elif button_id == "btn-history-next":
+                self.fetch_history_page(query=self.history_query, page=self.history_page + 1, clear=True)
+            elif button_id == "btn-history-last":
+                self.fetch_history_page(query=self.history_query, page=self.history_page + 1, clear=True)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Handle row selection for results-table, config-table, and fs-table."""
+        """Handle row selection for results-table, config-table, fs-table, and history-table."""
         table = event.data_table
         cursor_row = event.cursor_row
         
@@ -230,6 +269,8 @@ class DockerDorkerApp(App):
             self._handle_config_row_selection(row_data)
         elif table.id == "fs-table":
             self._handle_fs_row_selection(row_data)
+        elif table.id == "history-table":
+            self._handle_history_row_selection(row_data)
 
     def _handle_results_row_selection(self, row_data: tuple) -> None:
         """Handle selection in results-table to trigger tag enumeration."""
@@ -630,6 +671,100 @@ class DockerDorkerApp(App):
             fs_status.update(f"Request error: {e}")
         except httpx.HTTPStatusError as e:
             fs_status.update(f"HTTP error: {e.response.status_code}")
+
+
+    @work(exclusive=True, group="history")
+    async def fetch_history_page(self, query: str = "", page: int = 1, clear: bool = False) -> None:
+        """Fetch history page from API."""
+        self._loading_history = True
+        status = self.query_one("#history-status", Static)
+        table = self.query_one("#history-table", DataTable)
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                params = {
+                    "page": page,
+                    "page_size": 30,
+                    "sortby": "scraped_at",
+                    "order": "desc"
+                }
+                if query:
+                    params["q"] = query
+                
+                response = await client.get(
+                    "http://127.0.0.1:8000/history",
+                    params=params
+                )
+                response.raise_for_status()
+                
+                # Parse plain text response
+                lines = response.text.strip().split("\n")
+                
+                self.history_page = page
+                status.update("")
+                self.update_history_pagination()
+                
+                if clear:
+                    table.clear()
+                
+                # Skip header and separator lines (first 2 lines)
+                for line in lines[2:]:
+                    parts = [p.strip() for p in line.split("|")]
+                    if len(parts) >= 6:
+                        table.add_row(
+                            parts[0],  # scraped_at
+                            parts[1],  # owner
+                            parts[2],  # repo
+                            parts[3],  # tag
+                            parts[4],  # idx
+                            parts[5],  # layer_size
+                        )
+        except httpx.RequestError as e:
+            status.update(f"Request error: {e}")
+        except httpx.HTTPStatusError as e:
+            status.update(f"HTTP error: {e.response.status_code}")
+        finally:
+            self._loading_history = False
+
+    def update_history_pagination(self) -> None:
+        """Update history pagination status."""
+        status = self.query_one("#history-pagination-status", Static)
+        table = self.query_one("#history-table", DataTable)
+        row_count = table.row_count
+        status.update(f"Page {self.history_page} ({row_count} results)")
+
+    def _handle_history_row_selection(self, row_data: tuple) -> None:
+        """Handle selection in history-table to load layer into FS Simulator."""
+        if len(row_data) < 5:
+            return
+        
+        owner = str(row_data[1]).strip()
+        repo = str(row_data[2]).strip()
+        tag = str(row_data[3]).strip()
+        idx_str = str(row_data[4]).strip()
+        
+        try:
+            layer_idx = int(idx_str)
+        except ValueError:
+            return
+        
+        # Set state for FS Simulator
+        self.selected_namespace = owner
+        self.selected_repo = repo
+        self.selected_tag = tag
+        self.fs_image = f"{owner}/{repo}:{tag}"
+        self.fs_path = "/"
+        self.fs_layer = layer_idx
+        
+        # Update status and switch to FS Simulator tab
+        fs_status = self.query_one("#fs-status", Static)
+        fs_status.update(f"Loading {self.fs_image} layer {layer_idx} from history...")
+        
+        left_tabs = self.query_one("#left-tabs", TabbedContent)
+        left_tabs.active = "fs-simulator-tab"
+        
+        # Load the layer
+        self.check_and_load_fslog()
 
 
 if __name__ == "__main__":
