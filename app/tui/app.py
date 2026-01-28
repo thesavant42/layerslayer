@@ -454,7 +454,7 @@ class DockerDorkerApp(App):
 
     @work(exclusive=True, group="carve")
     async def carve_file_download(self, file_path: str, layer: int, filename: str) -> None:
-        """Download file and save using deliver_binary."""
+        """Download file and save to Downloads folder."""
         fs_status = self.query_one("#fs-status", Static)
         
         try:
@@ -463,17 +463,17 @@ class DockerDorkerApp(App):
                 
                 response = await client.get(
                     "http://127.0.0.1:8000/carve",
-                    params={"image": self.fs_image, "path": file_path, "layer": layer, "as_text": False}
+                    params={"image": self.fs_image, "path": file_path, "layer": layer}
                 )
                 response.raise_for_status()
                 
-                raw_bytes = response.content
-                binary_stream = io.BytesIO(raw_bytes)
+                # Write directly to Downloads folder
+                downloads = Path.home() / "Downloads"
+                save_path = downloads / filename
+                save_path.write_bytes(response.content)
                 
-                self.deliver_binary(binary_stream, save_filename=filename)
-                
-                fs_status.update(f"Saved: {filename}")
-                self.notify(f"File saved: {filename}", title="Download Complete")
+                fs_status.update(f"Saved: {save_path}")
+                self.notify(f"File saved: {save_path}", title="Download Complete")
                 
         except httpx.RequestError as e:
             fs_status.update(f"Request error: {e}")
