@@ -2,13 +2,13 @@
 
 #fs-status {
     padding: 1 1 1 1;
-    color: $text-muted;
+    color: $accent;
     height: auto;
 }
 
 #fs-breadcrumb {
     padding: 3 3 3 3;
-    color: $accent;
+    color: $primary;
     height: auto;
     text-style: bold;
 }
