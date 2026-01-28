@@ -467,13 +467,17 @@ class DockerDorkerApp(App):
                 )
                 response.raise_for_status()
                 
-                # Write directly to Downloads folder
-                downloads = Path.home() / "Downloads"
-                save_path = downloads / filename
-                save_path.write_bytes(response.content)
+                content_bytes = response.content
+                content_length = len(content_bytes)
                 
-                fs_status.update(f"Saved: {save_path}")
-                self.notify(f"File saved: {save_path}", title="Download Complete")
+                # Write directly to app/loot folder
+                loot_dir = (project_root / "app" / "loot").resolve()
+                loot_dir.mkdir(parents=True, exist_ok=True)
+                save_path = loot_dir / filename
+                save_path.write_bytes(content_bytes)
+                
+                fs_status.update(f"Saved: {save_path} ({content_length} bytes)")
+                self.notify(f"Saved to {save_path} ({content_length} bytes)", title="Download Complete")
                 
         except httpx.RequestError as e:
             fs_status.update(f"Request error: {e}")
