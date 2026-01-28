@@ -53,11 +53,19 @@ def parse_fslog_line(line: str) -> dict | None:
     
     # Pattern for merged view with layer info: [L15] (overridden)
     # Format: mode  size  date time  name  [layer_info] (overridden)?
-    merged_pattern = r'^([drwxlst-]{10})\s+([\d.]+\s+[BKMG]B?)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+(.+?)\s+\[L(\d+)\](?:\s+\(overridden\))?$'
+    # Capture (overridden) to filter out shadowed directories
+    merged_pattern = r'^([drwxlst-]{10})\s+([\d.]+\s+[BKMG]B?)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+(.+?)\s+\[L(\d+)\](\s+\(overridden\))?$'
     merged_match = re.match(merged_pattern, line)
     
     if merged_match:
-        mode, size, date_time, name, layer = merged_match.groups()
+        mode, size, date_time, name, layer, overridden = merged_match.groups()
+        
+        # Filter out overridden directories - they are shadowed by a newer layer
+        # Keep all files (show all variants) and only the topmost directory
+        is_directory = mode.startswith('d')
+        if is_directory and overridden:
+            return None
+        
         return {
             "mode": mode,
             "size": size.strip(),
