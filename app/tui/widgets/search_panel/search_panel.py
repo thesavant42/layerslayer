@@ -26,6 +26,9 @@ class SearchPanel(Static):
         )
         yield Static("", id="search-status")
         yield DataTable(id="results-table", cursor_type="row")
+        # Highlight info - displays full slug and description for highlighted row
+        yield Static("", id="highlight-slug")
+        yield Static("", id="highlight-description")
         # Pagination bar - AFTER the table so it appears below results
         with Center(id="pagination-container"):
             with Horizontal(id="pagination-bar"):

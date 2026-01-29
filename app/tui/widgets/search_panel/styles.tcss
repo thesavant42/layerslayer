@@ -28,6 +28,22 @@
     margin: 1;
 }
 
+/* Highlight info section - displays selected row details */
+#highlight-slug {
+    height: auto;
+    width: 100%;
+    padding: 0 1;
+    color: $accent;
+    text-style: bold;
+}
+
+#highlight-description {
+    height: auto;
+    width: 100%;
+    padding: 0 1;
+    color: $text-muted;
+}
+
 /* Pagination container - Center wrapper for centering */
 #pagination-container {
     height: 3;

@@ -252,6 +252,35 @@ class DockerDorkerApp(App):
             elif button_id == "btn-history-last":
                 self.fetch_history_page(query=self.history_query, page=self.history_page + 1, clear=True)
 
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """Handle row highlight changes to update the info display."""
+        table = event.data_table
+        
+        # Only handle results-table
+        if table.id != "results-table":
+            return
+        
+        cursor_row = event.cursor_row
+        
+        # Handle empty or invalid state
+        if cursor_row < 0 or cursor_row >= table.row_count:
+            return
+        
+        row_data = table.get_row_at(cursor_row)
+        if not row_data:
+            return
+        
+        # Extract SLUG (column 0) and DESCRIPTION (column 4)
+        slug = str(row_data[0]) if row_data[0] else ""
+        description = str(row_data[4]) if len(row_data) > 4 and row_data[4] else ""
+        
+        # Update the highlight info widgets
+        highlight_slug = self.query_one("#highlight-slug", Static)
+        highlight_description = self.query_one("#highlight-description", Static)
+        
+        highlight_slug.update(slug)
+        highlight_description.update(description)
+
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Handle row selection for results-table, config-table, fs-table, and history-table."""
         table = event.data_table
@@ -680,7 +709,6 @@ class DockerDorkerApp(App):
             fs_status.update(f"Request error: {e}")
         except httpx.HTTPStatusError as e:
             fs_status.update(f"HTTP error: {e.response.status_code}")
-
 
     @work(exclusive=True, group="history")
     async def fetch_history_page(self, query: str = "", page: int = 1, clear: bool = False) -> None:
